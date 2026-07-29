@@ -11,17 +11,37 @@
     background:#F1E9D2;
     min-height:100vh; margin:0; padding:40px 20px;
   }
-  .wrap{max-width:600px; margin:0 auto;}
+  .wrap{max-width:640px; margin:0 auto;}
   .card{
     background:#FBF7EC; border:1px solid #2B2A25; border-radius:8px;
-    padding:32px; box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+    padding:32px; box-shadow:4px 4px 0 rgba(43,42,37,0.08); margin-bottom:20px;
   }
   h1{font-size:1.3rem; margin:0 0 8px;}
+  h2{font-size:1.05rem; margin:0 0 14px;}
   p{color:#5C5648; line-height:1.5;}
+  input{
+    width:100%; padding:10px; margin:8px 0 14px; border:1px solid #2B2A25;
+    border-radius:5px; font-size:0.95rem; box-sizing:border-box;
+  }
   button{
     padding:10px 18px; background:#2F4858; color:white; border:none;
-    border-radius:6px; font-size:0.9rem; cursor:pointer; margin-top:16px;
+    border-radius:6px; font-size:0.9rem; cursor:pointer;
   }
+  button:disabled{opacity:0.5; cursor:default;}
+  .logout-btn{background:none; color:#5C5648; border:1px solid #5C5648; margin-top:16px;}
+  .class-item{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 0; border-bottom:1px dashed #C7B78E;
+  }
+  .class-item:last-child{border-bottom:none;}
+  .class-name{font-weight:600;}
+  .join-code{
+    font-family:'Courier New', monospace; background:#E3D5AE;
+    padding:4px 10px; border-radius:4px; font-size:0.9rem;
+  }
+  .message{margin-top:10px; font-size:0.88rem; padding:10px; border-radius:5px;}
+  .message.error{background:#F4E1E1; color:#7A2E2E;}
+  .empty{color:#5C5648; font-style:italic; font-size:0.9rem;}
 </style>
 </head>
 <body>
@@ -29,12 +49,36 @@
     <div class="card">
       <h1>Welcome</h1>
       <p id="status">Checking your session...</p>
-      <button id="logout-btn" style="display:none;">Log out</button>
+      <button id="logout-btn" class="logout-btn" style="display:none;">Log out</button>
+    </div>
+
+    <div class="card" id="create-class-card" style="display:none;">
+      <h2>Create a Class</h2>
+      <input type="text" id="class-name-input" placeholder="e.g. Psych 4B, Period 2">
+      <button id="create-class-btn">Create Class</button>
+      <div id="create-message"></div>
+    </div>
+
+    <div class="card" id="classes-card" style="display:none;">
+      <h2>Your Classes</h2>
+      <div id="classes-list"></div>
     </div>
   </div>
 
   <script src="js/supabase-config.js"></script>
   <script>
+    let currentUser = null;
+
+    function generateJoinCode(){
+      // Avoids easily-confused characters like 0/O and 1/I
+      const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+      let code = '';
+      for(let i = 0; i < 6; i++){
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
+    }
+
     async function init(){
       const { data: { session } } = await sb.auth.getSession();
 
@@ -43,22 +87,89 @@
         return;
       }
 
-      const user = session.user;
+      currentUser = session.user;
 
-      // Make sure this teacher has a row in the teachers table
-      const { error } = await sb.from('teachers').upsert({
-        id: user.id
-      });
+      const { error } = await sb.from('teachers').upsert({ id: currentUser.id });
 
       const statusEl = document.getElementById('status');
       if(error){
-        statusEl.textContent = 'Logged in as ' + user.email + ', but there was an issue setting up your profile: ' + error.message;
+        statusEl.textContent = 'Logged in as ' + currentUser.email + ', but there was an issue setting up your profile: ' + error.message;
       } else {
-        statusEl.textContent = 'Logged in as ' + user.email + '. Your teacher profile is set up. Class creation is coming in the next build step.';
+        statusEl.textContent = 'Logged in as ' + currentUser.email + '.';
+        document.getElementById('create-class-card').style.display = 'block';
+        document.getElementById('classes-card').style.display = 'block';
+        loadClasses();
       }
 
       document.getElementById('logout-btn').style.display = 'inline-block';
     }
+
+    async function loadClasses(){
+      const { data, error } = await sb
+        .from('classes')
+        .select('*')
+        .eq('teacher_id', currentUser.id)
+        .order('created_at', { ascending: false });
+
+      const listEl = document.getElementById('classes-list');
+      listEl.innerHTML = '';
+
+      if(error){
+        listEl.innerHTML = '<p class="empty">Could not load classes: ' + error.message + '</p>';
+        return;
+      }
+
+      if(!data || data.length === 0){
+        listEl.innerHTML = '<p class="empty">No classes yet — create one above.</p>';
+        return;
+      }
+
+      data.forEach(cls => {
+        const row = document.createElement('div');
+        row.className = 'class-item';
+        row.innerHTML = `
+          <span class="class-name">${cls.name}</span>
+          <span class="join-code">${cls.join_code}</span>
+        `;
+        listEl.appendChild(row);
+      });
+    }
+
+    document.getElementById('create-class-btn').addEventListener('click', async () => {
+      const input = document.getElementById('class-name-input');
+      const name = input.value.trim();
+      const msgEl = document.getElementById('create-message');
+      const btn = document.getElementById('create-class-btn');
+
+      if(!name){
+        msgEl.textContent = 'Please enter a class name.';
+        msgEl.className = 'message error';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+
+      const joinCode = generateJoinCode();
+
+      const { error } = await sb.from('classes').insert({
+        teacher_id: currentUser.id,
+        name: name,
+        join_code: joinCode
+      });
+
+      btn.disabled = false;
+      btn.textContent = 'Create Class';
+
+      if(error){
+        msgEl.textContent = 'Something went wrong: ' + error.message;
+        msgEl.className = 'message error';
+      } else {
+        msgEl.textContent = '';
+        input.value = '';
+        loadClasses();
+      }
+    });
 
     document.getElementById('logout-btn').addEventListener('click', async () => {
       await sb.auth.signOut();
