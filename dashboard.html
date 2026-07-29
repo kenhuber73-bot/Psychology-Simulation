@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Psychology Case Simulations</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body{
+    font-family: system-ui, sans-serif;
+    background:#F1E9D2;
+    min-height:100vh; margin:0; padding:40px 20px;
+  }
+  .wrap{max-width:600px; margin:0 auto;}
+  .card{
+    background:#FBF7EC; border:1px solid #2B2A25; border-radius:8px;
+    padding:32px; box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+  }
+  h1{font-size:1.3rem; margin:0 0 8px;}
+  p{color:#5C5648; line-height:1.5;}
+  button{
+    padding:10px 18px; background:#2F4858; color:white; border:none;
+    border-radius:6px; font-size:0.9rem; cursor:pointer; margin-top:16px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Welcome</h1>
+      <p id="status">Checking your session...</p>
+      <button id="logout-btn" style="display:none;">Log out</button>
+    </div>
+  </div>
+
+  <script src="js/supabase-config.js"></script>
+  <script>
+    async function init(){
+      const { data: { session } } = await sb.auth.getSession();
+
+      if(!session){
+        window.location.href = 'index.html';
+        return;
+      }
+
+      const user = session.user;
+
+      // Make sure this teacher has a row in the teachers table
+      const { error } = await sb.from('teachers').upsert({
+        id: user.id
+      });
+
+      const statusEl = document.getElementById('status');
+      if(error){
+        statusEl.textContent = 'Logged in as ' + user.email + ', but there was an issue setting up your profile: ' + error.message;
+      } else {
+        statusEl.textContent = 'Logged in as ' + user.email + '. Your teacher profile is set up. Class creation is coming in the next build step.';
+      }
+
+      document.getElementById('logout-btn').style.display = 'inline-block';
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await sb.auth.signOut();
+      window.location.href = 'index.html';
+    });
+
+    init();
+  </script>
+</body>
+</html>

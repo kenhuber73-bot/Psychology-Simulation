@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Login — Psychology Case Simulations</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body{
+    font-family: system-ui, sans-serif;
+    background:#F1E9D2;
+    display:flex; align-items:center; justify-content:center;
+    min-height:100vh; margin:0; padding:20px;
+  }
+  .card{
+    background:#FBF7EC; border:1px solid #2B2A25; border-radius:8px;
+    padding:32px; max-width:380px; width:100%;
+    box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+  }
+  h1{font-size:1.2rem; margin:0 0 8px;}
+  p{color:#5C5648; font-size:0.9rem; line-height:1.5;}
+  input{
+    width:100%; padding:10px; margin:14px 0; border:1px solid #2B2A25;
+    border-radius:5px; font-size:0.95rem; box-sizing:border-box;
+  }
+  button{
+    width:100%; padding:12px; background:#2F4858; color:white; border:none;
+    border-radius:6px; font-size:0.95rem; cursor:pointer; font-weight:600;
+  }
+  button:disabled{opacity:0.5; cursor:default;}
+  .message{margin-top:14px; font-size:0.88rem; padding:10px; border-radius:5px;}
+  .message.success{background:#E4EDE1; color:#3E5233;}
+  .message.error{background:#F4E1E1; color:#7A2E2E;}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Teacher Login</h1>
+    <p>Enter your email and we'll send you a one-time login link — no password needed.</p>
+    <input type="email" id="email-input" placeholder="you@school.edu" autocomplete="email">
+    <button id="login-btn">Send login link</button>
+    <div id="message"></div>
+  </div>
+
+  <script src="js/supabase-config.js"></script>
+  <script>
+    const btn = document.getElementById('login-btn');
+    const emailInput = document.getElementById('email-input');
+    const messageEl = document.getElementById('message');
+
+    btn.addEventListener('click', async () => {
+      const email = emailInput.value.trim();
+      if(!email){
+        showMessage('Please enter your email.', 'error');
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+
+      const { error } = await sb.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.origin + '/dashboard.html' }
+      });
+
+      if(error){
+        showMessage('Something went wrong: ' + error.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Send login link';
+      } else {
+        showMessage('Check your email for a login link!', 'success');
+        btn.textContent = 'Link sent';
+      }
+    });
+
+    function showMessage(text, type){
+      messageEl.textContent = text;
+      messageEl.className = 'message ' + type;
+    }
+
+    // If already logged in, skip straight to the dashboard
+    sb.auth.getSession().then(({ data }) => {
+      if(data.session){
+        window.location.href = 'dashboard.html';
+      }
+    });
+  </script>
+</body>
+</html>
