@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Join a Class — Psychology Case Simulations</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body{
+    font-family: system-ui, sans-serif;
+    background:#F1E9D2;
+    display:flex; align-items:center; justify-content:center;
+    min-height:100vh; margin:0; padding:20px;
+  }
+  .card{
+    background:#FBF7EC; border:1px solid #2B2A25; border-radius:8px;
+    padding:32px; max-width:380px; width:100%;
+    box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+  }
+  h1{font-size:1.2rem; margin:0 0 8px;}
+  p{color:#5C5648; font-size:0.9rem; line-height:1.5;}
+  input{
+    width:100%; padding:10px; margin:10px 0; border:1px solid #2B2A25;
+    border-radius:5px; font-size:0.95rem; box-sizing:border-box;
+    text-transform:none;
+  }
+  input#code-input{text-transform:uppercase; letter-spacing:1px; font-family:'Courier New', monospace;}
+  button{
+    width:100%; padding:12px; background:#2F4858; color:white; border:none;
+    border-radius:6px; font-size:0.95rem; cursor:pointer; font-weight:600;
+  }
+  button:disabled{opacity:0.5; cursor:default;}
+  .message{margin-top:14px; font-size:0.88rem; padding:10px; border-radius:5px;}
+  .message.error{background:#F4E1E1; color:#7A2E2E;}
+  .welcome-back{
+    background:#E4EDE1; border:1px solid #3E5233; border-radius:6px;
+    padding:14px; margin-bottom:16px; font-size:0.9rem; color:#3E5233;
+  }
+  .ghost-btn{
+    background:none; color:#5C5648; border:1px solid #5C5648; margin-top:10px;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Join a Class</h1>
+    <p id="intro-text">Enter the class code your teacher gave you, and pick a nickname — no email or real name needed.</p>
+
+    <div id="returning-box" style="display:none;"></div>
+
+    <div id="join-form">
+      <input type="text" id="code-input" placeholder="CLASS CODE" maxlength="6">
+      <input type="text" id="nickname-input" placeholder="Choose a nickname" maxlength="30">
+      <button id="join-btn">Join Class</button>
+      <div id="message"></div>
+    </div>
+  </div>
+
+  <script src="js/supabase-config.js"></script>
+  <script>
+    const existing = localStorage.getItem('studentSession');
+
+    if(existing){
+      const session = JSON.parse(existing);
+      document.getElementById('returning-box').style.display = 'block';
+      document.getElementById('returning-box').innerHTML = `
+        <div class="welcome-back">
+          You're already joined as <strong>${session.nickname}</strong> in <strong>${session.className}</strong>.
+        </div>
+        <button id="continue-btn">Continue</button>
+        <button id="new-join-btn" class="ghost-btn">Join a different class</button>
+      `;
+      document.getElementById('join-form').style.display = 'none';
+
+      document.getElementById('continue-btn').addEventListener('click', () => {
+        window.location.href = 'case.html';
+      });
+      document.getElementById('new-join-btn').addEventListener('click', () => {
+        document.getElementById('returning-box').style.display = 'none';
+        document.getElementById('join-form').style.display = 'block';
+      });
+    }
+
+    document.getElementById('join-btn').addEventListener('click', async () => {
+      const code = document.getElementById('code-input').value.trim().toUpperCase();
+      const nickname = document.getElementById('nickname-input').value.trim();
+      const msgEl = document.getElementById('message');
+      const btn = document.getElementById('join-btn');
+
+      if(!code || !nickname){
+        msgEl.textContent = 'Please enter both a class code and a nickname.';
+        msgEl.className = 'message error';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Joining...';
+      msgEl.textContent = '';
+
+      // Look up the class by its join code
+      const { data: classData, error: classError } = await sb
+        .from('classes')
+        .select('id, name')
+        .eq('join_code', code)
+        .maybeSingle();
+
+      if(classError || !classData){
+        msgEl.textContent = 'That class code was not found. Double-check it with your teacher.';
+        msgEl.className = 'message error';
+        btn.disabled = false;
+        btn.textContent = 'Join Class';
+        return;
+      }
+
+      // Create an anonymous session for this student
+      const { data: sessionData, error: sessionError } = await sb
+        .from('student_sessions')
+        .insert({ class_id: classData.id, nickname: nickname })
+        .select()
+        .single();
+
+      if(sessionError){
+        msgEl.textContent = 'Something went wrong joining: ' + sessionError.message;
+        msgEl.className = 'message error';
+        btn.disabled = false;
+        btn.textContent = 'Join Class';
+        return;
+      }
+
+      // Save session locally so this device remembers who they are
+      localStorage.setItem('studentSession', JSON.stringify({
+        sessionId: sessionData.id,
+        nickname: nickname,
+        className: classData.name,
+        classId: classData.id
+      }));
+
+      window.location.href = 'case.html';
+    });
+  </script>
+</body>
+</html>
