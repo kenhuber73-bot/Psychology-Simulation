@@ -23,6 +23,11 @@
     width:100%; padding:10px; margin:8px 0 14px; border:1px solid #2B2A25;
     border-radius:5px; font-size:0.95rem; box-sizing:border-box;
   }
+  select{
+    width:100%; padding:10px; margin:8px 0 14px; border:1px solid #2B2A25;
+    border-radius:5px; font-size:0.95rem; box-sizing:border-box; background:white;
+    font-family:inherit;
+  }
   button{
     padding:10px 18px; background:#2F4858; color:white; border:none;
     border-radius:6px; font-size:0.9rem; cursor:pointer;
@@ -62,6 +67,10 @@
     <div class="card" id="create-class-card" style="display:none;">
       <h2>Create a Class</h2>
       <input type="text" id="class-name-input" placeholder="e.g. Psych 4B, Period 2">
+      <select id="activity-select">
+        <option value="jordan_gad_mdd_v1">Anxiety vs. Depression — Jordan R.</option>
+        <option value="alex_adhd_gad_v1">ADHD vs. Anxiety — Alex M.</option>
+      </select>
       <button id="create-class-btn">Create Class</button>
       <div id="create-message"></div>
     </div>
@@ -91,6 +100,11 @@
       }
       return code;
     }
+
+    const activityLabels = {
+      jordan_gad_mdd_v1: 'Anxiety vs. Depression — Jordan R.',
+      alex_adhd_gad_v1: 'ADHD vs. Anxiety — Alex M.'
+    };
 
     async function init(){
       const { data: { session } } = await sb.auth.getSession();
@@ -140,8 +154,12 @@
       data.forEach(cls => {
         const row = document.createElement('div');
         row.className = 'class-item';
+        const activityLabel = activityLabels[cls.activity_id] || cls.activity_id;
         row.innerHTML = `
-          <span class="class-name">${cls.name}</span>
+          <span>
+            <span class="class-name">${cls.name}</span><br>
+            <span style="font-size:0.78rem; color:#5C5648;">${activityLabel}</span>
+          </span>
           <span class="join-code">${cls.join_code}</span>
         `;
         row.addEventListener('click', () => showResults(cls));
@@ -220,11 +238,13 @@
       btn.textContent = 'Creating...';
 
       const joinCode = generateJoinCode();
+      const activityId = document.getElementById('activity-select').value;
 
       const { error } = await sb.from('classes').insert({
         teacher_id: currentUser.id,
         name: name,
-        join_code: joinCode
+        join_code: joinCode,
+        activity_id: activityId
       });
 
       btn.disabled = false;
