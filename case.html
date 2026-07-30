@@ -137,6 +137,15 @@
   .why-count{font-family:'Courier Prime', monospace;font-size:0.75rem;color:var(--ink-soft);margin-top:12px;}
   .debrief{margin-top:22px;border-top:1px dashed var(--line);padding-top:16px;}
   .debrief h3{margin-top:0;}
+  .supervisor-note{
+    background:var(--folder); border-left:4px solid var(--ink); border-radius:0 6px 6px 0;
+    padding:16px 18px; margin:16px 0; font-family:'Courier Prime', monospace; font-size:0.9rem;
+    line-height:1.6; color:var(--ink);
+  }
+  .supervisor-note p{margin:0;}
+  .supervisor-signature{
+    margin-top:10px !important; text-align:right; font-style:italic; color:var(--ink-soft); font-size:0.85rem;
+  }
   .save-status{font-family:'Courier Prime', monospace;font-size:0.8rem;margin-top:16px;padding:10px 14px;border-radius:5px;}
   .save-status.saved{background:#E4EDE1;color:#3E5233;}
   .save-status.error{background:#F4E1E1;color:#7A2E2E;}
@@ -427,6 +436,39 @@ function buildApp(CASE){
       badge.innerHTML = '<span class="verdict miss">Worth Reconsidering</span>';
       title.textContent = dx.name + ' — not the best fit';
     }
+
+    // Supervisor reaction — based on thoroughness (share of questions asked), not just correctness
+    const thoroughness = state.asked.size / CASE.questions.length;
+    let tier;
+    if(thoroughness >= 0.75) tier = 'thorough';
+    else if(thoroughness >= 0.5) tier = 'moderate';
+    else tier = 'minimal';
+
+    const supervisorLines = {
+      correct: {
+        thorough: `Nice work. You built this diagnosis on a genuinely full picture — you covered most of the interview before committing to an impression, and it shows. That's the habit that separates a good clinician from a lucky guess.`,
+        moderate: `You landed on the right diagnosis, and that's worth something — but you got there with less than you could have gathered. It happened to work out this time; make sure it's the thoroughness doing the work next time, not the luck.`,
+        minimal: `You got the right answer, but honestly, you didn't give yourself much to work with — only a handful of questions asked before jumping to a conclusion. In a real interview, that's how confident-sounding wrong diagnoses happen. This one just happened to land.`
+      },
+      incorrect: {
+        thorough: `You did the hard part right — you explored almost everything before committing. The diagnosis itself didn't land, but that's a process I can work with. A misread on a solid workup is a much easier fix than a rushed one.`,
+        moderate: `You explored a fair amount, but not quite enough to catch the full pattern here. Worth going back through and asking what you skipped — the answer was likely sitting in an area you didn't get to.`,
+        minimal: `This is the one I want you to sit with: you asked very few questions before deciding. The diagnosis was off, and I don't think that's a coincidence. Slow down next time — the evidence really does change the answer.`
+      }
+    };
+
+    let supervisorText = supervisorLines[dx.correct ? 'correct' : 'incorrect'][tier];
+
+    const notesEmpty = document.getElementById('clinical-notes').value.trim().length === 0;
+    if(notesEmpty){
+      supervisorText += ` One more thing — you didn't write anything in your notes during the interview. Since each answer disappears once you move on, that's going to catch up with you on a longer case.`;
+    }
+
+    const supervisorBlock = document.createElement('div');
+    supervisorBlock.className = 'supervisor-note';
+    supervisorBlock.innerHTML = `<p>${supervisorText}</p><p class="supervisor-signature">— Dr. Alvarez, Clinical Supervisor</p>`;
+    body.appendChild(supervisorBlock);
+
     const mainExplain = document.createElement('p');
     mainExplain.textContent = dx.explain;
     body.appendChild(mainExplain);
