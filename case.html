@@ -235,18 +235,17 @@ function buildApp(CASE){
         <div class="layout">
           <div>
             <div class="choice-list" id="question-list"></div>
-            <div id="notes-log"></div>
           </div>
           <div>
             <div class="clipboard">
+              <h3>Interview Responses</h3>
+              <p class="clipboard-hint">Shows the most recent answer. It disappears once you ask your next question — write down what matters before moving on.</p>
+              <div id="notes-log"></div>
+            </div>
+            <div class="clipboard" style="margin-top:16px;">
               <h3>Your Clinical Notes</h3>
               <p class="clipboard-hint">Jot down symptoms and observations as you hear them. Nothing is filled in for you.</p>
               <textarea class="notes-textarea" id="clinical-notes" placeholder="Write what you're noticing..."></textarea>
-            </div>
-            <div class="clipboard" style="margin-top:16px;">
-              <h3>Safety Screening</h3>
-              <p class="clipboard-hint">Not diagnostic evidence — standard practice, tracked separately.</p>
-              <ul class="checklist" id="safety-checklist"></ul>
             </div>
           </div>
         </div>
@@ -304,7 +303,6 @@ function buildApp(CASE){
   const allLabels = Object.assign({}, CASE.gadLabels, CASE.mddLabels, CASE.otherLabels);
   const trueCriteria = new Set(Object.keys(CASE.symptomTruth).filter(k => CASE.symptomTruth[k]));
   const studentChecks = new Set();
-  const safetyChecks = new Set();
   let selectedDx = null;
   const whyChoices = new Set();
 
@@ -328,36 +326,10 @@ function buildApp(CASE){
     note.className = 'note';
     note.textContent = q.note;
     notesLog.appendChild(note);
-    const hint = document.createElement('p');
-    hint.style.fontSize = '0.78rem';
-    hint.style.color = 'var(--ink-soft)';
-    hint.style.marginTop = '6px';
-    hint.textContent = 'This note disappears once you ask another question — write down what matters before moving on.';
-    notesLog.appendChild(hint);
 
     document.getElementById('progress-text').textContent = `${state.asked.size} of ${CASE.questions.length} areas explored`;
     document.getElementById('btn-to-synthesis').disabled = state.asked.size < 3;
   }
-
-  const safetyEl = document.getElementById('safety-checklist');
-  (() => {
-    const li = document.createElement('li');
-    li.id = 'crit-safety_checked';
-    li.setAttribute('role','checkbox'); li.setAttribute('aria-checked','false'); li.tabIndex = 0;
-    li.innerHTML = `<span class="box"></span><span>${CASE.safetyLabel}</span>`;
-    const toggle = () => {
-      if(safetyChecks.has('safety_checked')){
-        safetyChecks.delete('safety_checked');
-        li.classList.remove('checked'); li.querySelector('.box').textContent=''; li.setAttribute('aria-checked','false');
-      } else {
-        safetyChecks.add('safety_checked');
-        li.classList.add('checked'); li.querySelector('.box').textContent='✓'; li.setAttribute('aria-checked','true');
-      }
-    };
-    li.addEventListener('click', toggle);
-    li.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggle(); } });
-    safetyEl.appendChild(li);
-  })();
 
   function buildChecklist(containerEl, labelMap){
     Object.entries(labelMap).forEach(([key,label]) => {
@@ -504,8 +476,7 @@ function buildApp(CASE){
 
     const debrief = document.createElement('div');
     debrief.className = 'debrief';
-    debrief.innerHTML = `<h3>Debrief</h3><p style="font-size:0.85rem;color:var(--ink-soft);">${CASE.debriefTrapText}</p>
-    <p style="font-size:0.85rem;color:var(--ink-soft);">${safetyChecks.has('safety_checked') ? 'You confirmed a safety screen during the interview — that\'s standard practice regardless of what the diagnosis turns out to be.' : 'You didn\'t mark the safety screen as completed. In a real interview, this is asked every time, independent of how likely self-harm seems.'}</p>`;
+    debrief.innerHTML = `<h3>Debrief</h3><p style="font-size:0.85rem;color:var(--ink-soft);">${CASE.debriefTrapText}</p>`;
     body.appendChild(debrief);
 
     goTo('outcome');
@@ -545,7 +516,7 @@ function buildApp(CASE){
   document.getElementById('btn-to-dx').addEventListener('click', () => goTo('dx'));
 
   document.getElementById('btn-restart').addEventListener('click', () => {
-    state.asked.clear(); studentChecks.clear(); whyChoices.clear(); safetyChecks.clear(); selectedDx = null;
+    state.asked.clear(); studentChecks.clear(); whyChoices.clear(); selectedDx = null;
     document.getElementById('notes-log').innerHTML = '';
     document.getElementById('clinical-notes').value = '';
 
