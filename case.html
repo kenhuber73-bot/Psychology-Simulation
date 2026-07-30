@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Case File 0416 — Diagnostic Interview Simulation</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1E9D2;
+    --paper-dark:#E3D5AE;
+    --folder:#D8C393;
+    --ink:#2B2A25;
+    --ink-soft:#5C5648;
+    --navy:#2F4858;
+    --red:#A13D3D;
+    --sage:#5E7A52;
+    --line:#C7B78E;
+    --white-card:#FBF7EC;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(0,0,0,0.03) 0, transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(0,0,0,0.03) 0, transparent 40%);
+    color:var(--ink);
+    font-family:'Space Grotesk', sans-serif;
+    min-height:100vh;
+    padding:28px 16px 60px;
+  }
+  .wrap{max-width:920px;margin:0 auto;}
+
+  .session-banner{
+    background:var(--navy); color:var(--white-card); font-family:'Courier Prime', monospace;
+    font-size:0.8rem; padding:8px 16px; border-radius:6px; margin-bottom:14px;
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;
+  }
+  .session-banner a{color:var(--white-card); opacity:0.8;}
+
+  .masthead{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:3px solid var(--ink);
+    padding-bottom:10px;margin-bottom:6px;
+  }
+  .masthead h1{
+    font-size:1.15rem;letter-spacing:0.08em;text-transform:uppercase;
+    margin:0;font-weight:700;
+  }
+  .case-num{font-family:'Courier Prime', monospace;font-size:0.85rem;color:var(--ink-soft);}
+  .subline{
+    font-family:'Courier Prime', monospace;font-size:0.78rem;color:var(--ink-soft);
+    margin-bottom:26px;letter-spacing:0.02em;
+  }
+
+  .tabs{display:flex;gap:6px;margin-bottom:-1px;flex-wrap:wrap;}
+  .tab{
+    font-family:'Courier Prime', monospace;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;
+    padding:7px 14px;border:1px solid var(--line);border-bottom:none;
+    background:var(--paper-dark);color:var(--ink-soft);border-radius:6px 6px 0 0;
+    opacity:0.55;
+  }
+  .tab.active{background:var(--white-card);color:var(--ink);opacity:1;font-weight:700;border-color:var(--ink);}
+
+  .panel{
+    background:var(--white-card);
+    border:1px solid var(--ink);
+    border-radius:0 8px 8px 8px;
+    padding:28px;
+    box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+  }
+
+  .screen{display:none;}
+  .screen.active{display:block;animation:fadein 0.35s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+  .stamp{
+    display:inline-block;border:2px solid var(--red);color:var(--red);
+    font-family:'Courier Prime', monospace;font-weight:700;font-size:0.72rem;
+    text-transform:uppercase;letter-spacing:0.08em;padding:4px 10px;border-radius:3px;
+    transform:rotate(-3deg);margin-bottom:16px;
+  }
+
+  h2{font-size:1.3rem;margin:0 0 12px;}
+  h3{font-size:0.95rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-soft);margin:22px 0 10px;}
+  p{line-height:1.6;font-size:0.98rem;}
+  .note{
+    font-family:'Courier Prime', monospace;
+    background:var(--paper-dark);
+    border-left:3px solid var(--navy);
+    padding:12px 16px;margin:10px 0;font-size:0.9rem;line-height:1.55;
+    border-radius:0 4px 4px 0;
+  }
+
+  .choice-list{display:flex;flex-direction:column;gap:10px;margin-top:16px;}
+  button.choice{
+    text-align:left;
+    background:var(--white-card);
+    border:1px solid var(--ink);
+    border-radius:6px;
+    padding:12px 16px;
+    font-family:'Space Grotesk', sans-serif;font-size:0.92rem;font-weight:500;
+    cursor:pointer;color:var(--ink);
+    transition:transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    box-shadow:2px 2px 0 rgba(43,42,37,0.15);
+  }
+  button.choice:hover:not(:disabled){transform:translate(-1px,-1px);box-shadow:3px 3px 0 rgba(43,42,37,0.25);background:var(--paper);}
+  button.choice:focus-visible{outline:2px solid var(--navy);outline-offset:2px;}
+  button.choice:disabled{opacity:0.4;cursor:default;}
+  button.choice.asked{opacity:0.45;}
+  button.choice .tag{
+    display:block;font-family:'Courier Prime', monospace;font-size:0.7rem;color:var(--ink-soft);margin-top:3px;
+  }
+
+  .primary-btn{
+    font-family:'Space Grotesk', sans-serif;font-weight:600;font-size:0.92rem;
+    background:var(--navy);color:var(--white-card);border:none;border-radius:6px;
+    padding:12px 22px;cursor:pointer;margin-top:20px;box-shadow:2px 2px 0 rgba(43,42,37,0.3);
+  }
+  .primary-btn:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 rgba(43,42,37,0.4);}
+  .primary-btn:disabled{opacity:0.35;cursor:not-allowed;transform:none;box-shadow:none;}
+  .ghost-btn{
+    font-family:'Courier Prime', monospace;font-size:0.8rem;background:none;border:1px solid var(--ink-soft);
+    color:var(--ink-soft);border-radius:5px;padding:8px 14px;cursor:pointer;margin-top:14px;
+  }
+
+  .layout{display:grid;grid-template-columns:1fr;gap:22px;}
+  @media(min-width:720px){.layout{grid-template-columns:1.5fr 1fr;}}
+
+  .notes-textarea{
+    width:100%;min-height:160px;font-family:'Courier Prime', monospace;font-size:0.88rem;
+    background:var(--white-card);border:1px solid var(--ink);border-radius:6px;padding:12px;
+    line-height:1.5;resize:vertical;color:var(--ink);
+  }
+  .notes-textarea:focus-visible{outline:2px solid var(--navy);outline-offset:1px;}
+
+  .clipboard{
+    background:var(--folder);border:1px solid var(--ink);border-radius:8px;
+    padding:16px 18px;height:fit-content;
+  }
+  .clipboard h3{margin-top:0;color:var(--ink);}
+  .clipboard-hint{font-family:'Courier Prime', monospace;font-size:0.72rem;color:var(--ink-soft);margin:-4px 0 12px;line-height:1.5;}
+
+  .checklist{list-style:none;margin:0;padding:0;font-family:'Courier Prime', monospace;font-size:0.82rem;}
+  .checklist li{
+    display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px dashed rgba(43,42,37,0.25);
+    color:var(--ink-soft);cursor:pointer;user-select:none;background:none;border-top:none;border-left:none;border-right:none;
+    width:100%;font-family:'Courier Prime', monospace;font-size:0.82rem;text-align:left;
+  }
+  .checklist li:hover{color:var(--ink);}
+  .checklist li:focus-visible{outline:2px solid var(--navy);outline-offset:2px;}
+  .checklist li.checked{color:var(--ink);font-weight:700;}
+  .checklist .box{
+    flex:0 0 16px;height:16px;border:1.5px solid var(--ink-soft);border-radius:3px;margin-top:1px;
+    display:flex;align-items:center;justify-content:center;font-size:0.7rem;
+  }
+  .checklist li.checked .box{background:var(--sage);border-color:var(--sage);color:white;}
+
+  .progress{font-family:'Courier Prime', monospace;font-size:0.75rem;color:var(--ink-soft);margin-top:14px;}
+
+  .notes-recap{
+    font-family:'Courier Prime', monospace;font-size:0.88rem;line-height:1.6;
+    background:var(--paper-dark);border-left:3px solid var(--navy);border-radius:0 4px 4px 0;
+    padding:14px 16px;white-space:pre-wrap;margin:12px 0 22px;color:var(--ink);
+  }
+  .notes-recap.empty{color:var(--ink-soft);font-style:italic;}
+
+  .symptom-columns{display:grid;grid-template-columns:1fr;gap:18px;}
+  @media(min-width:720px){.symptom-columns{grid-template-columns:1fr 1fr;}}
+  .symptom-columns .clipboard{margin-bottom:0;}
+
+  .dx-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:16px;}
+  @media(min-width:640px){.dx-grid{grid-template-columns:1fr 1fr;}}
+  button.dx{
+    text-align:left;background:var(--white-card);border:1px solid var(--ink);border-radius:6px;
+    padding:16px;cursor:pointer;font-family:'Space Grotesk', sans-serif;
+  }
+  button.dx strong{display:block;font-size:1rem;margin-bottom:4px;}
+  button.dx span{font-size:0.82rem;color:var(--ink-soft);font-family:'Courier Prime', monospace;}
+  button.dx:hover{background:var(--paper);}
+
+  .verdict{
+    display:inline-block;padding:6px 14px;border-radius:4px;font-family:'Courier Prime', monospace;
+    font-weight:700;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px;
+  }
+  .verdict.correct{background:var(--sage);color:white;}
+  .verdict.partial{background:#B98A3E;color:white;}
+  .verdict.miss{background:var(--red);color:white;}
+
+  .why-grid{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 4px;}
+  button.why-chip{
+    font-family:'Courier Prime', monospace;font-size:0.82rem;
+    background:var(--white-card);border:1.5px solid var(--ink-soft);border-radius:20px;
+    padding:8px 16px;cursor:pointer;color:var(--ink-soft);
+  }
+  button.why-chip:hover:not(:disabled){border-color:var(--ink);color:var(--ink);}
+  button.why-chip.selected{background:var(--navy);border-color:var(--navy);color:white;font-weight:700;}
+  button.why-chip:disabled:not(.selected){opacity:0.35;cursor:not-allowed;}
+  .why-count{font-family:'Courier Prime', monospace;font-size:0.75rem;color:var(--ink-soft);margin-top:12px;}
+  .debrief{margin-top:22px;border-top:1px dashed var(--line);padding-top:16px;}
+  .debrief h3{margin-top:0;}
+
+  .save-status{
+    font-family:'Courier Prime', monospace;font-size:0.8rem;margin-top:16px;padding:10px 14px;
+    border-radius:5px;
+  }
+  .save-status.saved{background:#E4EDE1;color:#3E5233;}
+  .save-status.error{background:#F4E1E1;color:#7A2E2E;}
+
+  footer{
+    text-align:center;font-family:'Courier Prime', monospace;font-size:0.72rem;color:var(--ink-soft);
+    margin-top:30px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="session-banner" id="session-banner">Loading session...</div>
+
+  <div class="masthead">
+    <h1>School Psychological Services — Case File</h1>
+    <span class="case-num">FILE #0416</span>
+  </div>
+  <div class="subline">CONFIDENTIAL &middot; DIAGNOSTIC INTERVIEW TRAINING SIMULATION &middot; FICTIONAL CLIENT</div>
+
+  <div class="tabs">
+    <div class="tab active" id="tab-intro">Referral</div>
+    <div class="tab" id="tab-interview">Interview</div>
+    <div class="tab" id="tab-synthesis">Symptoms</div>
+    <div class="tab" id="tab-dx">Diagnosis</div>
+    <div class="tab" id="tab-why">Reasoning</div>
+    <div class="tab" id="tab-outcome">Outcome</div>
+  </div>
+
+  <div class="panel">
+
+    <!-- SCREEN 1: INTRO -->
+    <div class="screen active" id="screen-intro">
+      <span class="stamp">New Referral</span>
+      <h2>Referral Note</h2>
+      <div class="note">
+        Client: Jordan R., age 16, 10th grade.<br>
+        Referred by: Homeroom teacher, following a conversation with the school counselor.<br><br>
+        Reason for referral: "Jordan's grades have dropped over the last two terms. Teachers report Jordan seems distracted and asks to leave class to go to the nurse's office fairly often, usually mentioning a stomachache or headache. A friend mentioned Jordan has been more withdrawn lately. Teacher would like this looked into."
+      </div>
+      <p>You are the psychology intern assigned to conduct the initial diagnostic interview. Ask thoughtful questions, take your own notes on what you hear, and later you'll synthesize those notes into a working diagnostic impression — the same process a clinician follows before ever settling on a label.</p>
+      <p>There's no single "gotcha" question. Real interviews involve gathering enough information across several areas before a pattern becomes clear.</p>
+      <button class="primary-btn" id="btn-start">Begin the interview →</button>
+    </div>
+
+    <!-- SCREEN 2: INTERVIEW -->
+    <div class="screen" id="screen-interview">
+      <h2>Interview Room</h2>
+      <p>Choose questions to ask Jordan. As you go, write down what you're noticing in the notes box — in your own words. You'll need these notes for the next step.</p>
+
+      <div class="layout">
+        <div>
+          <div class="choice-list" id="question-list"></div>
+          <div id="notes-log"></div>
+        </div>
+        <div>
+          <div class="clipboard">
+            <h3>Your Clinical Notes</h3>
+            <p class="clipboard-hint">Jot down symptoms and observations as you hear them. Nothing is filled in for you.</p>
+            <textarea class="notes-textarea" id="clinical-notes" placeholder="e.g. Jordan describes worry about several unrelated things, going on for months..."></textarea>
+          </div>
+          <div class="clipboard" style="margin-top:16px;">
+            <h3>Safety Screening</h3>
+            <p class="clipboard-hint">Not diagnostic evidence — standard practice, tracked separately.</p>
+            <ul class="checklist" id="safety-checklist"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="progress" id="progress-text">0 of 8 areas explored</div>
+      <button class="primary-btn" id="btn-to-synthesis" disabled>Review your notes →</button>
+    </div>
+
+    <!-- SCREEN 3: SYNTHESIS -->
+    <div class="screen" id="screen-synthesis">
+      <h2>Synthesize Your Findings</h2>
+      <p>Here's what you wrote during the interview. Using your own notes, check off which symptoms you believe Jordan's case actually meets.</p>
+      <div class="notes-recap" id="notes-recap"></div>
+
+      <div class="symptom-columns">
+        <div class="clipboard">
+          <h3>Generalized Anxiety — Symptom Checklist</h3>
+          <ul class="checklist" id="gad-checklist"></ul>
+        </div>
+        <div class="clipboard">
+          <h3>Major Depression — Symptom Checklist</h3>
+          <ul class="checklist" id="mdd-checklist"></ul>
+        </div>
+      </div>
+
+      <div class="clipboard" style="margin-top:18px;">
+        <h3>Other Considerations</h3>
+        <ul class="checklist" id="other-checklist"></ul>
+      </div>
+
+      <button class="primary-btn" id="btn-to-dx">Form a diagnosis →</button>
+    </div>
+
+    <!-- SCREEN 4: DIAGNOSIS -->
+    <div class="screen" id="screen-dx">
+      <h2>What's your diagnostic impression?</h2>
+      <p>Based on your notes and checklist, which best fits the pattern of symptoms?</p>
+      <div class="dx-grid" id="dx-grid"></div>
+    </div>
+
+    <!-- SCREEN 5: WHY -->
+    <div class="screen" id="screen-why">
+      <h2>What made up your mind?</h2>
+      <p>From what you personally checked off, pick up to 3 pieces of evidence that mattered most to your diagnosis.</p>
+      <div id="why-options"></div>
+      <button class="primary-btn" id="btn-why-continue">See outcome →</button>
+    </div>
+
+    <!-- SCREEN 6: OUTCOME -->
+    <div class="screen" id="screen-outcome">
+      <div id="verdict-badge"></div>
+      <h2 id="outcome-title"></h2>
+      <div id="outcome-body"></div>
+      <div id="save-status" class="save-status">Saving your results...</div>
+      <button class="ghost-btn" id="btn-restart">↺ Start over with a new intern</button>
+    </div>
+
+  </div>
+
+  <footer>Fictional case for classroom use &middot; not a diagnostic tool &middot; always defer to a licensed clinician for real assessment</footer>
+</div>
+
+<script src="js/supabase-config.js"></script>
+<script>
+// ---------- session check ----------
+const rawSession = localStorage.getItem('studentSession');
+let studentSession = null;
+
+if(!rawSession){
+  window.location.href = 'join.html';
+} else {
+  studentSession = JSON.parse(rawSession);
+  document.getElementById('session-banner').innerHTML =
+    `Signed in as <strong>${studentSession.nickname}</strong> — ${studentSession.className} &nbsp;|&nbsp; <a href="join.html">Not you? Switch class</a>`;
+}
+
+const state = { asked: new Set() };
+
+const questions = [
+  {
+    id:'sleep', tag:'Sleep & rest',
+    text:'Ask about sleep patterns',
+    note:'"I have a hard time falling asleep most nights — my mind just keeps going over stuff. I\'m tired a lot during the day."'
+  },
+  {
+    id:'mood', tag:'Mood & interest',
+    text:'Ask whether Jordan still enjoys things',
+    note:'"I still like hanging out with my friends and playing guitar when I get the chance. I don\'t feel sad, exactly — more like keyed up. It\'s hard to just relax."'
+  },
+  {
+    id:'depression_screen', tag:'Depression screen',
+    text:'Ask about hopelessness, self-worth, and appetite',
+    note:'"No, I don\'t feel hopeless, or like something\'s wrong with me. I just can\'t relax. My appetite\'s the same as always — I still eat lunch with my friends every day."'
+  },
+  {
+    id:'worry', tag:'Nature of the worry',
+    text:'Ask what Jordan worries about',
+    note:'"Kind of everything, honestly. Grades, whether my friends are mad at me, if I locked the door, if my parents are okay when they\'re driving. It jumps around. I know some of it doesn\'t make sense but I can\'t turn it off."'
+  },
+  {
+    id:'duration', tag:'Timeline',
+    text:'Ask how long this has been going on',
+    note:'"Since around the start of the school year — so about seven months now. It\'s not really tied to one specific thing that happened."'
+  },
+  {
+    id:'physical', tag:'Physical symptoms',
+    text:'Ask about the stomachaches and headaches',
+    note:'"Yeah, my stomach gets tight and my shoulders hurt by the end of the day. The nurse checked me out and said there\'s nothing physically wrong. I also have a hard time focusing in class because my mind keeps drifting back to whatever I\'m worried about."'
+  },
+  {
+    id:'trigger', tag:'Possible trigger',
+    text:'Ask if anything specific happened around when this started',
+    note:'"There was a big regional swim meet back in October — I was really stressed about that. But thinking about it more... I was already worried about a bunch of unrelated stuff before that, and it hasn\'t let up since the meet ended months ago."'
+  },
+  {
+    id:'safety', tag:'Safety check',
+    text:'Ask directly about safety — any thoughts of self-harm',
+    note:'"No, nothing like that. I just feel wound up all the time, not hopeless." (Good practice: this is a screening question worth asking in every real interview, regardless of the answer.)'
+  }
+];
+
+const safetyLabel = 'Denies current thoughts of self-harm';
+
+const symptomTruth = {
+  excessive_worry:true,
+  multiple_domains:true,
+  restlessness:true,
+  muscle_tension:true,
+  concentration:true,
+  sleep:true,
+  duration:true,
+  depressed_mood:false,
+  anhedonia:false,
+  appetite_change:false,
+  worthlessness_hopelessness:false,
+  specific_stressor:false
+};
+
+const gadLabels = {
+  excessive_worry:'Excessive, hard-to-control worry',
+  multiple_domains:'Worry spans multiple areas of life',
+  restlessness:'Restlessness or feeling "keyed up"',
+  muscle_tension:'Muscle tension',
+  concentration:'Trouble concentrating',
+  sleep:'Sleep disturbance',
+  duration:'Present most days for 6+ months'
+};
+const mddLabels = {
+  depressed_mood:'Depressed or sad mood, most of the day',
+  anhedonia:'Loss of interest or pleasure in activities',
+  appetite_change:'Significant appetite or weight change',
+  worthlessness_hopelessness:'Feelings of worthlessness, guilt, or hopelessness'
+};
+const otherLabels = {
+  specific_stressor:'Symptoms tied to one identifiable stressor'
+};
+const allLabels = Object.assign({}, gadLabels, mddLabels, otherLabels);
+
+const trueCriteria = new Set(Object.keys(symptomTruth).filter(k=>symptomTruth[k]));
+const studentChecks = new Set();
+
+const dxOptions = [
+  {
+    id:'gad', name:'Generalized Anxiety Disorder',
+    blurb:'Persistent, hard-to-control worry across several areas of life, with physical signs like tension or restlessness',
+    correct:true,
+    explain:`Jordan's pattern fits generalized anxiety well: worry that jumps between several unrelated topics (school, relationships, family safety), lasting well over six months, paired with muscle tension, restlessness, poor sleep, and trouble concentrating — all without the flat, joyless mood or loss of interest that would point toward depression instead. The stomachaches and headaches are common physical companions to chronic worry in teens, which is often why anxiety gets mistaken for a physical illness at first.`
+  },
+  {
+    id:'mdd', name:'Major Depressive Disorder',
+    blurb:'Persistent low mood or loss of interest in most activities, most of the day, most days',
+    correct:false,
+    explain:`Depression was a reasonable hypothesis to test given the grade drop and withdrawal, but Jordan explicitly still enjoys friends and guitar — that preserved interest, combined with a "keyed up" rather than flat or hopeless mood, points away from depression and toward an anxiety pattern instead. Grades slipping and pulling back from friends can be a byproduct of anxiety too, not just depression — which is exactly why it's worth asking about mood and interest directly rather than assuming from the referral note alone.`
+  },
+  {
+    id:'adj', name:'Adjustment Disorder',
+    blurb:'Emotional or behavioral symptoms that develop in response to a specific identifiable stressor, within three months of it',
+    correct:false,
+    explain:`Adjustment disorder is diagnosed in reaction to a specific, identifiable stressor — a move, a breakup, a family event. Jordan's worry isn't tied to one triggering event; it's spread across many unconnected areas of life and has been building gradually for about seven months, which points toward a more generalized pattern rather than a reaction to one specific change.`
+  },
+  {
+    id:'normal', name:'Normal Adolescent Stress — no diagnosis needed',
+    blurb:'Everyday stress that comes and goes without significantly interfering with daily functioning',
+    correct:false,
+    explain:`Some stress is a normal part of being 16 — the difference here is impact and control. Jordan describes worry that's hard to turn off, has lasted months, and is now affecting grades, sleep, and physical health. That combination of duration, uncontrollability, and functional impact is what separates an everyday stressful patch from a pattern worth a clinical picture.`
+  }
+];
+
+// ---------- interview screen ----------
+const qList = document.getElementById('question-list');
+questions.forEach(q=>{
+  const btn = document.createElement('button');
+  btn.className = 'choice';
+  btn.innerHTML = `${q.text}<span class="tag">${q.tag}</span>`;
+  btn.addEventListener('click', ()=>askQuestion(q, btn));
+  qList.appendChild(btn);
+});
+
+function askQuestion(q, btn){
+  if(state.asked.has(q.id)) return;
+  state.asked.add(q.id);
+  btn.classList.add('asked');
+  btn.disabled = true;
+
+  const note = document.createElement('div');
+  note.className = 'note';
+  note.textContent = q.note;
+  document.getElementById('notes-log').appendChild(note);
+
+  document.getElementById('progress-text').textContent = `${state.asked.size} of ${questions.length} areas explored`;
+  document.getElementById('btn-to-synthesis').disabled = state.asked.size < 3;
+}
+
+const safetyChecks = new Set();
+const safetyEl = document.getElementById('safety-checklist');
+(()=>{
+  const li = document.createElement('li');
+  li.id = 'crit-safety_checked';
+  li.setAttribute('role','checkbox');
+  li.setAttribute('aria-checked','false');
+  li.tabIndex = 0;
+  li.innerHTML = `<span class="box"></span><span>${safetyLabel}</span>`;
+  const toggle = ()=>{
+    if(safetyChecks.has('safety_checked')){
+      safetyChecks.delete('safety_checked');
+      li.classList.remove('checked'); li.querySelector('.box').textContent=''; li.setAttribute('aria-checked','false');
+    } else {
+      safetyChecks.add('safety_checked');
+      li.classList.add('checked'); li.querySelector('.box').textContent='✓'; li.setAttribute('aria-checked','true');
+    }
+  };
+  li.addEventListener('click', toggle);
+  li.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggle(); } });
+  safetyEl.appendChild(li);
+})();
+
+// ---------- synthesis screen ----------
+function buildChecklist(containerEl, labelMap){
+  Object.entries(labelMap).forEach(([key,label])=>{
+    if(document.getElementById('crit-'+key)) return;
+    const li = document.createElement('li');
+    li.id = 'crit-'+key;
+    li.setAttribute('role','checkbox');
+    li.setAttribute('aria-checked','false');
+    li.tabIndex = 0;
+    li.innerHTML = `<span class="box"></span><span>${label}</span>`;
+    const toggle = ()=>{
+      if(studentChecks.has(key)){
+        studentChecks.delete(key);
+        li.classList.remove('checked'); li.querySelector('.box').textContent=''; li.setAttribute('aria-checked','false');
+      } else {
+        studentChecks.add(key);
+        li.classList.add('checked'); li.querySelector('.box').textContent='✓'; li.setAttribute('aria-checked','true');
+      }
+    };
+    li.addEventListener('click', toggle);
+    li.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggle(); } });
+    containerEl.appendChild(li);
+  });
+}
+buildChecklist(document.getElementById('gad-checklist'), gadLabels);
+buildChecklist(document.getElementById('mdd-checklist'), mddLabels);
+buildChecklist(document.getElementById('other-checklist'), otherLabels);
+
+function renderSynthesis(){
+  const notesVal = document.getElementById('clinical-notes').value.trim();
+  const recap = document.getElementById('notes-recap');
+  if(notesVal){
+    recap.textContent = notesVal;
+    recap.classList.remove('empty');
+  } else {
+    recap.textContent = 'You didn\'t write any notes during the interview. That\'s okay — use what you remember from the transcript to fill out the checklist below.';
+    recap.classList.add('empty');
+  }
+}
+
+// ---------- diagnosis screen ----------
+let selectedDx = null;
+const whyChoices = new Set();
+
+const dxGrid = document.getElementById('dx-grid');
+dxOptions.forEach(dx=>{
+  const btn = document.createElement('button');
+  btn.className = 'dx';
+  btn.innerHTML = `<strong>${dx.name}</strong><span>${dx.blurb}</span>`;
+  btn.addEventListener('click', ()=>{ selectedDx = dx; renderWhyScreen(); goTo('why'); });
+  dxGrid.appendChild(btn);
+});
+
+function renderWhyScreen(){
+  whyChoices.clear();
+  const container = document.getElementById('why-options');
+  container.innerHTML = '';
+
+  if(studentChecks.size === 0){
+    container.innerHTML = '<p>You didn\'t check off any checklist evidence — that\'s okay, just continue to see how your diagnosis holds up.</p>';
+    return;
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'why-grid';
+  [...studentChecks].forEach(key=>{
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'why-chip';
+    chip.textContent = allLabels[key];
+    chip.addEventListener('click', ()=>toggleWhy(key, chip));
+    grid.appendChild(chip);
+  });
+  container.appendChild(grid);
+
+  const count = document.createElement('div');
+  count.className = 'why-count';
+  count.id = 'why-count';
+  count.textContent = '0 of 3 selected';
+  container.appendChild(count);
+}
+
+function toggleWhy(key, chip){
+  if(whyChoices.has(key)){
+    whyChoices.delete(key);
+    chip.classList.remove('selected');
+  } else {
+    if(whyChoices.size >= 3) return;
+    whyChoices.add(key);
+    chip.classList.add('selected');
+  }
+  document.getElementById('why-count').textContent = `${whyChoices.size} of 3 selected`;
+  document.querySelectorAll('.why-chip').forEach(c=>{
+    if(!c.classList.contains('selected')) c.disabled = whyChoices.size >= 3;
+  });
+}
+
+document.getElementById('btn-why-continue').addEventListener('click', ()=>showOutcome(selectedDx));
+
+// ---------- outcome screen ----------
+async function showOutcome(dx){
+  const badge = document.getElementById('verdict-badge');
+  const title = document.getElementById('outcome-title');
+  const body = document.getElementById('outcome-body');
+  body.innerHTML = '';
+
+  if(dx.correct){
+    badge.innerHTML = '<span class="verdict correct">Strong Fit</span>';
+    title.textContent = 'Diagnostic impression: ' + dx.name;
+  } else {
+    badge.innerHTML = '<span class="verdict miss">Worth Reconsidering</span>';
+    title.textContent = dx.name + ' — not the best fit';
+  }
+  const mainExplain = document.createElement('p');
+  mainExplain.textContent = dx.explain;
+  body.appendChild(mainExplain);
+
+  if(!dx.correct){
+    const correctOne = dxOptions.find(d=>d.correct);
+    const followup = document.createElement('div');
+    followup.className = 'note';
+    followup.innerHTML = `The best-fitting diagnosis for this case was <strong>${correctOne.name}</strong>. ${correctOne.explain}`;
+    body.appendChild(followup);
+  }
+
+  const coverage = document.createElement('p');
+  coverage.style.marginTop = '18px';
+  coverage.style.fontSize = '0.85rem';
+  coverage.style.color = 'var(--ink-soft)';
+  coverage.textContent = state.asked.size < questions.length
+    ? `You explored ${state.asked.size} of ${questions.length} interview areas. Try the case again and ask everything for the fullest picture.`
+    : `You explored every area of the interview — nice thorough work.`;
+  body.appendChild(coverage);
+
+  const matched = [...studentChecks].filter(c=>trueCriteria.has(c));
+  const missed = [...trueCriteria].filter(c=>!studentChecks.has(c));
+  const falsePos = [...studentChecks].filter(c=>!trueCriteria.has(c));
+
+  const scoreBlock = document.createElement('div');
+  scoreBlock.className = 'note';
+  let scoreHtml = `<strong>Checklist accuracy: ${matched.length} of ${trueCriteria.size} true symptoms correctly identified.</strong>`;
+  if(missed.length){
+    scoreHtml += `<br>Missed: ${missed.map(c=>allLabels[c]).join(', ')}.`;
+  }
+  if(falsePos.length){
+    scoreHtml += `<br>Checked but not actually supported: ${falsePos.map(c=>allLabels[c]).join(', ')} — worth re-reading those notes.`;
+  }
+  if(!missed.length && !falsePos.length){
+    scoreHtml += `<br>Clean read of the case — every box matched the evidence.`;
+  }
+  scoreBlock.innerHTML = scoreHtml;
+  body.appendChild(scoreBlock);
+
+  if(whyChoices.size > 0){
+    const reasonBlock = document.createElement('div');
+    reasonBlock.className = 'note';
+    const chosenLabels = [...whyChoices].map(k=>allLabels[k]);
+    let reasonHtml = `<strong>Your stated reasoning:</strong> ${chosenLabels.join(', ')}.`;
+
+    if(whyChoices.has('specific_stressor')){
+      reasonHtml += `<br><br>Worth a second look: you leaned on "tied to one identifiable stressor" as decisive. Re-reading that note, the worry was already present before the swim meet and continued well after it ended — so it wasn't really caused by one event. That's a common trap: a stressful event mentioned near the onset of symptoms doesn't automatically mean it's the cause.`;
+    } else if(studentChecks.has('specific_stressor')){
+      reasonHtml += `<br><br>Nice catch leaving "tied to one identifiable stressor" out of your key reasoning — the swim meet mention was a deliberate distractor. It didn't actually hold up as a single trigger once you read the full note.`;
+    }
+    reasonBlock.innerHTML = reasonHtml;
+    body.appendChild(reasonBlock);
+  }
+
+  const debrief = document.createElement('div');
+  debrief.className = 'debrief';
+  debrief.innerHTML = `<h3>Debrief</h3><p style="font-size:0.85rem;color:var(--ink-soft);">One note in this case was designed as a trap: the swim meet. It's easy to grab onto a specific event mentioned near where symptoms started and assume it's the cause — but a real trigger should explain the timing (starts after, often resolves once the stressor passes). Jordan's worry did neither. Watching for that gap between "mentioned nearby" and "actually explains it" is a habit worth building early.</p>
+  <p style="font-size:0.85rem;color:var(--ink-soft);">${safetyChecks.has('safety_checked') ? 'You confirmed a safety screen during the interview — that\'s standard practice regardless of what the diagnosis turns out to be.' : 'You didn\'t mark the safety screen as completed. In a real interview, this is asked every time, independent of how likely self-harm seems.'}</p>`;
+  body.appendChild(debrief);
+
+  goTo('outcome');
+
+  // Save the attempt to the database
+  const saveStatusEl = document.getElementById('save-status');
+  saveStatusEl.textContent = 'Saving your results...';
+  saveStatusEl.className = 'save-status';
+
+  const { error } = await sb.from('case_attempts').insert({
+    student_session_id: studentSession.sessionId,
+    case_id: 'jordan_gad_mdd_v1',
+    notes: document.getElementById('clinical-notes').value,
+    checklist_selections: [...studentChecks],
+    reasoning_selections: [...whyChoices],
+    diagnosis: dx.name,
+    was_correct: dx.correct
+  });
+
+  if(error){
+    saveStatusEl.textContent = 'Your results were not saved: ' + error.message + '. Take a screenshot to show your teacher just in case.';
+    saveStatusEl.className = 'save-status error';
+  } else {
+    saveStatusEl.textContent = 'Your results have been saved. Your teacher can see this in their dashboard.';
+    saveStatusEl.className = 'save-status saved';
+  }
+}
+
+// ---------- navigation ----------
+function goTo(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+document.getElementById('btn-start').addEventListener('click', ()=>goTo('interview'));
+document.getElementById('btn-to-synthesis').addEventListener('click', ()=>{ renderSynthesis(); goTo('synthesis'); });
+document.getElementById('btn-to-dx').addEventListener('click', ()=>goTo('dx'));
+
+document.getElementById('btn-restart').addEventListener('click', ()=>{
+  state.asked.clear(); studentChecks.clear(); whyChoices.clear(); safetyChecks.clear(); selectedDx = null;
+  document.getElementById('notes-log').innerHTML = '';
+  document.getElementById('clinical-notes').value = '';
+  document.querySelectorAll('.choice').forEach(b=>{b.disabled=false; b.classList.remove('asked');});
+  document.querySelectorAll('.checklist li').forEach(li=>{li.classList.remove('checked'); li.querySelector('.box').textContent=''; li.setAttribute('aria-checked','false');});
+  document.getElementById('progress-text').textContent = `0 of ${questions.length} areas explored`;
+  document.getElementById('btn-to-synthesis').disabled = true;
+  goTo('intro');
+});
+</script>
+</body>
+</html>
