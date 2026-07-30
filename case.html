@@ -227,6 +227,7 @@ function buildApp(CASE){
     <div class="tabs">
       <div class="tab active" id="tab-intro">Referral</div>
       <div class="tab" id="tab-interview">Interview</div>
+      <div class="tab" id="tab-collateral">Collateral</div>
       <div class="tab" id="tab-synthesis">Symptoms</div>
       <div class="tab" id="tab-dx">Diagnosis</div>
       <div class="tab" id="tab-why">Reasoning</div>
@@ -270,7 +271,25 @@ function buildApp(CASE){
           </div>
         </div>
         <div class="progress" id="progress-text">0 of ${CASE.questions.length} areas explored</div>
-        <button class="primary-btn" id="btn-to-synthesis" disabled>Review your notes →</button>
+        <button class="primary-btn" id="btn-to-collateral" disabled>Continue →</button>
+      </div>
+
+      <div class="screen" id="screen-collateral">
+        <h2>Gather Collateral Information</h2>
+        <p>Real clinicians don't rely on the client's account alone. Optionally request a teacher's or parent's perspective — sources don't always agree with each other, and that disagreement is itself useful information.</p>
+        <div class="symptom-columns">
+          <div class="clipboard" id="collateral-teacher-box">
+            <h3>Teacher's Account</h3>
+            <button class="choice" id="request-teacher-btn">Request teacher's account</button>
+            <div id="collateral-teacher-note"></div>
+          </div>
+          <div class="clipboard" id="collateral-parent-box">
+            <h3>Parent's Account</h3>
+            <button class="choice" id="request-parent-btn">Request parent's account</button>
+            <div id="collateral-parent-note"></div>
+          </div>
+        </div>
+        <button class="primary-btn" id="btn-to-synthesis">Continue to symptoms →</button>
       </div>
 
       <div class="screen" id="screen-synthesis">
@@ -358,7 +377,7 @@ function buildApp(CASE){
     notesLog.appendChild(note);
 
     document.getElementById('progress-text').textContent = `${state.asked.size} of ${CASE.questions.length} areas explored`;
-    document.getElementById('btn-to-synthesis').disabled = state.asked.size < 3;
+    document.getElementById('btn-to-collateral').disabled = state.asked.size < 3;
   }
 
   function buildChecklist(containerEl, labelMap){
@@ -575,6 +594,24 @@ function buildApp(CASE){
   }
 
   document.getElementById('btn-start').addEventListener('click', () => goTo('interview'));
+  document.getElementById('btn-to-collateral').addEventListener('click', () => goTo('collateral'));
+  document.getElementById('request-teacher-btn').addEventListener('click', () => {
+    const noteEl = document.getElementById('collateral-teacher-note');
+    const note = document.createElement('div');
+    note.className = 'note';
+    note.textContent = CASE.collateral.teacher;
+    noteEl.appendChild(note);
+    document.getElementById('request-teacher-btn').disabled = true;
+  });
+  document.getElementById('request-parent-btn').addEventListener('click', () => {
+    const noteEl = document.getElementById('collateral-parent-note');
+    const note = document.createElement('div');
+    note.className = 'note';
+    note.textContent = CASE.collateral.parent;
+    noteEl.appendChild(note);
+    document.getElementById('request-parent-btn').disabled = true;
+  });
+
   document.getElementById('btn-to-synthesis').addEventListener('click', () => { renderSynthesis(); goTo('synthesis'); });
   document.getElementById('btn-to-dx').addEventListener('click', () => goTo('dx'));
 
@@ -596,7 +633,13 @@ function buildApp(CASE){
 
     document.querySelectorAll('.checklist li').forEach(li => { li.classList.remove('checked'); li.querySelector('.box').textContent=''; li.setAttribute('aria-checked','false'); });
     document.getElementById('progress-text').textContent = `0 of ${CASE.questions.length} areas explored`;
-    document.getElementById('btn-to-synthesis').disabled = true;
+    document.getElementById('btn-to-collateral').disabled = true;
+
+    document.getElementById('collateral-teacher-note').innerHTML = '';
+    document.getElementById('collateral-parent-note').innerHTML = '';
+    document.getElementById('request-teacher-btn').disabled = false;
+    document.getElementById('request-parent-btn').disabled = false;
+
     goTo('intro');
   });
 }
