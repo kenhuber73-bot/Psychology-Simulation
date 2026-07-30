@@ -11,7 +11,7 @@
     background:#F1E9D2;
     min-height:100vh; margin:0; padding:40px 20px;
   }
-  .wrap{max-width:640px; margin:0 auto;}
+  .wrap{max-width:720px; margin:0 auto;}
   .card{
     background:#FBF7EC; border:1px solid #2B2A25; border-radius:8px;
     padding:32px; box-shadow:4px 4px 0 rgba(43,42,37,0.08); margin-bottom:20px;
@@ -31,9 +31,10 @@
   .logout-btn{background:none; color:#5C5648; border:1px solid #5C5648; margin-top:16px;}
   .class-item{
     display:flex; justify-content:space-between; align-items:center;
-    padding:12px 0; border-bottom:1px dashed #C7B78E;
+    padding:12px 0; border-bottom:1px dashed #C7B78E; cursor:pointer;
   }
   .class-item:last-child{border-bottom:none;}
+  .class-item:hover{background:#F1E9D2;}
   .class-name{font-weight:600;}
   .join-code{
     font-family:'Courier New', monospace; background:#E3D5AE;
@@ -42,6 +43,12 @@
   .message{margin-top:10px; font-size:0.88rem; padding:10px; border-radius:5px;}
   .message.error{background:#F4E1E1; color:#7A2E2E;}
   .empty{color:#5C5648; font-style:italic; font-size:0.9rem;}
+  .close-results{background:none; color:#5C5648; border:1px solid #5C5648; font-size:0.8rem; padding:6px 12px; margin-bottom:16px;}
+  table{width:100%; border-collapse:collapse; font-size:0.88rem;}
+  th{text-align:left; color:#5C5648; font-weight:600; padding:8px 6px; border-bottom:2px solid #2B2A25;}
+  td{padding:8px 6px; border-bottom:1px dashed #C7B78E;}
+  .correct-tag{background:#E4EDE1; color:#3E5233; padding:2px 8px; border-radius:4px; font-size:0.78rem; font-weight:600;}
+  .incorrect-tag{background:#F4E1E1; color:#7A2E2E; padding:2px 8px; border-radius:4px; font-size:0.78rem; font-weight:600;}
 </style>
 </head>
 <body>
@@ -61,7 +68,14 @@
 
     <div class="card" id="classes-card" style="display:none;">
       <h2>Your Classes</h2>
+      <p style="font-size:0.85rem; margin-top:-8px;">Click a class to see student results.</p>
       <div id="classes-list"></div>
+    </div>
+
+    <div class="card" id="results-card" style="display:none;">
+      <button id="close-results-btn" class="close-results">← Back to classes</button>
+      <h2 id="results-title">Results</h2>
+      <div id="results-content"></div>
     </div>
   </div>
 
@@ -70,7 +84,6 @@
     let currentUser = null;
 
     function generateJoinCode(){
-      // Avoids easily-confused characters like 0/O and 1/I
       const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
       let code = '';
       for(let i = 0; i < 6; i++){
@@ -131,9 +144,65 @@
           <span class="class-name">${cls.name}</span>
           <span class="join-code">${cls.join_code}</span>
         `;
+        row.addEventListener('click', () => showResults(cls));
         listEl.appendChild(row);
       });
     }
+
+    async function showResults(cls){
+      document.getElementById('classes-card').style.display = 'none';
+      document.getElementById('results-card').style.display = 'block';
+      document.getElementById('results-title').textContent = 'Results — ' + cls.name;
+      const contentEl = document.getElementById('results-content');
+      contentEl.innerHTML = '<p class="empty">Loading results...</p>';
+
+      const { data, error } = await sb
+        .from('case_attempts')
+        .select('id, diagnosis, was_correct, completed_at, student_sessions!inner(nickname, class_id)')
+        .eq('student_sessions.class_id', cls.id)
+        .order('completed_at', { ascending: false });
+
+      if(error){
+        contentEl.innerHTML = '<p class="empty">Could not load results: ' + error.message + '</p>';
+        return;
+      }
+
+      if(!data || data.length === 0){
+        contentEl.innerHTML = '<p class="empty">No completed attempts yet for this class. Once students finish the case, their results will show up here.</p>';
+        return;
+      }
+
+      let rows = data.map(attempt => {
+        const date = new Date(attempt.completed_at);
+        const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        const tag = attempt.was_correct
+          ? '<span class="correct-tag">Correct</span>'
+          : '<span class="incorrect-tag">Incorrect</span>';
+        return `
+          <tr>
+            <td>${attempt.student_sessions.nickname}</td>
+            <td>${attempt.diagnosis}</td>
+            <td>${tag}</td>
+            <td>${dateStr}</td>
+          </tr>
+        `;
+      }).join('');
+
+      contentEl.innerHTML = `
+        <p style="font-size:0.85rem;">${data.length} completed attempt${data.length === 1 ? '' : 's'}</p>
+        <table>
+          <thead>
+            <tr><th>Student</th><th>Diagnosis Given</th><th>Result</th><th>Completed</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    document.getElementById('close-results-btn').addEventListener('click', () => {
+      document.getElementById('results-card').style.display = 'none';
+      document.getElementById('classes-card').style.display = 'block';
+    });
 
     document.getElementById('create-class-btn').addEventListener('click', async () => {
       const input = document.getElementById('class-name-input');
