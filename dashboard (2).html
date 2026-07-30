@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Psychology Case Simulations</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body{
+    font-family: system-ui, sans-serif;
+    background:#F1E9D2;
+    min-height:100vh; margin:0; padding:40px 20px;
+  }
+  .wrap{max-width:720px; margin:0 auto;}
+  .card{
+    background:#FBF7EC; border:1px solid #2B2A25; border-radius:8px;
+    padding:32px; box-shadow:4px 4px 0 rgba(43,42,37,0.08); margin-bottom:20px;
+  }
+  h1{font-size:1.3rem; margin:0 0 8px;}
+  h2{font-size:1.05rem; margin:0 0 14px;}
+  p{color:#5C5648; line-height:1.5;}
+  input{
+    width:100%; padding:10px; margin:8px 0 14px; border:1px solid #2B2A25;
+    border-radius:5px; font-size:0.95rem; box-sizing:border-box;
+  }
+  button{
+    padding:10px 18px; background:#2F4858; color:white; border:none;
+    border-radius:6px; font-size:0.9rem; cursor:pointer;
+  }
+  button:disabled{opacity:0.5; cursor:default;}
+  .logout-btn{background:none; color:#5C5648; border:1px solid #5C5648; margin-top:16px;}
+  .class-item{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 0; border-bottom:1px dashed #C7B78E; cursor:pointer;
+  }
+  .class-item:last-child{border-bottom:none;}
+  .class-item:hover{background:#F1E9D2;}
+  .class-name{font-weight:600;}
+  .join-code{
+    font-family:'Courier New', monospace; background:#E3D5AE;
+    padding:4px 10px; border-radius:4px; font-size:0.9rem;
+  }
+  .message{margin-top:10px; font-size:0.88rem; padding:10px; border-radius:5px;}
+  .message.error{background:#F4E1E1; color:#7A2E2E;}
+  .empty{color:#5C5648; font-style:italic; font-size:0.9rem;}
+  .close-results{background:none; color:#5C5648; border:1px solid #5C5648; font-size:0.8rem; padding:6px 12px; margin-bottom:16px;}
+  table{width:100%; border-collapse:collapse; font-size:0.88rem;}
+  th{text-align:left; color:#5C5648; font-weight:600; padding:8px 6px; border-bottom:2px solid #2B2A25;}
+  td{padding:8px 6px; border-bottom:1px dashed #C7B78E;}
+  .correct-tag{background:#E4EDE1; color:#3E5233; padding:2px 8px; border-radius:4px; font-size:0.78rem; font-weight:600;}
+  .incorrect-tag{background:#F4E1E1; color:#7A2E2E; padding:2px 8px; border-radius:4px; font-size:0.78rem; font-weight:600;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Welcome</h1>
+      <p id="status">Checking your session...</p>
+      <button id="logout-btn" class="logout-btn" style="display:none;">Log out</button>
+    </div>
+
+    <div class="card" id="create-class-card" style="display:none;">
+      <h2>Create a Class</h2>
+      <input type="text" id="class-name-input" placeholder="e.g. Psych 4B, Period 2">
+      <button id="create-class-btn">Create Class</button>
+      <div id="create-message"></div>
+    </div>
+
+    <div class="card" id="classes-card" style="display:none;">
+      <h2>Your Classes</h2>
+      <p style="font-size:0.85rem; margin-top:-8px;">Click a class to see student results.</p>
+      <div id="classes-list"></div>
+    </div>
+
+    <div class="card" id="results-card" style="display:none;">
+      <button id="close-results-btn" class="close-results">← Back to classes</button>
+      <h2 id="results-title">Results</h2>
+      <div id="results-content"></div>
+    </div>
+  </div>
+
+  <script src="js/supabase-config.js"></script>
+  <script>
+    let currentUser = null;
+
+    function generateJoinCode(){
+      const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+      let code = '';
+      for(let i = 0; i < 6; i++){
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
+    }
+
+    async function init(){
+      const { data: { session } } = await sb.auth.getSession();
+
+      if(!session){
+        window.location.href = 'index.html';
+        return;
+      }
+
+      currentUser = session.user;
+
+      const { error } = await sb.from('teachers').upsert({ id: currentUser.id });
+
+      const statusEl = document.getElementById('status');
+      if(error){
+        statusEl.textContent = 'Logged in as ' + currentUser.email + ', but there was an issue setting up your profile: ' + error.message;
+      } else {
+        statusEl.textContent = 'Logged in as ' + currentUser.email + '.';
+        document.getElementById('create-class-card').style.display = 'block';
+        document.getElementById('classes-card').style.display = 'block';
+        loadClasses();
+      }
+
+      document.getElementById('logout-btn').style.display = 'inline-block';
+    }
+
+    async function loadClasses(){
+      const { data, error } = await sb
+        .from('classes')
+        .select('*')
+        .eq('teacher_id', currentUser.id)
+        .order('created_at', { ascending: false });
+
+      const listEl = document.getElementById('classes-list');
+      listEl.innerHTML = '';
+
+      if(error){
+        listEl.innerHTML = '<p class="empty">Could not load classes: ' + error.message + '</p>';
+        return;
+      }
+
+      if(!data || data.length === 0){
+        listEl.innerHTML = '<p class="empty">No classes yet — create one above.</p>';
+        return;
+      }
+
+      data.forEach(cls => {
+        const row = document.createElement('div');
+        row.className = 'class-item';
+        row.innerHTML = `
+          <span class="class-name">${cls.name}</span>
+          <span class="join-code">${cls.join_code}</span>
+        `;
+        row.addEventListener('click', () => showResults(cls));
+        listEl.appendChild(row);
+      });
+    }
+
+    async function showResults(cls){
+      document.getElementById('classes-card').style.display = 'none';
+      document.getElementById('results-card').style.display = 'block';
+      document.getElementById('results-title').textContent = 'Results — ' + cls.name;
+      const contentEl = document.getElementById('results-content');
+      contentEl.innerHTML = '<p class="empty">Loading results...</p>';
+
+      const { data, error } = await sb
+        .from('case_attempts')
+        .select('id, diagnosis, was_correct, completed_at, student_sessions!inner(nickname, class_id)')
+        .eq('student_sessions.class_id', cls.id)
+        .order('completed_at', { ascending: false });
+
+      if(error){
+        contentEl.innerHTML = '<p class="empty">Could not load results: ' + error.message + '</p>';
+        return;
+      }
+
+      if(!data || data.length === 0){
+        contentEl.innerHTML = '<p class="empty">No completed attempts yet for this class. Once students finish the case, their results will show up here.</p>';
+        return;
+      }
+
+      let rows = data.map(attempt => {
+        const date = new Date(attempt.completed_at);
+        const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        const tag = attempt.was_correct
+          ? '<span class="correct-tag">Correct</span>'
+          : '<span class="incorrect-tag">Incorrect</span>';
+        return `
+          <tr>
+            <td>${attempt.student_sessions.nickname}</td>
+            <td>${attempt.diagnosis}</td>
+            <td>${tag}</td>
+            <td>${dateStr}</td>
+          </tr>
+        `;
+      }).join('');
+
+      contentEl.innerHTML = `
+        <p style="font-size:0.85rem;">${data.length} completed attempt${data.length === 1 ? '' : 's'}</p>
+        <table>
+          <thead>
+            <tr><th>Student</th><th>Diagnosis Given</th><th>Result</th><th>Completed</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    document.getElementById('close-results-btn').addEventListener('click', () => {
+      document.getElementById('results-card').style.display = 'none';
+      document.getElementById('classes-card').style.display = 'block';
+    });
+
+    document.getElementById('create-class-btn').addEventListener('click', async () => {
+      const input = document.getElementById('class-name-input');
+      const name = input.value.trim();
+      const msgEl = document.getElementById('create-message');
+      const btn = document.getElementById('create-class-btn');
+
+      if(!name){
+        msgEl.textContent = 'Please enter a class name.';
+        msgEl.className = 'message error';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+
+      const joinCode = generateJoinCode();
+
+      const { error } = await sb.from('classes').insert({
+        teacher_id: currentUser.id,
+        name: name,
+        join_code: joinCode
+      });
+
+      btn.disabled = false;
+      btn.textContent = 'Create Class';
+
+      if(error){
+        msgEl.textContent = 'Something went wrong: ' + error.message;
+        msgEl.className = 'message error';
+      } else {
+        msgEl.textContent = '';
+        input.value = '';
+        loadClasses();
+      }
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await sb.auth.signOut();
+      window.location.href = 'index.html';
+    });
+
+    init();
+  </script>
+</body>
+</html>
