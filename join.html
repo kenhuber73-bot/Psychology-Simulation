@@ -73,7 +73,7 @@
       document.getElementById('join-form').style.display = 'none';
 
       document.getElementById('continue-btn').addEventListener('click', () => {
-        window.location.href = 'case.html';
+        window.location.href = 'choose-case.html';
       });
       document.getElementById('new-join-btn').addEventListener('click', () => {
         document.getElementById('returning-box').style.display = 'none';
@@ -100,7 +100,7 @@
       // Look up the class by its join code
       const { data: classData, error: classError } = await sb
         .from('classes')
-        .select('id, name, activity_id')
+        .select('id, name')
         .eq('join_code', code)
         .maybeSingle();
 
@@ -132,11 +132,10 @@
         sessionId: sessionData.id,
         nickname: nickname,
         className: classData.name,
-        classId: classData.id,
-        activityId: classData.activity_id
+        classId: classData.id
       }));
 
-      window.location.href = 'case.html';
+      window.location.href = 'choose-case.html';
     });
   </script>
 </body>

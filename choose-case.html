@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Choose a Case — Psychology Case Simulations</title>
+<style>
+  body{
+    font-family: system-ui, sans-serif;
+    background:#F1E9D2;
+    min-height:100vh; margin:0; padding:40px 20px;
+  }
+  .wrap{max-width:600px; margin:0 auto;}
+  .banner{
+    background:#2F4858; color:#FBF7EC; font-family:'Courier New', monospace;
+    font-size:0.8rem; padding:8px 16px; border-radius:6px; margin-bottom:20px;
+  }
+  .banner a{color:#FBF7EC; opacity:0.8;}
+  h1{font-size:1.3rem; margin:0 0 8px;}
+  p{color:#5C5648; line-height:1.5;}
+  .case-card{
+    background:#FBF7EC; border:1px solid #2B2A25; border-radius:8px;
+    padding:22px; margin-bottom:16px; cursor:pointer;
+    box-shadow:3px 3px 0 rgba(43,42,37,0.1);
+    transition:transform 0.1s ease, box-shadow 0.1s ease;
+  }
+  .case-card:hover{transform:translate(-1px,-1px); box-shadow:4px 4px 0 rgba(43,42,37,0.18);}
+  .case-title{font-weight:700; font-size:1.05rem; margin-bottom:6px;}
+  .case-desc{font-size:0.9rem; color:#5C5648;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="banner" id="session-banner">Loading...</div>
+    <h1>Choose a Case</h1>
+    <p>Pick which diagnostic interview you'd like to work through.</p>
+
+    <div class="case-card" data-case="jordan_gad_mdd_v1">
+      <div class="case-title">Jordan R. — Anxiety vs. Depression</div>
+      <div class="case-desc">A 16-year-old referred for declining grades and withdrawal. Interview to distinguish Generalized Anxiety Disorder from Major Depressive Disorder.</div>
+    </div>
+
+    <div class="case-card" data-case="alex_adhd_gad_v1">
+      <div class="case-title">Alex M. — ADHD vs. Anxiety</div>
+      <div class="case-desc">A 15-year-old referred for inattention and disorganization. Interview to distinguish ADHD from Generalized Anxiety Disorder.</div>
+    </div>
+  </div>
+
+  <script>
+    const rawSession = localStorage.getItem('studentSession');
+    if(!rawSession){
+      window.location.href = 'join.html';
+    } else {
+      const session = JSON.parse(rawSession);
+      document.getElementById('session-banner').innerHTML =
+        `Signed in as <strong>${session.nickname}</strong> — ${session.className} &nbsp;|&nbsp; <a href="join.html">Not you? Switch class</a>`;
+    }
+
+    document.querySelectorAll('.case-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const session = JSON.parse(localStorage.getItem('studentSession'));
+        session.activityId = card.dataset.case;
+        localStorage.setItem('studentSession', JSON.stringify(session));
+        window.location.href = 'case.html';
+      });
+    });
+  </script>
+</body>
+</html>
