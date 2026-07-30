@@ -55,6 +55,15 @@
     font-family:'Courier Prime', monospace;background:var(--paper-dark);border-left:3px solid var(--navy);
     padding:12px 16px;margin:10px 0;font-size:0.9rem;line-height:1.55;border-radius:0 4px 4px 0;
   }
+  .bg-section{
+    background:var(--white-card); border:1px solid var(--line); border-left:3px solid var(--ink-soft);
+    border-radius:0 4px 4px 0; padding:12px 16px; margin:10px 0;
+  }
+  .bg-section .bg-label{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; text-transform:uppercase;
+    letter-spacing:0.06em; color:var(--ink-soft); font-weight:700; margin-bottom:4px;
+  }
+  .bg-section p{margin:0; font-size:0.92rem;}
   .choice-list{display:flex;flex-direction:column;gap:10px;margin-top:16px;}
   button.choice{
     text-align:left;background:var(--white-card);border:1px solid var(--ink);border-radius:6px;padding:12px 16px;
@@ -233,8 +242,10 @@ function buildApp(CASE){
           Referred by: ${CASE.referral.referredBy}<br><br>
           Reason for referral: ${CASE.referral.reason}
         </div>
+        <h3>Background File</h3>
+        <div id="background-sections"></div>
         <p>You are the psychology intern assigned to conduct the initial diagnostic interview. Ask thoughtful questions, take your own notes on what you hear, and later you'll synthesize those notes into a working diagnostic impression — the same process a clinician follows before ever settling on a label.</p>
-        <p>There's no single "gotcha" question. Real interviews involve gathering enough information across several areas before a pattern becomes clear.</p>
+        <p>Read the background carefully. Some details may seem to point toward an obvious explanation — real backgrounds often do. That doesn't mean the obvious explanation is the right one.</p>
         <button class="primary-btn" id="btn-start">Begin the interview →</button>
       </div>
 
@@ -307,6 +318,16 @@ function buildApp(CASE){
   `;
 
   document.title = 'Case File ' + CASE.id;
+
+  const bgContainer = document.getElementById('background-sections');
+  if(CASE.referral.background && CASE.referral.background.length){
+    CASE.referral.background.forEach(section => {
+      const div = document.createElement('div');
+      div.className = 'bg-section';
+      div.innerHTML = `<div class="bg-label">${section.label}</div><p>${section.text}</p>`;
+      bgContainer.appendChild(div);
+    });
+  }
 
   const state = { asked: new Set() };
   const allLabels = Object.assign({}, CASE.gadLabels, CASE.mddLabels, CASE.otherLabels);
