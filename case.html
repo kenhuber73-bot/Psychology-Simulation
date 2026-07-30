@@ -243,10 +243,14 @@ function buildApp(CASE){
           Referred by: ${CASE.referral.referredBy}<br><br>
           Reason for referral: ${CASE.referral.reason}
         </div>
-        <h3>Background File</h3>
-        <div id="background-sections"></div>
+        <h3>Student Records System</h3>
+        <p>Before meeting with the client, you pull up the school's records system on your computer. Click a category below to review what's on file — check whatever seems relevant before you begin.</p>
+        <div class="clipboard" id="records-box">
+          <div class="choice-list" id="background-buttons"></div>
+          <div id="background-sections"></div>
+        </div>
         <p>You are the psychology intern assigned to conduct the initial diagnostic interview. Ask thoughtful questions, take your own notes on what you hear, and later you'll synthesize those notes into a working diagnostic impression — the same process a clinician follows before ever settling on a label.</p>
-        <p>Read the background carefully. Some details may seem to point toward an obvious explanation — real backgrounds often do. That doesn't mean the obvious explanation is the right one.</p>
+        <p>Read the records carefully. Some details may seem to point toward an obvious explanation — real records often do. That doesn't mean the obvious explanation is the right one.</p>
         <button class="primary-btn" id="btn-start">Begin the interview →</button>
       </div>
 
@@ -338,13 +342,21 @@ function buildApp(CASE){
 
   document.title = 'Case File ' + CASE.id;
 
-  const bgContainer = document.getElementById('background-sections');
+  const bgButtonsContainer = document.getElementById('background-buttons');
+  const bgSectionsContainer = document.getElementById('background-sections');
   if(CASE.referral.background && CASE.referral.background.length){
     CASE.referral.background.forEach(section => {
-      const div = document.createElement('div');
-      div.className = 'bg-section';
-      div.innerHTML = `<div class="bg-label">${section.label}</div><p>${section.text}</p>`;
-      bgContainer.appendChild(div);
+      const btn = document.createElement('button');
+      btn.className = 'choice';
+      btn.textContent = 'Check: ' + section.label;
+      btn.addEventListener('click', () => {
+        const div = document.createElement('div');
+        div.className = 'bg-section';
+        div.innerHTML = `<div class="bg-label">${section.label}</div><p>${section.text}</p>`;
+        bgSectionsContainer.appendChild(div);
+        btn.remove();
+      });
+      bgButtonsContainer.appendChild(btn);
     });
   }
 
@@ -639,6 +651,25 @@ function buildApp(CASE){
     document.getElementById('collateral-parent-note').innerHTML = '';
     document.getElementById('request-teacher-btn').disabled = false;
     document.getElementById('request-parent-btn').disabled = false;
+
+    // Rebuild the records-system buttons since checked ones were removed
+    bgSectionsContainer.innerHTML = '';
+    bgButtonsContainer.innerHTML = '';
+    if(CASE.referral.background && CASE.referral.background.length){
+      CASE.referral.background.forEach(section => {
+        const btn = document.createElement('button');
+        btn.className = 'choice';
+        btn.textContent = 'Check: ' + section.label;
+        btn.addEventListener('click', () => {
+          const div = document.createElement('div');
+          div.className = 'bg-section';
+          div.innerHTML = `<div class="bg-label">${section.label}</div><p>${section.text}</p>`;
+          bgSectionsContainer.appendChild(div);
+          btn.remove();
+        });
+        bgButtonsContainer.appendChild(btn);
+      });
+    }
 
     goTo('intro');
   });
