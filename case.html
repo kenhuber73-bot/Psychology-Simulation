@@ -231,7 +231,7 @@ function buildApp(CASE){
 
       <div class="screen" id="screen-interview">
         <h2>Interview Room</h2>
-        <p>Choose questions to ask. As you go, write down what you're noticing in the notes box — in your own words. You'll need these notes for the next step.</p>
+        <p>Choose questions to ask. Each question can only be asked once, and disappears from the list after you ask it. The answer you get will only stay on screen until you ask your next question — so write down what matters in the notes box before moving on.</p>
         <div class="layout">
           <div>
             <div class="choice-list" id="question-list"></div>
@@ -320,12 +320,21 @@ function buildApp(CASE){
   function askQuestion(q, btn){
     if(state.asked.has(q.id)) return;
     state.asked.add(q.id);
-    btn.classList.add('asked');
-    btn.disabled = true;
+    btn.remove();
+
+    const notesLog = document.getElementById('notes-log');
+    notesLog.innerHTML = '';
     const note = document.createElement('div');
     note.className = 'note';
     note.textContent = q.note;
-    document.getElementById('notes-log').appendChild(note);
+    notesLog.appendChild(note);
+    const hint = document.createElement('p');
+    hint.style.fontSize = '0.78rem';
+    hint.style.color = 'var(--ink-soft)';
+    hint.style.marginTop = '6px';
+    hint.textContent = 'This note disappears once you ask another question — write down what matters before moving on.';
+    notesLog.appendChild(hint);
+
     document.getElementById('progress-text').textContent = `${state.asked.size} of ${CASE.questions.length} areas explored`;
     document.getElementById('btn-to-synthesis').disabled = state.asked.size < 3;
   }
@@ -539,7 +548,18 @@ function buildApp(CASE){
     state.asked.clear(); studentChecks.clear(); whyChoices.clear(); safetyChecks.clear(); selectedDx = null;
     document.getElementById('notes-log').innerHTML = '';
     document.getElementById('clinical-notes').value = '';
-    document.querySelectorAll('.choice').forEach(b => { b.disabled=false; b.classList.remove('asked'); });
+
+    // Rebuild the question list since asked questions were removed, not just disabled
+    const qListEl = document.getElementById('question-list');
+    qListEl.innerHTML = '';
+    CASE.questions.forEach(q => {
+      const btn = document.createElement('button');
+      btn.className = 'choice';
+      btn.innerHTML = `${q.text}<span class="tag">${q.tag}</span>`;
+      btn.addEventListener('click', () => askQuestion(q, btn));
+      qListEl.appendChild(btn);
+    });
+
     document.querySelectorAll('.checklist li').forEach(li => { li.classList.remove('checked'); li.querySelector('.box').textContent=''; li.setAttribute('aria-checked','false'); });
     document.getElementById('progress-text').textContent = `0 of ${CASE.questions.length} areas explored`;
     document.getElementById('btn-to-synthesis').disabled = true;
