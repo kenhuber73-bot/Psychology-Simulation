@@ -100,7 +100,7 @@
       // Look up the class by its join code
       const { data: classData, error: classError } = await sb
         .from('classes')
-        .select('id, name')
+        .select('id, name, activity_id')
         .eq('join_code', code)
         .maybeSingle();
 
@@ -132,7 +132,8 @@
         sessionId: sessionData.id,
         nickname: nickname,
         className: classData.name,
-        classId: classData.id
+        classId: classData.id,
+        activityId: classData.activity_id
       }));
 
       window.location.href = 'case.html';
