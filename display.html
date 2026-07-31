@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Join Screen — Psychology Case Simulations</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>
+  body{
+    font-family: system-ui, sans-serif;
+    background:#2F4858;
+    color:white;
+    min-height:100vh; margin:0;
+    display:flex; align-items:center; justify-content:center;
+    flex-direction:column;
+    padding:30px;
+    text-align:center;
+  }
+  h1{
+    font-size:1.4rem; font-weight:500; color:#C9DCE6; margin:0 0 6px;
+    text-transform:uppercase; letter-spacing:0.08em;
+  }
+  #class-name{font-size:2.2rem; font-weight:700; margin:0 0 40px;}
+  .join-panel{
+    display:flex; gap:60px; align-items:center; flex-wrap:wrap; justify-content:center;
+  }
+  .code-block{
+    background:#FBF7EC; color:#2B2A25; border-radius:16px;
+    padding:40px 60px; box-shadow:0 10px 30px rgba(0,0,0,0.3);
+  }
+  .code-block p{margin:0 0 10px; font-size:1rem; color:#5C5648; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;}
+  #join-code{
+    font-family:'Courier New', monospace; font-size:5rem; font-weight:700;
+    letter-spacing:0.1em; line-height:1;
+  }
+  .qr-block{
+    background:white; border-radius:16px; padding:20px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.3);
+  }
+  #qr-canvas{display:block;}
+  .instructions{margin-top:40px; font-size:1.1rem; color:#C9DCE6;}
+  .instructions a{color:white;}
+  .error-msg{font-size:1.2rem; color:#F4C6C6; margin-top:20px;}
+</style>
+</head>
+<body>
+  <h1>Join This Class</h1>
+  <div id="class-name">Loading...</div>
+
+  <div class="join-panel" id="join-panel" style="display:none;">
+    <div class="code-block">
+      <p>Class Code</p>
+      <div id="join-code"></div>
+    </div>
+    <div class="qr-block">
+      <canvas id="qr-canvas"></canvas>
+    </div>
+  </div>
+
+  <div class="instructions" id="instructions" style="display:none;">
+    Go to <strong id="join-url-text"></strong> or scan the QR code
+  </div>
+
+  <div class="error-msg" id="error-msg" style="display:none;">
+    No class code provided. Open this page from your dashboard's class list.
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const className = params.get('name');
+
+    if(!code){
+      document.getElementById('error-msg').style.display = 'block';
+    } else {
+      document.getElementById('class-name').textContent = className || '';
+      document.getElementById('join-code').textContent = code;
+      document.getElementById('join-panel').style.display = 'flex';
+      document.getElementById('instructions').style.display = 'block';
+
+      const joinUrl = window.location.href.replace(/[^/]*$/, '') + 'join.html?code=' + encodeURIComponent(code);
+      document.getElementById('join-url-text').textContent = window.location.host + window.location.pathname.replace(/[^/]*$/, '') + 'join.html';
+
+      QRCode.toCanvas(document.getElementById('qr-canvas'), joinUrl, { width: 220, margin: 1 }, function(error){
+        if(error) console.error(error);
+      });
+    }
+  </script>
+</body>
+</html>
