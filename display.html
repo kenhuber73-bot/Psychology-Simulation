@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Join Screen — Psychology Case Simulations</title>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   body{
     font-family: system-ui, sans-serif;
@@ -53,7 +53,7 @@
       <div id="join-code"></div>
     </div>
     <div class="qr-block">
-      <canvas id="qr-canvas"></canvas>
+      <div id="qr-canvas"></div>
     </div>
   </div>
 
@@ -81,8 +81,10 @@
       const joinUrl = window.location.href.replace(/[^/]*$/, '') + 'join.html?code=' + encodeURIComponent(code);
       document.getElementById('join-url-text').textContent = window.location.host + window.location.pathname.replace(/[^/]*$/, '') + 'join.html';
 
-      QRCode.toCanvas(document.getElementById('qr-canvas'), joinUrl, { width: 220, margin: 1 }, function(error){
-        if(error) console.error(error);
+      new QRCode(document.getElementById('qr-canvas'), {
+        text: joinUrl,
+        width: 220,
+        height: 220
       });
     }
   </script>
