@@ -58,6 +58,12 @@
 
   <script src="js/supabase-config.js"></script>
   <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const prefilledCode = urlParams.get('code');
+    if(prefilledCode){
+      document.getElementById('code-input').value = prefilledCode.toUpperCase();
+    }
+
     const existing = localStorage.getItem('studentSession');
 
     if(existing){

@@ -40,11 +40,16 @@
   }
   .class-item:last-child{border-bottom:none;}
   .class-item:hover{background:#F1E9D2;}
-  .class-name{font-weight:600;}
+  .class-name{font-weight:600; cursor:pointer;}
   .join-code{
     font-family:'Courier New', monospace; background:#E3D5AE;
-    padding:4px 10px; border-radius:4px; font-size:0.9rem;
+    padding:4px 10px; border-radius:4px; font-size:0.9rem; cursor:pointer;
   }
+  .display-btn{
+    background:#2F4858; color:white; border:none; border-radius:5px;
+    padding:6px 12px; font-size:0.8rem; cursor:pointer;
+  }
+  .display-btn:hover{background:#3A5A6E;}
   .message{margin-top:10px; font-size:0.88rem; padding:10px; border-radius:5px;}
   .message.error{background:#F4E1E1; color:#7A2E2E;}
   .empty{color:#5C5648; font-style:italic; font-size:0.9rem;}
@@ -152,9 +157,18 @@
         row.className = 'class-item';
         row.innerHTML = `
           <span class="class-name">${cls.name}</span>
-          <span class="join-code">${cls.join_code}</span>
+          <span style="display:flex; align-items:center; gap:10px;">
+            <span class="join-code">${cls.join_code}</span>
+            <button class="display-btn" data-code="${cls.join_code}" data-name="${cls.name}">Display</button>
+          </span>
         `;
-        row.addEventListener('click', () => showResults(cls));
+        row.querySelector('.class-name').addEventListener('click', () => showResults(cls));
+        row.querySelector('.join-code').addEventListener('click', () => showResults(cls));
+        row.querySelector('.display-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          const url = 'display.html?code=' + encodeURIComponent(cls.join_code) + '&name=' + encodeURIComponent(cls.name);
+          window.open(url, '_blank');
+        });
         listEl.appendChild(row);
       });
     }
