@@ -111,7 +111,7 @@
       const { data: { session } } = await sb.auth.getSession();
 
       if(!session){
-        window.location.href = 'index.html';
+        window.location.href = 'teacher-login.html';
         return;
       }
 
@@ -268,7 +268,7 @@
 
     document.getElementById('logout-btn').addEventListener('click', async () => {
       await sb.auth.signOut();
-      window.location.href = 'index.html';
+      window.location.href = 'teacher-login.html';
     });
 
     init();
