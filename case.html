@@ -95,9 +95,23 @@
   .notes-textarea:focus-visible{outline:2px solid var(--navy);outline-offset:1px;}
   .clipboard{background:var(--folder);border:1px solid var(--ink);border-radius:8px;padding:16px 18px;height:fit-content;}
 
+  .monitor-frame{
+    background:linear-gradient(180deg, #3A3D42 0%, #24262A 100%);
+    border-radius:16px; padding:16px 16px 20px; margin:16px 0 0;
+    box-shadow:0 8px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  .monitor-stand{
+    width:70px; height:22px; margin:0 auto 28px;
+    background:linear-gradient(180deg, #2C2E32 0%, #1C1D20 100%);
+    clip-path:polygon(30% 0%, 70% 0%, 90% 100%, 10% 100%);
+  }
+  .monitor-stand::after{
+    content:''; display:block; width:160px; height:8px; margin:0 auto;
+    background:#1C1D20; border-radius:4px; transform:translateY(14px);
+  }
+
   .browser-chrome{
-    border-radius:10px; overflow:hidden; border:1px solid #C4C4C4;
-    box-shadow:0 3px 10px rgba(0,0,0,0.15); margin:16px 0 22px;
+    border-radius:6px; overflow:hidden; border:1px solid #C4C4C4;
     font-family:'Space Grotesk', sans-serif;
   }
   .browser-topbar{
@@ -273,18 +287,21 @@ function buildApp(CASE){
         </div>
         <h3>Clinic Records System</h3>
         <p>Before meeting with the client, you pull up the clinic's records system on your computer. Click a category below to review what's on file — check whatever seems relevant before you begin.</p>
-        <div class="browser-chrome">
-          <div class="browser-topbar">
-            <span class="browser-dot dot-red"></span>
-            <span class="browser-dot dot-yellow"></span>
-            <span class="browser-dot dot-green"></span>
-            <div class="browser-url" id="browser-url">portal.schooldistrict.edu/records</div>
-          </div>
-          <div class="browser-content" id="records-box">
-            <div class="choice-list" id="background-buttons"></div>
-            <div id="background-sections"></div>
+        <div class="monitor-frame">
+          <div class="browser-chrome">
+            <div class="browser-topbar">
+              <span class="browser-dot dot-red"></span>
+              <span class="browser-dot dot-yellow"></span>
+              <span class="browser-dot dot-green"></span>
+              <div class="browser-url" id="browser-url">portal.schooldistrict.edu/records</div>
+            </div>
+            <div class="browser-content" id="records-box">
+              <div class="choice-list" id="background-buttons"></div>
+              <div id="background-sections"></div>
+            </div>
           </div>
         </div>
+        <div class="monitor-stand"></div>
         <p>You are the psychology intern assigned to conduct the initial diagnostic interview. Ask thoughtful questions, take your own notes on what you hear, and later you'll synthesize those notes into a working diagnostic impression — the same process a clinician follows before ever settling on a label.</p>
         <p>Read the records carefully. Some details may seem to point toward an obvious explanation — real records often do. That doesn't mean the obvious explanation is the right one.</p>
         <button class="primary-btn" id="btn-start">Begin the interview →</button>
