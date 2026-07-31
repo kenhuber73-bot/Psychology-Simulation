@@ -399,6 +399,7 @@ function buildApp(CASE){
         <h2 id="outcome-title"></h2>
         <div id="outcome-body"></div>
         <div id="save-status" class="save-status">Saving your results...</div>
+        <button class="primary-btn" id="btn-new-case">Try a Different Case →</button>
         <button class="ghost-btn" id="btn-restart">↺ Start over with a new intern</button>
       </div>
     </div>
@@ -781,6 +782,10 @@ function buildApp(CASE){
 
   document.getElementById('btn-to-synthesis').addEventListener('click', () => { renderSynthesis(); goTo('synthesis'); });
   document.getElementById('btn-to-dx').addEventListener('click', () => goTo('dx'));
+
+  document.getElementById('btn-new-case').addEventListener('click', () => {
+    window.location.href = 'choose-case.html';
+  });
 
   document.getElementById('btn-restart').addEventListener('click', () => {
     state.asked.clear(); studentChecks.clear(); whyChoices.clear(); selectedDx = null;
