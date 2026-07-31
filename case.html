@@ -95,6 +95,24 @@
   .notes-textarea:focus-visible{outline:2px solid var(--navy);outline-offset:1px;}
   .clipboard{background:var(--folder);border:1px solid var(--ink);border-radius:8px;padding:16px 18px;height:fit-content;}
 
+  .notes-widget{position:fixed; bottom:20px; right:20px; z-index:1000;}
+  .notes-toggle-btn{
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:0.9rem;
+    background:var(--navy); color:var(--white-card); border:none; border-radius:24px;
+    padding:12px 20px; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,0.25);
+  }
+  .notes-toggle-btn:hover{background:#3A5A6E;}
+  .notes-panel{
+    display:none; position:fixed; bottom:74px; right:20px; width:320px; max-width:88vw;
+    background:var(--white-card); border:1px solid var(--ink); border-radius:10px;
+    padding:16px 18px; box-shadow:0 8px 24px rgba(0,0,0,0.25); z-index:1001;
+  }
+  .notes-panel.open{display:block;}
+  .notes-panel .notes-textarea{min-height:180px;}
+  .message.error{
+    background:#F4E1E1; color:#7A2E2E; padding:10px 14px; border-radius:5px; font-size:0.88rem;
+  }
+
   .monitor-frame{
     background:linear-gradient(180deg, #3A3D42 0%, #24262A 100%);
     border-radius:16px; padding:16px 16px 20px; margin:16px 0 0;
@@ -316,7 +334,7 @@ function buildApp(CASE){
 
       <div class="screen" id="screen-interview">
         <h2>Interview Room</h2>
-        <p>Choose questions to ask. Each question can only be asked once, and disappears from the list after you ask it. The answer you get will only stay on screen until you ask your next question — so write down what matters in the notes box before moving on.</p>
+        <p>Choose questions to ask. Each question can only be asked once, and disappears from the list after you ask it. The answer you get will only stay on screen until you ask your next question — write down what matters in your notes (bottom right) before moving on.</p>
         <div class="layout">
           <div>
             <div class="choice-list" id="question-list"></div>
@@ -326,11 +344,6 @@ function buildApp(CASE){
               <h3>Interview Responses</h3>
               <p class="clipboard-hint">Shows the most recent answer. It disappears once you ask your next question — write down what matters before moving on.</p>
               <div id="notes-log"></div>
-            </div>
-            <div class="clipboard" style="margin-top:16px;">
-              <h3>Your Clinical Notes</h3>
-              <p class="clipboard-hint">Jot down symptoms and observations as you hear them. Nothing is filled in for you.</p>
-              <textarea class="notes-textarea" id="clinical-notes" placeholder="Write what you're noticing..."></textarea>
             </div>
           </div>
         </div>
@@ -387,6 +400,10 @@ function buildApp(CASE){
         <h2>What made up your mind?</h2>
         <p>From what you personally checked off, pick up to 3 pieces of evidence that mattered most to your diagnosis.</p>
         <div id="why-options"></div>
+        <h3>Explain Your Reasoning</h3>
+        <p class="clipboard-hint" style="margin-top:-6px;">In your own words, write a short paragraph explaining why you think this diagnosis fits — refer to your notes if it helps.</p>
+        <textarea class="notes-textarea" id="reasoning-paragraph" placeholder="Explain why you believe this diagnosis matches the case..." style="min-height:120px;"></textarea>
+        <div id="reasoning-warning" class="message error" style="display:none; margin-top:10px;">Please write at least a short paragraph before continuing.</div>
         <button class="primary-btn" id="btn-why-continue">See outcome →</button>
       </div>
 
@@ -396,6 +413,16 @@ function buildApp(CASE){
         <div id="outcome-body"></div>
         <div id="save-status" class="save-status">Saving your results...</div>
         <button class="ghost-btn" id="btn-restart">↺ Start over with a new intern</button>
+      </div>
+    </div>
+
+    <div class="notes-widget">
+      <button class="notes-toggle-btn" id="notes-toggle-btn">📝 My Notes</button>
+      <div class="notes-panel" id="notes-panel">
+        <h3 style="margin-top:0;">Your Clinical Notes</h3>
+        <p class="clipboard-hint">Available on every screen. Nothing is filled in for you.</p>
+        <textarea class="notes-textarea" id="clinical-notes" placeholder="Write what you're noticing..."></textarea>
+        <button class="ghost-btn" id="notes-close-btn" style="margin-top:10px;">Close</button>
       </div>
     </div>
   `;
@@ -554,7 +581,16 @@ function buildApp(CASE){
     });
   }
 
-  document.getElementById('btn-why-continue').addEventListener('click', () => showOutcome(selectedDx));
+  document.getElementById('btn-why-continue').addEventListener('click', () => {
+    const paragraph = document.getElementById('reasoning-paragraph').value.trim();
+    const warningEl = document.getElementById('reasoning-warning');
+    if(paragraph.length < 20){
+      warningEl.style.display = 'block';
+      return;
+    }
+    warningEl.style.display = 'none';
+    showOutcome(selectedDx);
+  });
 
   async function showOutcome(dx){
     const badge = document.getElementById('verdict-badge');
@@ -649,6 +685,14 @@ function buildApp(CASE){
       body.appendChild(reasonBlock);
     }
 
+    const reasoningParagraph = document.getElementById('reasoning-paragraph').value.trim();
+    if(reasoningParagraph){
+      const paragraphBlock = document.createElement('div');
+      paragraphBlock.className = 'note';
+      paragraphBlock.innerHTML = `<strong>Your written explanation:</strong><br>${reasoningParagraph}`;
+      body.appendChild(paragraphBlock);
+    }
+
     const debrief = document.createElement('div');
     debrief.className = 'debrief';
     debrief.innerHTML = `<h3>Debrief</h3><p style="font-size:0.85rem;color:var(--ink-soft);">${CASE.debriefTrapText}</p>`;
@@ -666,6 +710,7 @@ function buildApp(CASE){
       notes: document.getElementById('clinical-notes').value,
       checklist_selections: [...studentChecks],
       reasoning_selections: [...whyChoices],
+      reasoning_paragraph: reasoningParagraph,
       diagnosis: dx.name,
       was_correct: dx.correct
     });
@@ -687,6 +732,12 @@ function buildApp(CASE){
   }
 
   document.getElementById('btn-start').addEventListener('click', () => goTo('interview'));
+  document.getElementById('notes-toggle-btn').addEventListener('click', () => {
+    document.getElementById('notes-panel').classList.toggle('open');
+  });
+  document.getElementById('notes-close-btn').addEventListener('click', () => {
+    document.getElementById('notes-panel').classList.remove('open');
+  });
   document.getElementById('btn-to-collateral').addEventListener('click', () => goTo('collateral'));
   document.getElementById('request-teacher-btn').addEventListener('click', () => {
     const noteEl = document.getElementById('collateral-teacher-note');
@@ -712,6 +763,9 @@ function buildApp(CASE){
     state.asked.clear(); studentChecks.clear(); whyChoices.clear(); selectedDx = null;
     document.getElementById('notes-log').innerHTML = '';
     document.getElementById('clinical-notes').value = '';
+    document.getElementById('reasoning-paragraph').value = '';
+    document.getElementById('reasoning-warning').style.display = 'none';
+    document.getElementById('notes-panel').classList.remove('open');
 
     // Rebuild the question list since asked questions were removed, not just disabled
     const qListEl = document.getElementById('question-list');
