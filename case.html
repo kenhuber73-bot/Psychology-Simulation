@@ -302,6 +302,13 @@ function buildApp(CASE){
           </div>
         </div>
         <div class="monitor-stand"></div>
+        <h3>Diagnostic Reference</h3>
+        <p>Before forming an impression, it can help to review the disorders that might be relevant to this case. Click a name below to read a plain-language summary of its core features.</p>
+        <div class="clipboard" id="reference-box">
+          <div class="choice-list" id="reference-buttons"></div>
+          <div id="reference-sections"></div>
+        </div>
+        <p class="clipboard-hint" style="margin-top:-6px;">These summaries are simplified for classroom use and written in our own words — not verbatim diagnostic manual text.</p>
         <p>You are the psychology intern assigned to conduct the initial diagnostic interview. Ask thoughtful questions, take your own notes on what you hear, and later you'll synthesize those notes into a working diagnostic impression — the same process a clinician follows before ever settling on a label.</p>
         <p>Read the records carefully. Some details may seem to point toward an obvious explanation — real records often do. That doesn't mean the obvious explanation is the right one.</p>
         <button class="primary-btn" id="btn-start">Begin the interview →</button>
@@ -413,6 +420,24 @@ function buildApp(CASE){
         btn.remove();
       });
       bgButtonsContainer.appendChild(btn);
+    });
+  }
+
+  const refButtonsContainer = document.getElementById('reference-buttons');
+  const refSectionsContainer = document.getElementById('reference-sections');
+  if(CASE.disorderReference && CASE.disorderReference.length){
+    CASE.disorderReference.forEach(entry => {
+      const btn = document.createElement('button');
+      btn.className = 'choice';
+      btn.textContent = 'Read: ' + entry.name;
+      btn.addEventListener('click', () => {
+        const div = document.createElement('div');
+        div.className = 'bg-section';
+        div.innerHTML = `<div class="bg-label">${entry.name}</div><p>${entry.summary}</p>`;
+        refSectionsContainer.appendChild(div);
+        btn.remove();
+      });
+      refButtonsContainer.appendChild(btn);
     });
   }
 
@@ -724,6 +749,25 @@ function buildApp(CASE){
           btn.remove();
         });
         bgButtonsContainer.appendChild(btn);
+      });
+    }
+
+    // Rebuild the diagnostic reference buttons the same way
+    refSectionsContainer.innerHTML = '';
+    refButtonsContainer.innerHTML = '';
+    if(CASE.disorderReference && CASE.disorderReference.length){
+      CASE.disorderReference.forEach(entry => {
+        const btn = document.createElement('button');
+        btn.className = 'choice';
+        btn.textContent = 'Read: ' + entry.name;
+        btn.addEventListener('click', () => {
+          const div = document.createElement('div');
+          div.className = 'bg-section';
+          div.innerHTML = `<div class="bg-label">${entry.name}</div><p>${entry.summary}</p>`;
+          refSectionsContainer.appendChild(div);
+          btn.remove();
+        });
+        refButtonsContainer.appendChild(btn);
       });
     }
 
