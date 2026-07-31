@@ -178,7 +178,7 @@
   }
   .notes-recap.empty{color:var(--ink-soft);font-style:italic;}
   .symptom-columns{display:grid;grid-template-columns:1fr;gap:18px;}
-  @media(min-width:720px){.symptom-columns{grid-template-columns:1fr 1fr;}}
+  @media(min-width:640px){.symptom-columns{grid-template-columns:repeat(auto-fit, minmax(230px, 1fr));}}
   .symptom-columns .clipboard{margin-bottom:0;}
   .dx-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:16px;}
   @media(min-width:640px){.dx-grid{grid-template-columns:1fr 1fr;}}
@@ -371,22 +371,9 @@ function buildApp(CASE){
 
       <div class="screen" id="screen-synthesis">
         <h2>Synthesize Your Findings</h2>
-        <p>Here's what you wrote during the interview. Using your own notes, check off which symptoms you believe this case actually meets.</p>
+        <p>Here's what you wrote during the interview. Using your own notes, check off which symptoms you believe this case actually meets. There's a checklist for every disorder under consideration — not just the ones you suspect.</p>
         <div class="notes-recap" id="notes-recap"></div>
-        <div class="symptom-columns">
-          <div class="clipboard">
-            <h3>${CASE.gadColumnTitle}</h3>
-            <ul class="checklist" id="gad-checklist"></ul>
-          </div>
-          <div class="clipboard">
-            <h3>${CASE.mddColumnTitle}</h3>
-            <ul class="checklist" id="mdd-checklist"></ul>
-          </div>
-        </div>
-        <div class="clipboard" style="margin-top:18px;">
-          <h3>Other Considerations</h3>
-          <ul class="checklist" id="other-checklist"></ul>
-        </div>
+        <div class="symptom-columns" id="symptom-columns-container"></div>
         <button class="primary-btn" id="btn-to-dx">Form a diagnosis →</button>
       </div>
 
@@ -469,7 +456,21 @@ function buildApp(CASE){
   }
 
   const state = { asked: new Set() };
-  const allLabels = Object.assign({}, CASE.gadLabels, CASE.mddLabels, CASE.otherLabels);
+
+  function shuffleArray(arr){
+    const a = arr.slice();
+    for(let i = a.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  // Merge every category's labels into one lookup table, used for scoring and the reasoning chips
+  let allLabels = {};
+  (CASE.checklistCategories || []).forEach(cat => { allLabels = Object.assign(allLabels, cat.labels); });
+  if(CASE.otherLabels) allLabels = Object.assign(allLabels, CASE.otherLabels);
+
   const trueCriteria = new Set(Object.keys(CASE.symptomTruth).filter(k => CASE.symptomTruth[k]));
   const studentChecks = new Set();
   let selectedDx = null;
@@ -521,9 +522,31 @@ function buildApp(CASE){
       containerEl.appendChild(li);
     });
   }
-  buildChecklist(document.getElementById('gad-checklist'), CASE.gadLabels);
-  buildChecklist(document.getElementById('mdd-checklist'), CASE.mddLabels);
-  buildChecklist(document.getElementById('other-checklist'), CASE.otherLabels);
+
+  // Builds one checklist box per disorder in the differential, in a freshly randomized order
+  // each time this runs — so the correct answer's column is never in a predictable spot.
+  function renderSymptomColumns(){
+    const container = document.getElementById('symptom-columns-container');
+    container.innerHTML = '';
+
+    const categories = shuffleArray(CASE.checklistCategories || []);
+    categories.forEach((cat, idx) => {
+      const box = document.createElement('div');
+      box.className = 'clipboard';
+      box.innerHTML = `<h3>${cat.title}</h3><ul class="checklist" id="checklist-cat-${idx}"></ul>`;
+      container.appendChild(box);
+      buildChecklist(document.getElementById('checklist-cat-' + idx), cat.labels);
+    });
+
+    if(CASE.otherLabels && Object.keys(CASE.otherLabels).length){
+      const otherBox = document.createElement('div');
+      otherBox.className = 'clipboard';
+      otherBox.innerHTML = `<h3>Other Considerations</h3><ul class="checklist" id="checklist-other"></ul>`;
+      container.appendChild(otherBox);
+      buildChecklist(document.getElementById('checklist-other'), CASE.otherLabels);
+    }
+  }
+  renderSymptomColumns();
 
   function renderSynthesis(){
     const notesVal = document.getElementById('clinical-notes').value.trim();
@@ -538,7 +561,7 @@ function buildApp(CASE){
   }
 
   const dxGrid = document.getElementById('dx-grid');
-  CASE.dxOptions.forEach(dx => {
+  shuffleArray(CASE.dxOptions).forEach(dx => {
     const btn = document.createElement('button');
     btn.className = 'dx';
     btn.innerHTML = `<strong>${dx.name}</strong><span>${dx.blurb}</span>`;
