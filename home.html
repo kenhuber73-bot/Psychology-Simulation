@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Psych Sims — Interactive Psychology Classroom Resources</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1E9D2; --paper-dark:#E3D5AE; --folder:#D8C393; --ink:#2B2A25; --ink-soft:#5C5648;
+    --navy:#2F4858; --red:#A13D3D; --sage:#5E7A52; --line:#C7B78E; --white-card:#FBF7EC;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper); color:var(--ink); font-family:'Space Grotesk', sans-serif;
+  }
+  a{color:inherit;}
+
+  /* folder-tab nav, echoing the simulation's own tab bar */
+  .topnav{
+    display:flex; gap:6px; padding:18px 24px 0; max-width:1100px; margin:0 auto;
+  }
+  .topnav a{
+    font-family:'Courier Prime', monospace; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em;
+    padding:9px 18px; border:1px solid var(--line); border-bottom:none; background:var(--paper-dark);
+    color:var(--ink-soft); border-radius:7px 7px 0 0; text-decoration:none; opacity:0.6;
+  }
+  .topnav a.active{background:var(--white-card); color:var(--ink); opacity:1; font-weight:700; border-color:var(--ink);}
+  .topnav a:hover:not(.active){opacity:0.85;}
+
+  /* hero, styled like an intake case file */
+  .hero-wrap{max-width:1100px; margin:0 auto; padding:0 24px;}
+  .hero-card{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:0 10px 10px 10px;
+    padding:56px 48px; box-shadow:6px 6px 0 rgba(43,42,37,0.08); margin-bottom:60px;
+    position:relative; overflow:hidden;
+  }
+  .hero-stamp{
+    display:inline-block; border:2.5px solid var(--red); color:var(--red);
+    font-family:'Courier Prime', monospace; font-weight:700; font-size:0.78rem;
+    text-transform:uppercase; letter-spacing:0.1em; padding:6px 14px; border-radius:4px;
+    transform:rotate(-4deg); margin-bottom:26px;
+  }
+  .wordmark{
+    font-size:clamp(2.4rem, 6vw, 4.2rem); font-weight:800; line-height:1; margin:0 0 18px; letter-spacing:-0.01em;
+  }
+  .wordmark .a{color:var(--sage);}
+  .wordmark .b{color:var(--ink);}
+  .tagline{
+    font-family:'Courier Prime', monospace; font-size:1.05rem; color:var(--ink-soft);
+    margin:0 0 28px; max-width:560px; line-height:1.6;
+  }
+  .hero-desc{font-size:1rem; color:var(--ink-soft); max-width:600px; line-height:1.65; margin:0 0 34px;}
+  .cta-btn{
+    display:inline-block; font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:1rem;
+    background:var(--navy); color:var(--white-card); border:none; border-radius:7px;
+    padding:16px 30px; cursor:pointer; text-decoration:none;
+    box-shadow:3px 3px 0 rgba(43,42,37,0.3); transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .cta-btn:hover{transform:translate(-2px,-2px); box-shadow:5px 5px 0 rgba(43,42,37,0.4);}
+  .perforation{
+    position:absolute; left:0; right:0; bottom:0; height:1px;
+    background-image:linear-gradient(to right, var(--line) 60%, transparent 0%);
+    background-size:14px 1px; background-repeat:repeat-x;
+  }
+
+  /* feature row */
+  .features{
+    max-width:1100px; margin:0 auto 70px; padding:0 24px;
+    display:grid; grid-template-columns:1fr; gap:34px;
+  }
+  @media(min-width:760px){.features{grid-template-columns:repeat(4,1fr);}}
+  .feature{text-align:left;}
+  .feature svg{width:34px; height:34px; margin-bottom:14px; stroke:var(--navy);}
+  .feature h4{
+    font-size:0.82rem; text-transform:uppercase; letter-spacing:0.07em; margin:0 0 8px; color:var(--ink);
+  }
+  .feature p{font-size:0.88rem; color:var(--ink-soft); margin:0; line-height:1.55;}
+
+  /* activities grid */
+  .activities-wrap{max-width:1100px; margin:0 auto; padding:0 24px 70px;}
+  .activities-wrap h2{
+    font-family:'Courier Prime', monospace; font-size:0.8rem; text-transform:uppercase;
+    letter-spacing:0.08em; color:var(--ink-soft); margin:0 0 22px; padding-bottom:10px;
+    border-bottom:1px dashed var(--line);
+  }
+  .card-grid{display:grid; grid-template-columns:1fr; gap:20px;}
+  @media(min-width:700px){.card-grid{grid-template-columns:1fr 1fr;}}
+  .card{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:24px; box-shadow:4px 4px 0 rgba(43,42,37,0.08); text-decoration:none; color:inherit;
+    display:block; transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .card:hover{transform:translate(-2px,-2px); box-shadow:6px 6px 0 rgba(43,42,37,0.14);}
+  .card h3{margin:0 0 8px; font-size:1.1rem;}
+  .card p{margin:0; color:var(--ink-soft); font-size:0.9rem; line-height:1.55;}
+  .card .tag{
+    display:inline-block; font-family:'Courier Prime', monospace; font-size:0.68rem; text-transform:uppercase;
+    letter-spacing:0.05em; background:var(--sage); color:white; padding:3px 10px; border-radius:12px;
+    margin-bottom:10px; font-weight:700;
+  }
+  .card.coming-soon{cursor:default; opacity:0.62;}
+  .card.coming-soon:hover{transform:none; box-shadow:4px 4px 0 rgba(43,42,37,0.08);}
+  .card.coming-soon .tag{background:var(--ink-soft);}
+
+  footer{
+    text-align:center; padding:34px 20px; color:var(--ink-soft);
+    font-family:'Courier Prime', monospace; font-size:0.78rem; border-top:1px dashed var(--line);
+    max-width:1100px; margin:0 auto;
+  }
+</style>
+</head>
+<body>
+
+  <nav class="topnav">
+    <a href="index.html" class="active">Home</a>
+    <a href="#activities">Activities</a>
+    <a href="teacher-login.html">Teacher Login</a>
+  </nav>
+
+  <div class="hero-wrap">
+    <div class="hero-card">
+      <span class="hero-stamp">Open for Enrollment</span>
+      <h1 class="wordmark"><span class="a">Psych</span><span class="b">Sims</span></h1>
+      <p class="tagline">Transform your psychology classroom.</p>
+      <p class="hero-desc">Interactive case simulations, lesson resources, and (soon) virtual experiments for the high school psychology classroom — built by a teacher, for teachers.</p>
+      <a href="#activities" class="cta-btn">Explore Activities →</a>
+      <div class="perforation"></div>
+    </div>
+  </div>
+
+  <div class="features">
+    <div class="feature">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      <h4>Simulations</h4>
+      <p>Interview fictional clients, weigh evidence, and form a diagnostic impression.</p>
+    </div>
+    <div class="feature">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <h4>Lessons</h4>
+      <p>Ready-to-use plans and slides aligned to IB, HSP3U, and HSB4U curricula.</p>
+    </div>
+    <div class="feature">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6L3 21h18L15 8V2"/><path d="M9 2h6"/><path d="M8 16h8"/></svg>
+      <h4>Experiments</h4>
+      <p>Run simplified classic studies and analyze the data they generate.</p>
+    </div>
+    <div class="feature">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3a2 2 0 0 1-2 4"/><path d="M7 5H4a2 2 0 0 0 2 4"/></svg>
+      <h4>Review Games</h4>
+      <p>Fast, self-marking activities to reinforce unit content.</p>
+    </div>
+  </div>
+
+  <div class="activities-wrap" id="activities">
+    <h2>Case File 0001 — Available Activities</h2>
+    <div class="card-grid">
+
+      <a href="teacher-login.html" class="card">
+        <span class="tag">Available Now</span>
+        <h3>Case Study Simulations</h3>
+        <p>Students step into the role of a psychology intern, interview a fictional client, review records, weigh evidence, and form a diagnostic impression — with real-time feedback on both their conclusion and their process.</p>
+      </a>
+
+      <div class="card coming-soon">
+        <span class="tag">Coming Soon</span>
+        <h3>IB Psychology Lessons</h3>
+        <p>A growing library of lesson plans, presentation slides, and classroom activities aligned to the IB Psychology curriculum.</p>
+      </div>
+
+      <div class="card coming-soon">
+        <span class="tag">Coming Soon</span>
+        <h3>HSP3U Lessons</h3>
+        <p>Lesson plans and resources for Introduction to Anthropology, Psychology, and Sociology (Grade 11, Ontario curriculum).</p>
+      </div>
+
+      <div class="card coming-soon">
+        <span class="tag">Coming Soon</span>
+        <h3>HSB4U Lessons</h3>
+        <p>Lesson plans and resources for Challenge and Change in Society (Grade 12, Ontario curriculum).</p>
+      </div>
+
+      <div class="card coming-soon">
+        <span class="tag">Coming Soon</span>
+        <h3>Review Games</h3>
+        <p>Fast-paced, self-marking review activities to reinforce unit content — great for a warm-up or the last ten minutes of class.</p>
+      </div>
+
+      <div class="card coming-soon">
+        <span class="tag">Coming Soon</span>
+        <h3>Virtual Psychology Experiments</h3>
+        <p>Run simplified versions of classic psychology experiments right here, collect the data, and practice real statistical analysis on the results.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>Built for classroom use &middot; not a diagnostic tool</footer>
+
+</body>
+</html>
