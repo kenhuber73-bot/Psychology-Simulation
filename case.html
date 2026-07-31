@@ -94,6 +94,34 @@
   }
   .notes-textarea:focus-visible{outline:2px solid var(--navy);outline-offset:1px;}
   .clipboard{background:var(--folder);border:1px solid var(--ink);border-radius:8px;padding:16px 18px;height:fit-content;}
+
+  .browser-chrome{
+    border-radius:10px; overflow:hidden; border:1px solid #C4C4C4;
+    box-shadow:0 3px 10px rgba(0,0,0,0.15); margin:16px 0 22px;
+    font-family:'Space Grotesk', sans-serif;
+  }
+  .browser-topbar{
+    background:#E4E4E4; padding:10px 14px; display:flex; align-items:center; gap:6px;
+    border-bottom:1px solid #C4C4C4;
+  }
+  .browser-dot{width:11px; height:11px; border-radius:50%; display:inline-block;}
+  .dot-red{background:#FF5F57;} .dot-yellow{background:#FEBC2E;} .dot-green{background:#28C840;}
+  .browser-url{
+    flex:1; margin-left:10px; background:#FFFFFF; border-radius:6px; padding:5px 12px;
+    font-family:'Courier Prime', monospace; font-size:0.78rem; color:#555; text-align:left;
+    border:1px solid #D5D5D5;
+  }
+  .browser-content{
+    background:#F4F6F8; padding:18px 20px; color:#22292F;
+  }
+  .browser-content .choice{
+    background:#FFFFFF; border:1px solid #D5DAE0; color:#22292F;
+  }
+  .browser-content .choice:hover:not(:disabled){background:#EDF1F5;}
+  .browser-content .bg-section{
+    background:#FFFFFF; border:1px solid #D5DAE0; border-left:3px solid #2F4858;
+  }
+  .browser-content .bg-label{color:#556274;}
   .clipboard h3{margin-top:0;color:var(--ink);}
   .clipboard-hint{font-family:'Courier Prime', monospace;font-size:0.72rem;color:var(--ink-soft);margin:-4px 0 12px;line-height:1.5;}
   .checklist{list-style:none;margin:0;padding:0;font-family:'Courier Prime', monospace;font-size:0.82rem;}
@@ -243,11 +271,19 @@ function buildApp(CASE){
           Referred by: ${CASE.referral.referredBy}<br><br>
           Reason for referral: ${CASE.referral.reason}
         </div>
-        <h3>Student Records System</h3>
-        <p>Before meeting with the client, you pull up the school's records system on your computer. Click a category below to review what's on file — check whatever seems relevant before you begin.</p>
-        <div class="clipboard" id="records-box">
-          <div class="choice-list" id="background-buttons"></div>
-          <div id="background-sections"></div>
+        <h3>Clinic Records System</h3>
+        <p>Before meeting with the client, you pull up the clinic's records system on your computer. Click a category below to review what's on file — check whatever seems relevant before you begin.</p>
+        <div class="browser-chrome">
+          <div class="browser-topbar">
+            <span class="browser-dot dot-red"></span>
+            <span class="browser-dot dot-yellow"></span>
+            <span class="browser-dot dot-green"></span>
+            <div class="browser-url" id="browser-url">portal.schooldistrict.edu/records</div>
+          </div>
+          <div class="browser-content" id="records-box">
+            <div class="choice-list" id="background-buttons"></div>
+            <div id="background-sections"></div>
+          </div>
         </div>
         <p>You are the psychology intern assigned to conduct the initial diagnostic interview. Ask thoughtful questions, take your own notes on what you hear, and later you'll synthesize those notes into a working diagnostic impression — the same process a clinician follows before ever settling on a label.</p>
         <p>Read the records carefully. Some details may seem to point toward an obvious explanation — real records often do. That doesn't mean the obvious explanation is the right one.</p>
@@ -341,6 +377,9 @@ function buildApp(CASE){
   `;
 
   document.title = 'Case File ' + CASE.id;
+
+  const slug = CASE.recordsSlug || CASE.referral.clientLine.split(',')[0].toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().replace(/\s+/g, '-');
+  document.getElementById('browser-url').textContent = 'records.schoolpsychservices.org/patients/' + slug;
 
   const bgButtonsContainer = document.getElementById('background-buttons');
   const bgSectionsContainer = document.getElementById('background-sections');
