@@ -181,8 +181,9 @@
     margin:12px 0 22px;color:var(--ink);
   }
   .notes-recap.empty{color:var(--ink-soft);font-style:italic;}
-  .symptom-columns{display:grid;grid-template-columns:1fr;gap:18px;align-items:start;}
-  @media(min-width:640px){.symptom-columns{grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));}}
+  .symptom-columns{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;}
+  .symptom-columns > .clipboard{flex:1 1 240px;min-width:210px;}
+  .symptom-stack{flex:1 1 240px;min-width:210px;display:flex;flex-direction:column;gap:18px;}
   .symptom-columns .clipboard{margin-bottom:0;}
   .dx-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:16px;}
   @media(min-width:640px){.dx-grid{grid-template-columns:1fr 1fr;}}
@@ -540,26 +541,44 @@ function buildApp(CASE){
   }
 
   // Builds one checklist box per disorder in the differential, in a freshly randomized order
-  // each time this runs — so the correct answer's column is never in a predictable spot.
+  // each time this runs — so the correct answer's position is never in a predictable spot.
+  // Categories with a "cutoff" tend to be the longer/denser ones (e.g. GAD, MDD), so each
+  // gets its own full column; shorter categories (no cutoff) stack together in a side column.
+  function buildCategoryBox(cat, idSuffix){
+    const box = document.createElement('div');
+    box.className = 'clipboard';
+    box.innerHTML = `<h3>${cat.title}</h3><ul class="checklist" id="checklist-cat-${idSuffix}"></ul>`;
+    buildChecklist(box.querySelector('.checklist'), cat.labels);
+    if(cat.cutoff){
+      const note = document.createElement('p');
+      note.className = 'checklist-cutoff';
+      box.appendChild(note);
+      cutoffTrackers.push({ cutoff: cat.cutoff, el: note });
+    }
+    return box;
+  }
+
   function renderSymptomColumns(){
     const container = document.getElementById('symptom-columns-container');
     container.innerHTML = '';
     cutoffTrackers = [];
 
     const categories = shuffleArray(CASE.checklistCategories || []);
-    categories.forEach((cat, idx) => {
-      const box = document.createElement('div');
-      box.className = 'clipboard';
-      box.innerHTML = `<h3>${cat.title}</h3><ul class="checklist" id="checklist-cat-${idx}"></ul>`;
-      container.appendChild(box);
-      buildChecklist(document.getElementById('checklist-cat-' + idx), cat.labels);
-      if(cat.cutoff){
-        const note = document.createElement('p');
-        note.className = 'checklist-cutoff';
-        box.appendChild(note);
-        cutoffTrackers.push({ cutoff: cat.cutoff, el: note });
-      }
+    const bigCats = categories.filter(c => c.cutoff);
+    const smallCats = categories.filter(c => !c.cutoff);
+
+    bigCats.forEach((cat, idx) => {
+      container.appendChild(buildCategoryBox(cat, 'big-' + idx));
     });
+
+    if(smallCats.length){
+      const stack = document.createElement('div');
+      stack.className = 'symptom-stack';
+      smallCats.forEach((cat, idx) => {
+        stack.appendChild(buildCategoryBox(cat, 'small-' + idx));
+      });
+      container.appendChild(stack);
+    }
 
     if(CASE.otherLabels && Object.keys(CASE.otherLabels).length){
       const otherBox = document.createElement('div');
