@@ -59,6 +59,11 @@
       <div class="case-title">Emotional Stroop Task</div>
       <div class="case-desc">Same idea, different twist — pick a phobia category and see if fear-related words slow you down more than ordinary ones.</div>
     </div>
+
+    <div class="case-card" id="social-reflection-card" style="border-style:dashed;">
+      <div class="case-title">Social Situations Reflection</div>
+      <div class="case-desc">A short self-reflection scale on how you feel in social situations. Not a diagnostic tool, and nothing is saved.</div>
+    </div>
   </div>
 
   <script>
@@ -86,6 +91,10 @@
 
     document.getElementById('emotional-stroop-card').addEventListener('click', () => {
       window.location.href = 'emotional-stroop.html';
+    });
+
+    document.getElementById('social-reflection-card').addEventListener('click', () => {
+      window.location.href = 'social-situations-reflection.html';
     });
   </script>
 </body>
