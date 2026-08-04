@@ -181,8 +181,8 @@
     margin:12px 0 22px;color:var(--ink);
   }
   .notes-recap.empty{color:var(--ink-soft);font-style:italic;}
-  .symptom-columns{display:grid;grid-template-columns:1fr;gap:18px;}
-  @media(min-width:640px){.symptom-columns{grid-template-columns:repeat(auto-fit, minmax(230px, 1fr));}}
+  .symptom-columns{display:grid;grid-template-columns:1fr;gap:18px;align-items:start;}
+  @media(min-width:640px){.symptom-columns{grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));}}
   .symptom-columns .clipboard{margin-bottom:0;}
   .dx-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:16px;}
   @media(min-width:640px){.dx-grid{grid-template-columns:1fr 1fr;}}
@@ -486,7 +486,7 @@ function buildApp(CASE){
     cutoffTrackers.forEach(({cutoff, el}) => {
       const checkedCount = cutoff.keys.filter(k => studentChecks.has(k)).length;
       const met = checkedCount >= cutoff.count;
-      el.innerHTML = `<strong>Cutoff:</strong> ${cutoff.note} <span class="cutoff-status">(${checkedCount} of ${cutoff.count}+ needed currently checked — ${met ? 'threshold met' : 'threshold not yet met'})</span>`;
+      el.innerHTML = `<strong>Cutoff:</strong> ${cutoff.note} <span class="cutoff-status">(${checkedCount}/${cutoff.count}+ checked — ${met ? 'met' : 'not met'})</span>`;
       el.classList.toggle('cutoff-met', met);
     });
   }
