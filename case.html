@@ -503,8 +503,16 @@ function buildApp(CASE){
   function refreshCutoffNotes(){
     cutoffTrackers.forEach(({cutoff, el}) => {
       const checkedCount = cutoff.keys.filter(k => studentChecks.has(k)).length;
-      const met = checkedCount >= cutoff.count;
-      el.innerHTML = `<strong>Cutoff:</strong> ${cutoff.note} <span class="cutoff-status">(${checkedCount}/${cutoff.count}+ checked — ${met ? 'met' : 'not met'})</span>`;
+      const countMet = checkedCount >= cutoff.count;
+      const anchorMet = !cutoff.requireAnyOf || cutoff.requireAnyOf.some(k => studentChecks.has(k));
+      const met = countMet && anchorMet;
+      let status = `${checkedCount}/${cutoff.count}+ checked`;
+      if(countMet && !anchorMet){
+        status += ` — count met, but still missing ${cutoff.requireAnyOfLabel || 'a required item'} — not met`;
+      } else {
+        status += met ? ' — met' : ' — not met';
+      }
+      el.innerHTML = `<strong>Cutoff:</strong> ${cutoff.note} <span class="cutoff-status">(${status})</span>`;
       el.classList.toggle('cutoff-met', met);
     });
   }
@@ -534,21 +542,31 @@ function buildApp(CASE){
     document.getElementById('btn-to-collateral').disabled = state.asked.size < 3;
   }
 
-  function buildChecklist(containerEl, labelMap){
+  function buildChecklist(containerEl, labelMap, idSuffix){
     Object.entries(labelMap).forEach(([key,label]) => {
-      if(document.getElementById('crit-'+key)) return;
+      const domId = 'crit-' + idSuffix + '-' + key;
+      if(document.getElementById(domId)) return;
       const li = document.createElement('li');
-      li.id = 'crit-'+key;
-      li.setAttribute('role','checkbox'); li.setAttribute('aria-checked','false'); li.tabIndex = 0;
-      li.innerHTML = `<span class="box"></span><span>${label}</span>`;
+      li.id = domId;
+      li.dataset.key = key;
+      const isChecked = studentChecks.has(key);
+      li.setAttribute('role','checkbox'); li.setAttribute('aria-checked', isChecked ? 'true' : 'false'); li.tabIndex = 0;
+      li.innerHTML = `<span class="box">${isChecked ? '✓' : ''}</span><span>${label}</span>`;
+      if(isChecked) li.classList.add('checked');
       const toggle = () => {
         if(studentChecks.has(key)){
           studentChecks.delete(key);
-          li.classList.remove('checked'); li.querySelector('.box').textContent=''; li.setAttribute('aria-checked','false');
         } else {
           studentChecks.add(key);
-          li.classList.add('checked'); li.querySelector('.box').textContent='✓'; li.setAttribute('aria-checked','true');
         }
+        // Some keys are shared across categories (e.g. "concentration" applies to both
+        // GAD and MDD) — keep every rendered row for that key in sync, not just this one.
+        const nowChecked = studentChecks.has(key);
+        document.querySelectorAll(`[data-key="${key}"]`).forEach(el => {
+          el.classList.toggle('checked', nowChecked);
+          el.querySelector('.box').textContent = nowChecked ? '✓' : '';
+          el.setAttribute('aria-checked', nowChecked ? 'true' : 'false');
+        });
         refreshCutoffNotes();
       };
       li.addEventListener('click', toggle);
@@ -565,7 +583,7 @@ function buildApp(CASE){
     const box = document.createElement('div');
     box.className = 'clipboard';
     box.innerHTML = `<h3>${cat.title}</h3><ul class="checklist" id="checklist-cat-${idSuffix}"></ul>`;
-    buildChecklist(box.querySelector('.checklist'), cat.labels);
+    buildChecklist(box.querySelector('.checklist'), cat.labels, idSuffix);
     if(cat.cutoff){
       const note = document.createElement('p');
       note.className = 'checklist-cutoff';
@@ -602,7 +620,7 @@ function buildApp(CASE){
       otherBox.className = 'clipboard';
       otherBox.innerHTML = `<h3>Other Considerations</h3><ul class="checklist" id="checklist-other"></ul>`;
       container.appendChild(otherBox);
-      buildChecklist(document.getElementById('checklist-other'), CASE.otherLabels);
+      buildChecklist(document.getElementById('checklist-other'), CASE.otherLabels, 'other');
     }
     refreshCutoffNotes();
   }
