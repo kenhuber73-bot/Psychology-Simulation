@@ -81,6 +81,11 @@
       <div class="case-title">Social Situations Reflection</div>
       <div class="case-desc">A short self-reflection scale on how you feel in social situations. Not a diagnostic tool, and nothing is saved.</div>
     </div>
+
+    <div class="case-card" id="sias-card" style="border-style:dashed;">
+      <div class="case-title">Social Interaction Anxiety Scale</div>
+      <div class="case-desc">The actual, published SIAS used in research. Not a diagnostic tool, and nothing is saved.</div>
+    </div>
   </div>
 
   <script>
@@ -116,6 +121,10 @@
 
     document.getElementById('social-reflection-card').addEventListener('click', () => {
       window.location.href = 'social-situations-reflection.html';
+    });
+
+    document.getElementById('sias-card').addEventListener('click', () => {
+      window.location.href = 'sias.html';
     });
   </script>
 </body>

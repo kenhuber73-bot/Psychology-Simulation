@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Social Interaction Anxiety Scale — Psych Simulations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1E9D2; --paper-dark:#E3D5AE; --folder:#D8C393; --ink:#2B2A25; --ink-soft:#5C5648;
+    --navy:#2F4858; --red:#A13D3D; --sage:#5E7A52; --line:#C7B78E; --white-card:#FBF7EC;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:radial-gradient(circle at 20% 10%, rgba(0,0,0,0.03) 0, transparent 40%);
+    font-family:'Space Grotesk', sans-serif; color:var(--ink); min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .wrap{width:100%; max-width:600px;}
+  .eyebrow{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; text-transform:uppercase;
+    letter-spacing:0.08em; color:var(--ink-soft); text-align:center; margin-bottom:8px;
+  }
+  .panel{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:32px; box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+  }
+  .screen{display:none;}
+  .screen.active{display:block;}
+  h1{font-size:1.4rem; margin:0 0 14px; text-align:center;}
+  h2{font-size:1.15rem; margin:0 0 10px;}
+  p{line-height:1.6; font-size:0.95rem;}
+  .rule{
+    background:var(--paper-dark); border-left:3px solid var(--navy); border-radius:0 4px 4px 0;
+    padding:14px 16px; margin:16px 0; font-size:0.85rem; line-height:1.55;
+  }
+  .rule strong{display:block; margin-bottom:4px;}
+  .primary-btn{
+    background:var(--navy); color:white; border:none; border-radius:24px; padding:13px 26px;
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:0.95rem; cursor:pointer;
+    display:block; margin:20px auto 0; transition:transform 0.12s ease;
+  }
+  .primary-btn:hover{transform:translateY(-1px);}
+  .primary-btn:disabled{opacity:0.4; cursor:default; transform:none;}
+
+  /* --- Item list --- */
+  .item{border-bottom:1px dashed var(--line); padding:16px 0;}
+  .item:first-child{padding-top:0;}
+  .item-text{font-size:0.92rem; margin-bottom:10px; line-height:1.5;}
+  .scale-row{display:flex; gap:6px; flex-wrap:wrap;}
+  .scale-option{
+    flex:1; min-width:64px; text-align:center; border:1px solid var(--line); border-radius:6px;
+    padding:8px 4px; cursor:pointer; font-family:'Courier Prime', monospace; font-size:0.7rem;
+    color:var(--ink-soft); background:var(--paper); transition:background 0.1s ease, border-color 0.1s ease;
+  }
+  .scale-option:hover{border-color:var(--ink);}
+  .scale-option.selected{background:var(--navy); border-color:var(--navy); color:white; font-weight:700;}
+  .progress{
+    font-family:'Courier Prime', monospace; font-size:0.75rem; color:var(--ink-soft);
+    text-align:center; margin-bottom:6px;
+  }
+  .progress-track{background:var(--paper); border-radius:4px; height:6px; overflow:hidden; margin-bottom:20px;}
+  .progress-fill{height:100%; background:var(--sage); border-radius:4px; transition:width 0.2s ease;}
+
+  /* --- Results --- */
+  .score-callout{
+    background:var(--paper-dark); border-radius:6px; padding:20px; margin:16px 0; text-align:center;
+  }
+  .score-number{font-size:2.4rem; font-weight:700; color:var(--navy);}
+  .score-max{font-size:1rem; color:var(--ink-soft);}
+  .score-band{font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:1.05rem; margin-top:8px;}
+  .footer-note{
+    margin-top:22px; font-size:0.8rem; color:var(--ink-soft); border-top:1px dashed var(--line);
+    padding-top:14px; line-height:1.55;
+  }
+  .btn-row{display:flex; gap:10px; justify-content:center; margin-top:20px;}
+  .ghost-btn{
+    background:transparent; color:var(--ink-soft); border:1px solid var(--line); border-radius:24px;
+    padding:11px 22px; font-family:'Space Grotesk', sans-serif; font-size:0.88rem; cursor:pointer;
+  }
+  .ghost-btn:hover{color:var(--ink); border-color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Psych Simulations &middot; Self-Reflection Tool</div>
+  <div class="panel">
+
+    <div class="screen active" id="screen-intro">
+      <h1>Social Interaction Anxiety Scale</h1>
+      <p>This is the actual SIAS, a real published measure researchers use to study social anxiety (Mattick &amp; Clarke, 1998). For each statement, rate how characteristic or true it is of you.</p>
+      <div class="rule">
+        <strong>About this version</strong>
+        Reproduced from a public-domain co-occurring disorders screening toolkit, which explicitly permits duplication for personal or group use. This is a different tool from the "Social Situations Reflection" activity, which was written fresh for this class — this one is the real, published scale.
+      </div>
+      <div class="rule">
+        <strong>Not a diagnostic tool</strong>
+        This isn't a clinical assessment, and your answers aren't saved anywhere. A score here can't tell you whether you have a diagnosable condition — only a licensed professional can make that determination.
+      </div>
+      <p style="text-align:center; color:var(--ink-soft); font-size:0.85rem;">20 statements &middot; answer honestly, there's no "right" answer</p>
+      <button class="primary-btn" id="btn-start">Start →</button>
+    </div>
+
+    <div class="screen" id="screen-quiz">
+      <div class="progress" id="progress-text">Statement 1 of 20</div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%;"></div></div>
+      <div id="item-container"></div>
+      <button class="primary-btn" id="btn-see-results" disabled>See my results →</button>
+    </div>
+
+    <div class="screen" id="screen-results">
+      <h2>Your Results</h2>
+      <div class="score-callout">
+        <span class="score-number" id="score-number">—</span><span class="score-max"> / 80</span>
+        <div class="score-band" id="score-band"></div>
+      </div>
+      <p id="score-explain"></p>
+
+      <div class="footer-note">
+        This score is not, and cannot be, an official diagnosis — only a licensed professional can diagnose a condition. Published research on adult samples has sometimes used a score in the mid-30s as a rough marker of clinically significant social anxiety, but that threshold wasn't established specifically for teenagers, so treat any band here as a loose reference point, not a cutoff. Your answers were never saved anywhere and are gone as soon as you leave this page.
+      </div>
+
+      <div class="btn-row">
+        <button class="ghost-btn" id="btn-retry">↺ Try again</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // The actual Social Interaction Anxiety Scale (Mattick & Clarke, 1998),
+  // reproduced from a public-domain co-occurring disorders screening toolkit
+  // that explicitly permits duplication for personal/group use.
+  // Items 5, 9, and 11 are positively worded and are reverse-scored.
+  const ITEMS = [
+    { text: "I get nervous if I have to speak with someone in authority (teacher, boss, etc.).", reverse: false },
+    { text: "I have difficulty making eye contact with others.", reverse: false },
+    { text: "I become tense if I have to talk about myself or my feelings.", reverse: false },
+    { text: "I find it difficult to mix comfortably with the people I work with.", reverse: false },
+    { text: "I find it easy to make friends my own age.", reverse: true },
+    { text: "I tense up if I meet an acquaintance in the street.", reverse: false },
+    { text: "When mixing socially, I am uncomfortable.", reverse: false },
+    { text: "I feel tense if I am alone with just one other person.", reverse: false },
+    { text: "I am at ease meeting people at parties, etc.", reverse: true },
+    { text: "I have difficulty talking with other people.", reverse: false },
+    { text: "I find it easy to think of things to talk about.", reverse: true },
+    { text: "I worry about expressing myself in case I appear awkward.", reverse: false },
+    { text: "I find it difficult to disagree with another's point of view.", reverse: false },
+    { text: "I have difficulty talking to attractive persons of the opposite sex.", reverse: false },
+    { text: "I find myself worrying that I won't know what to say in social situations.", reverse: false },
+    { text: "I am nervous mixing with people I don't know well.", reverse: false },
+    { text: "I feel I'll say something embarrassing when talking.", reverse: false },
+    { text: "When mixing in a group, I find myself worrying I will be ignored.", reverse: false },
+    { text: "I am tense mixing in a group.", reverse: false },
+    { text: "I am unsure whether to greet someone I know only slightly.", reverse: false }
+  ];
+
+  const SCALE = [
+    { value: 0, label: 'Not at all' },
+    { value: 1, label: 'Slightly' },
+    { value: 2, label: 'Moderately' },
+    { value: 3, label: 'Very much' },
+    { value: 4, label: 'Extremely' }
+  ];
+
+  const MAX_SCORE = ITEMS.length * 4;
+  const answers = new Array(ITEMS.length).fill(null);
+
+  function goTo(name){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+  }
+
+  function renderItems(){
+    const container = document.getElementById('item-container');
+    container.innerHTML = '';
+    ITEMS.forEach((item, idx) => {
+      const el = document.createElement('div');
+      el.className = 'item';
+      el.innerHTML = `
+        <div class="item-text">${idx + 1}. ${item.text}</div>
+        <div class="scale-row" id="scale-${idx}"></div>
+      `;
+      container.appendChild(el);
+      const row = el.querySelector('.scale-row');
+      SCALE.forEach(opt => {
+        const btn = document.createElement('div');
+        btn.className = 'scale-option';
+        btn.textContent = opt.label;
+        btn.dataset.value = opt.value;
+        btn.addEventListener('click', () => selectAnswer(idx, opt.value, row));
+        row.appendChild(btn);
+      });
+    });
+  }
+
+  function selectAnswer(idx, value, row){
+    answers[idx] = value;
+    row.querySelectorAll('.scale-option').forEach(el => {
+      el.classList.toggle('selected', Number(el.dataset.value) === value);
+    });
+    updateProgress();
+  }
+
+  function updateProgress(){
+    const answeredCount = answers.filter(a => a !== null).length;
+    document.getElementById('progress-text').textContent = `Statement ${Math.min(answeredCount + 1, ITEMS.length)} of ${ITEMS.length}`;
+    document.getElementById('progress-fill').style.width = (answeredCount / ITEMS.length * 100) + '%';
+    document.getElementById('btn-see-results').disabled = answeredCount < ITEMS.length;
+  }
+
+  function showResults(){
+    const total = answers.reduce((sum, raw, idx) => {
+      const scored = ITEMS[idx].reverse ? (4 - raw) : raw;
+      return sum + scored;
+    }, 0);
+    document.getElementById('score-number').textContent = total;
+
+    const bandEl = document.getElementById('score-band');
+    const explainEl = document.getElementById('score-explain');
+
+    let band, explain;
+    if(total <= 20){
+      band = 'Lower end of the range';
+      explain = `Social interactions don't seem to weigh heavily on you day to day. Most people feel at least a little nervous meeting someone new sometimes — this just means it's not taking up much of your headspace.`;
+    } else if(total <= 33){
+      band = 'Middle of the range';
+      explain = `Some social situations bring up real nervousness for you — a common experience, not a red flag on its own. Most people land somewhere in this range.`;
+    } else if(total <= 49){
+      band = 'Higher end of the range';
+      explain = `This is close to or above the range some published research has used as a rough marker for clinically significant social anxiety in adults. Worth being aware of, especially if you notice yourself avoiding situations because of it.`;
+    } else {
+      band = 'High end of the range';
+      explain = `This score is well above the range some published research has associated with clinically significant social anxiety in adults. That's worth paying attention to.`;
+    }
+
+    bandEl.textContent = band;
+    explainEl.textContent = explain;
+    goTo('results');
+  }
+
+  function resetQuiz(){
+    answers.fill(null);
+    renderItems();
+    updateProgress();
+    goTo('quiz');
+  }
+
+  document.getElementById('btn-start').addEventListener('click', resetQuiz);
+  document.getElementById('btn-see-results').addEventListener('click', showResults);
+  document.getElementById('btn-retry').addEventListener('click', resetQuiz);
+</script>
+</body>
+</html>
