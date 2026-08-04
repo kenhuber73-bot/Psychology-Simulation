@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gene x Environment: Thompson et al. (2011) — Psych Simulations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1E9D2; --paper-dark:#E3D5AE; --folder:#D8C393; --ink:#2B2A25; --ink-soft:#5C5648;
+    --navy:#2F4858; --red:#A13D3D; --sage:#5E7A52; --line:#C7B78E; --white-card:#FBF7EC;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:radial-gradient(circle at 20% 10%, rgba(0,0,0,0.03) 0, transparent 40%);
+    font-family:'Space Grotesk', sans-serif; color:var(--ink); min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .wrap{width:100%; max-width:680px;}
+  .eyebrow{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; text-transform:uppercase;
+    letter-spacing:0.08em; color:var(--ink-soft); text-align:center; margin-bottom:8px;
+  }
+  .panel{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:32px; box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+  }
+  .screen{display:none;}
+  .screen.active{display:block;}
+  h1{font-size:1.35rem; margin:0 0 6px; text-align:center;}
+  h2{font-size:1.1rem; margin:0 0 10px;}
+  .subhead{text-align:center; color:var(--ink-soft); font-size:0.85rem; margin-bottom:20px;}
+  p{line-height:1.6; font-size:0.93rem;}
+  .rule{
+    background:var(--paper-dark); border-left:3px solid var(--navy); border-radius:0 4px 4px 0;
+    padding:14px 16px; margin:16px 0; font-size:0.87rem; line-height:1.55;
+  }
+  .rule strong{display:block; margin-bottom:4px;}
+  .primary-btn{
+    background:var(--navy); color:white; border:none; border-radius:24px; padding:13px 26px;
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:0.95rem; cursor:pointer;
+    display:block; margin:20px auto 0; transition:transform 0.12s ease;
+  }
+  .primary-btn:hover{transform:translateY(-1px);}
+  .primary-btn:disabled{opacity:0.4; cursor:default; transform:none;}
+  .ghost-btn{
+    background:transparent; color:var(--ink-soft); border:1px solid var(--line); border-radius:24px;
+    padding:11px 22px; font-family:'Space Grotesk', sans-serif; font-size:0.88rem; cursor:pointer;
+  }
+  .ghost-btn:hover{color:var(--ink); border-color:var(--ink);}
+  .btn-row{display:flex; gap:10px; justify-content:center; margin-top:20px; flex-wrap:wrap;}
+
+  /* --- 2x2 grid --- */
+  .grid-wrap{margin:24px 0 12px;}
+  .axis-label-top{
+    text-align:center; font-family:'Courier Prime', monospace; font-size:0.72rem;
+    text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft); margin-bottom:8px;
+  }
+  .grid-with-axis{display:flex; gap:10px;}
+  .axis-label-side{
+    writing-mode:vertical-rl; transform:rotate(180deg); font-family:'Courier Prime', monospace;
+    font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; width:20px;
+  }
+  .grid-2x2{
+    flex:1; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:10px;
+  }
+  .col-headers, .row-block{display:contents;}
+  .cell{
+    background:var(--paper); border:2px solid var(--line); border-radius:8px;
+    padding:14px; cursor:pointer; text-align:center; min-height:120px;
+    display:flex; flex-direction:column; justify-content:center; align-items:center; gap:6px;
+    transition:border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+  }
+  .cell:hover{border-color:var(--navy); transform:translateY(-1px);}
+  .cell.picked{border-color:var(--navy); background:var(--paper-dark);}
+  .cell.revealed{cursor:default; transform:none;}
+  .cell.revealed:hover{transform:none;}
+  .cell.revealed.elevated{border-color:var(--red); background:#F4E6E1;}
+  .cell.revealed.baseline{border-color:var(--sage); background:#E9EFE5;}
+  .cell-label{font-weight:700; font-size:0.85rem; line-height:1.3;}
+  .cell-symbol{font-size:1.6rem;}
+  .cell-result{font-family:'Courier Prime', monospace; font-size:0.72rem; color:var(--ink-soft); margin-top:2px;}
+  .col-header{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; text-align:center; color:var(--ink-soft);
+    text-transform:uppercase; letter-spacing:0.04em;
+  }
+
+  .predict-hint{
+    text-align:center; font-family:'Courier Prime', monospace; font-size:0.78rem;
+    color:var(--ink-soft); margin-top:14px;
+  }
+
+  .feedback-callout{
+    border-radius:6px; padding:16px 18px; margin:18px 0; text-align:center; font-weight:600;
+  }
+  .feedback-callout.correct{background:#E4EDE1; color:#3E5233;}
+  .feedback-callout.incorrect{background:#F4E1E1; color:#7A2E2E;}
+
+  .bar-panel{margin-top:22px;}
+  .bar-row{display:flex; align-items:center; gap:10px; margin:8px 0;}
+  .bar-label{font-family:'Courier Prime', monospace; font-size:0.72rem; color:var(--ink-soft); width:130px; flex-shrink:0;}
+  .bar-track{flex:1; background:var(--paper); border-radius:4px; height:18px; overflow:hidden; border:1px solid var(--line);}
+  .bar-fill{height:100%; border-radius:4px 0 0 4px; transition:width 0.5s ease;}
+  .bar-fill.elevated{background:var(--red);}
+  .bar-fill.baseline{background:var(--sage);}
+
+  .key-insight{
+    background:var(--paper-dark); border-radius:6px; padding:18px; margin-top:22px;
+  }
+  .key-insight h3{margin:0 0 8px; font-size:0.95rem;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Psych Simulations &middot; Core Study Breakdown</div>
+  <div class="panel">
+
+    <div class="screen active" id="screen-intro">
+      <h1>Gene x Environment: Thompson et al. (2011)</h1>
+
+      <h2 style="margin-top:18px;">What's oxytocin got to do with it?</h2>
+      <p>Oxytocin is a hormone that plays a big role in bonding, trust, and how we respond to social and emotional stress. It works by attaching to receptors on cells — think of the receptor as a lock, and oxytocin as the key. The gene that builds that receptor is called OXTR.</p>
+      <p>Some people carry a variation of the OXTR gene that changes how well that receptor works. On its own, researchers have found this variation doesn't seem to cause problems. It just means a person's stress-response system might be a little more sensitive under the right — or wrong — conditions.</p>
+
+      <h2 style="margin-top:18px;">What does "gene x environment interaction" mean?</h2>
+      <p>Most of the time, we think of genes and environment as two separate things that each push your development in their own direction. A "gene x environment interaction" is different: it's when a gene only matters <em>because of</em> a specific environment, or an environment only matters <em>because of</em> a specific gene. Neither one does much alone — the effect only shows up when both are present together, like two ingredients that are harmless separately but react when combined.</p>
+      <div class="rule">
+        <strong>Why this matters for this study</strong>
+        Growing up with a mother who has struggled with depression is a known environmental stressor for children. Thompson and colleagues wanted to know: does having the OXTR variation make a girl more vulnerable to that specific stressor — even if her mother isn't currently depressed?
+      </div>
+
+      <h2 style="margin-top:18px;">How the study worked</h2>
+      <p>The researchers studied 92 adolescent girls, ages 9 to 14. Each girl's mother was interviewed about her mental health history, and each girl's DNA was collected (from a saliva sample) to check for the OXTR variation. Girls also completed a standard anxiety measure, and clinical interviews were carried out with both mothers and daughters.</p>
+      <p>Mothers were sorted into two groups based on their history:</p>
+      <div class="rule">
+        <strong>Low adversity (about 65% of mothers)</strong> — no history of Major Depressive Disorder or any other mental illness.<br><br>
+        <strong>High adversity (about 35% of mothers)</strong> — a history of recurrent Major Depressive Disorder (at least two depressive episodes during the daughter's lifetime), but currently in remission — meaning these mothers were not depressed at the time of the study.
+      </div>
+      <p>Crossing that with whether each girl carried the OXTR variation or not creates four possible groups — which is exactly what you're about to work through.</p>
+
+      <div class="rule">
+        <strong>Your job</strong>
+        Before seeing the results, predict which of the four groups had the highest symptom levels of depression, physical anxiety, and social anxiety. Then reveal all four and see if your prediction matches what the researchers actually found.
+      </div>
+      <button class="primary-btn" id="btn-start">Make your prediction →</button>
+    </div>
+
+    <div class="screen" id="screen-predict">
+      <h2>Which group do you predict had the highest symptoms?</h2>
+      <p class="subhead">Click one cell, then confirm your guess.</p>
+
+      <div class="grid-wrap">
+        <div class="grid-with-axis">
+          <div class="axis-label-side">Mother's history</div>
+          <div style="flex:1;">
+            <div class="axis-label-top">OXTR gene</div>
+            <div class="grid-2x2" id="predict-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="predict-hint" id="predict-hint">Click a cell to lock in your prediction.</div>
+      <button class="primary-btn" id="btn-confirm-predict" disabled>Reveal the results →</button>
+    </div>
+
+    <div class="screen" id="screen-results">
+      <h2>The actual results</h2>
+      <div class="feedback-callout" id="feedback-callout"></div>
+
+      <div class="grid-wrap">
+        <div class="grid-with-axis">
+          <div class="axis-label-side">Mother's history</div>
+          <div style="flex:1;">
+            <div class="axis-label-top">OXTR gene</div>
+            <div class="grid-2x2" id="results-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bar-panel">
+        <div class="bar-row">
+          <div class="bar-label">Depression</div>
+          <div class="bar-track"><div class="bar-fill" id="bar-depression"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Physical anxiety</div>
+          <div class="bar-track"><div class="bar-fill" id="bar-physical"></div></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Social anxiety</div>
+          <div class="bar-track"><div class="bar-fill" id="bar-social"></div></div>
+        </div>
+        <p class="predict-hint" id="bar-caption">Click a group above to see its relative symptom levels.</p>
+      </div>
+
+      <div class="key-insight">
+        <h3>The key insight</h3>
+        <p>Only <strong>one</strong> of the four groups showed elevated symptoms: girls with the OXTR variation <em>and</em> a mother with a history of recurrent depression. Having the gene variation alone didn't matter. Having a mother with a depression history alone didn't matter. It took <strong>both together</strong> — which is exactly what "gene x environment interaction" means: a genetic vulnerability that only shows its effect when a specific environmental stressor is also present.</p>
+      </div>
+
+      <div class="btn-row">
+        <button class="ghost-btn" id="btn-retry">↺ Try again</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Four groups in the study design. "elevated" = the one group Thompson et al.
+  // found had significantly higher symptoms; the other three were statistically
+  // similar to each other (all "baseline").
+  const GROUPS = [
+    { id: 'low-novar', adversity: 'Low adversity', gene: 'No variation', outcome: 'baseline', depression: 35, physical: 38, social: 32 },
+    { id: 'low-var',   adversity: 'Low adversity', gene: 'Has variation', outcome: 'baseline', depression: 38, physical: 36, social: 34 },
+    { id: 'high-novar', adversity: 'High adversity', gene: 'No variation', outcome: 'baseline', depression: 40, physical: 40, social: 37 },
+    { id: 'high-var',  adversity: 'High adversity', gene: 'Has variation', outcome: 'elevated', depression: 88, physical: 82, social: 90 }
+  ];
+
+  let predictedId = null;
+
+  function goTo(name){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+  }
+
+  function buildPredictGrid(){
+    const grid = document.getElementById('predict-grid');
+    grid.innerHTML = '';
+    GROUPS.forEach(g => {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.id = g.id;
+      cell.innerHTML = `
+        <div class="cell-symbol">?</div>
+        <div class="cell-label">${g.adversity}<br>${g.gene}</div>
+      `;
+      cell.addEventListener('click', () => {
+        predictedId = g.id;
+        grid.querySelectorAll('.cell').forEach(c => c.classList.remove('picked'));
+        cell.classList.add('picked');
+        document.getElementById('predict-hint').textContent = `You picked: ${g.adversity} + ${g.gene}`;
+        document.getElementById('btn-confirm-predict').disabled = false;
+      });
+      grid.appendChild(cell);
+    });
+  }
+
+  function buildResultsGrid(){
+    const grid = document.getElementById('results-grid');
+    grid.innerHTML = '';
+    GROUPS.forEach(g => {
+      const cell = document.createElement('div');
+      cell.className = 'cell revealed ' + g.outcome;
+      cell.dataset.id = g.id;
+      cell.innerHTML = `
+        <div class="cell-symbol">${g.outcome === 'elevated' ? '▲' : '—'}</div>
+        <div class="cell-label">${g.adversity}<br>${g.gene}</div>
+        <div class="cell-result">${g.outcome === 'elevated' ? 'Elevated symptoms' : 'Baseline symptoms'}</div>
+      `;
+      cell.addEventListener('click', () => showBars(g));
+      grid.appendChild(cell);
+    });
+  }
+
+  function showBars(g){
+    document.getElementById('bar-depression').style.width = g.depression + '%';
+    document.getElementById('bar-physical').style.width = g.physical + '%';
+    document.getElementById('bar-social').style.width = g.social + '%';
+    ['bar-depression','bar-physical','bar-social'].forEach(id => {
+      document.getElementById(id).className = 'bar-fill ' + g.outcome;
+    });
+    document.getElementById('bar-caption').textContent =
+      `${g.adversity} + ${g.gene} (illustrative relative levels, not exact study values)`;
+  }
+
+  function showResults(){
+    buildResultsGrid();
+    const actual = GROUPS.find(g => g.outcome === 'elevated');
+    const feedback = document.getElementById('feedback-callout');
+    if(predictedId === actual.id){
+      feedback.className = 'feedback-callout correct';
+      feedback.textContent = `Correct! ${actual.adversity} + ${actual.gene} was the group with elevated symptoms.`;
+    } else {
+      feedback.className = 'feedback-callout incorrect';
+      feedback.textContent = `Not quite — the elevated group was actually ${actual.adversity} + ${actual.gene}.`;
+    }
+    showBars(actual);
+    goTo('results');
+  }
+
+  function resetActivity(){
+    predictedId = null;
+    buildPredictGrid();
+    document.getElementById('predict-hint').textContent = 'Click a cell to lock in your prediction.';
+    document.getElementById('btn-confirm-predict').disabled = true;
+    goTo('predict');
+  }
+
+  document.getElementById('btn-start').addEventListener('click', resetActivity);
+  document.getElementById('btn-confirm-predict').addEventListener('click', showResults);
+  document.getElementById('btn-retry').addEventListener('click', resetActivity);
+</script>
+</body>
+</html>
