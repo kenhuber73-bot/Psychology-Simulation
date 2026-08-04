@@ -170,6 +170,10 @@
     display:flex;align-items:center;justify-content:center;font-size:0.7rem;
   }
   .checklist li.checked .box{background:var(--sage);border-color:var(--sage);color:white;}
+  .checklist-cutoff{font-family:'Courier Prime', monospace;font-size:0.78rem;color:var(--ink-soft);margin:10px 0 0;padding-top:10px;border-top:1px dashed var(--line);line-height:1.5;}
+  .checklist-cutoff .cutoff-status{font-weight:700;}
+  .checklist-cutoff.cutoff-met .cutoff-status{color:var(--sage);}
+  .checklist-cutoff:not(.cutoff-met) .cutoff-status{color:var(--ink-soft);}
   .progress{font-family:'Courier Prime', monospace;font-size:0.75rem;color:var(--ink-soft);margin-top:14px;}
   .notes-recap{
     font-family:'Courier Prime', monospace;font-size:0.88rem;line-height:1.6;background:var(--paper-dark);
@@ -476,6 +480,16 @@ function buildApp(CASE){
   const studentChecks = new Set();
   let selectedDx = null;
   const whyChoices = new Set();
+  let cutoffTrackers = [];
+
+  function refreshCutoffNotes(){
+    cutoffTrackers.forEach(({cutoff, el}) => {
+      const checkedCount = cutoff.keys.filter(k => studentChecks.has(k)).length;
+      const met = checkedCount >= cutoff.count;
+      el.innerHTML = `<strong>Cutoff:</strong> ${cutoff.note} <span class="cutoff-status">(${checkedCount} of ${cutoff.count}+ needed currently checked — ${met ? 'threshold met' : 'threshold not yet met'})</span>`;
+      el.classList.toggle('cutoff-met', met);
+    });
+  }
 
   const qList = document.getElementById('question-list');
   CASE.questions.forEach(q => {
@@ -517,6 +531,7 @@ function buildApp(CASE){
           studentChecks.add(key);
           li.classList.add('checked'); li.querySelector('.box').textContent='✓'; li.setAttribute('aria-checked','true');
         }
+        refreshCutoffNotes();
       };
       li.addEventListener('click', toggle);
       li.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggle(); } });
@@ -529,6 +544,7 @@ function buildApp(CASE){
   function renderSymptomColumns(){
     const container = document.getElementById('symptom-columns-container');
     container.innerHTML = '';
+    cutoffTrackers = [];
 
     const categories = shuffleArray(CASE.checklistCategories || []);
     categories.forEach((cat, idx) => {
@@ -537,6 +553,12 @@ function buildApp(CASE){
       box.innerHTML = `<h3>${cat.title}</h3><ul class="checklist" id="checklist-cat-${idx}"></ul>`;
       container.appendChild(box);
       buildChecklist(document.getElementById('checklist-cat-' + idx), cat.labels);
+      if(cat.cutoff){
+        const note = document.createElement('p');
+        note.className = 'checklist-cutoff';
+        box.appendChild(note);
+        cutoffTrackers.push({ cutoff: cat.cutoff, el: note });
+      }
     });
 
     if(CASE.otherLabels && Object.keys(CASE.otherLabels).length){
@@ -546,6 +568,7 @@ function buildApp(CASE){
       container.appendChild(otherBox);
       buildChecklist(document.getElementById('checklist-other'), CASE.otherLabels);
     }
+    refreshCutoffNotes();
   }
   renderSymptomColumns();
 
@@ -807,6 +830,7 @@ function buildApp(CASE){
     });
 
     document.querySelectorAll('.checklist li').forEach(li => { li.classList.remove('checked'); li.querySelector('.box').textContent=''; li.setAttribute('aria-checked','false'); });
+    refreshCutoffNotes();
     document.getElementById('progress-text').textContent = `0 of ${CASE.questions.length} areas explored`;
     document.getElementById('btn-to-collateral').disabled = true;
 
