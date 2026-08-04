@@ -27,6 +27,12 @@
   .case-card:hover{transform:translate(-1px,-1px); box-shadow:4px 4px 0 rgba(43,42,37,0.18);}
   .case-title{font-weight:700; font-size:1.05rem; margin-bottom:6px;}
   .case-desc{font-size:0.9rem; color:#5C5648;}
+  .section-header{
+    font-family:'Courier New', monospace; font-size:0.78rem; text-transform:uppercase;
+    letter-spacing:0.08em; color:#5C5648; margin:28px 0 12px; padding-bottom:6px;
+    border-bottom:1px dashed #C7B78E;
+  }
+  .section-header:first-of-type{margin-top:22px;}
 </style>
 </head>
 <body>
@@ -34,6 +40,8 @@
     <div class="banner" id="session-banner">Loading...</div>
     <h1>Choose an Activity</h1>
     <p>Pick a diagnostic interview to work through, or a live experiment to try.</p>
+
+    <div class="section-header">Case Studies</div>
 
     <div class="case-card" data-case="jordan_gad_mdd_v1">
       <div class="case-title">Jordan R. — Anxiety vs. Depression</div>
@@ -50,6 +58,8 @@
       <div class="case-desc">A 17-year-old referred for persistent low mood. Interview to distinguish Persistent Depressive Disorder from Major Depressive Disorder and Bipolar Disorder.</div>
     </div>
 
+    <div class="section-header">Experiments</div>
+
     <div class="case-card" id="stroop-card" style="border-style:dashed;">
       <div class="case-title">Stroop Task — Live Experiment</div>
       <div class="case-desc">Click the ink color, not the word. Fast, fun, and your results show up live on the class display — nothing is saved.</div>
@@ -59,6 +69,13 @@
       <div class="case-title">Emotional Stroop Task</div>
       <div class="case-desc">Same idea, different twist — pick a phobia category and see if fear-related words slow you down more than ordinary ones.</div>
     </div>
+
+    <div class="case-card" id="social-anxiety-stroop-card" style="border-style:dashed;">
+      <div class="case-title">Social Anxiety Stroop Task</div>
+      <div class="case-desc">Does "judged" or "teased" slow you down more than "chair" or "window"? A measure of attentional bias toward social judgment.</div>
+    </div>
+
+    <div class="section-header">Psychological Tests</div>
 
     <div class="case-card" id="social-reflection-card" style="border-style:dashed;">
       <div class="case-title">Social Situations Reflection</div>
@@ -91,6 +108,10 @@
 
     document.getElementById('emotional-stroop-card').addEventListener('click', () => {
       window.location.href = 'emotional-stroop.html';
+    });
+
+    document.getElementById('social-anxiety-stroop-card').addEventListener('click', () => {
+      window.location.href = 'social-anxiety-stroop.html';
     });
 
     document.getElementById('social-reflection-card').addEventListener('click', () => {
