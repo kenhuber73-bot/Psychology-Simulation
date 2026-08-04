@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emotional Stroop Task — Psych Simulations</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1E9D2; --paper-dark:#E3D5AE; --folder:#D8C393; --ink:#2B2A25; --ink-soft:#5C5648;
+    --navy:#2F4858; --red:#A13D3D; --sage:#5E7A52; --line:#C7B78E; --white-card:#FBF7EC;
+    --stroop-red:#C0392B; --stroop-green:#2E7D46; --stroop-blue:#2A5DB0; --stroop-yellow:#B8901A;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:radial-gradient(circle at 20% 10%, rgba(0,0,0,0.03) 0, transparent 40%);
+    font-family:'Space Grotesk', sans-serif; color:var(--ink); min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .wrap{width:100%; max-width:560px;}
+  .eyebrow{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; text-transform:uppercase;
+    letter-spacing:0.08em; color:var(--ink-soft); text-align:center; margin-bottom:8px;
+  }
+  .panel{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:32px; box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+  }
+  .screen{display:none;}
+  .screen.active{display:block;}
+  h1{font-size:1.5rem; margin:0 0 14px; text-align:center;}
+  h2{font-size:1.15rem; margin:0 0 10px;}
+  p{line-height:1.6; font-size:0.95rem;}
+  .rule{
+    background:var(--paper-dark); border-left:3px solid var(--navy); border-radius:0 4px 4px 0;
+    padding:14px 16px; margin:16px 0; font-size:0.9rem; line-height:1.55;
+  }
+  .rule strong{display:block; margin-bottom:4px;}
+  .primary-btn{
+    background:var(--navy); color:white; border:none; border-radius:24px; padding:13px 26px;
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:0.95rem; cursor:pointer;
+    display:block; margin:20px auto 0; transition:transform 0.12s ease;
+  }
+  .primary-btn:hover{transform:translateY(-1px);}
+  .primary-btn:active{transform:translateY(0);}
+
+  /* --- Category picker --- */
+  .category-grid{display:flex; flex-direction:column; gap:10px; margin-top:18px;}
+  button.category-card{
+    text-align:left; background:var(--white-card); border:1px solid var(--ink); border-radius:6px;
+    padding:14px 16px; font-family:'Space Grotesk', sans-serif; font-size:0.95rem; font-weight:600;
+    cursor:pointer; color:var(--ink); box-shadow:2px 2px 0 rgba(43,42,37,0.15);
+    transition:transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  }
+  button.category-card:hover{transform:translate(-1px,-1px); box-shadow:3px 3px 0 rgba(43,42,37,0.25); background:var(--paper);}
+  button.category-card span{display:block; font-weight:400; font-size:0.82rem; color:var(--ink-soft); margin-top:3px;}
+
+  /* --- Trial screen --- */
+  .progress{
+    font-family:'Courier Prime', monospace; font-size:0.75rem; color:var(--ink-soft);
+    text-align:center; margin-bottom:18px; letter-spacing:0.04em;
+  }
+  .stage{
+    background:var(--paper); border:1px solid var(--line); border-radius:8px;
+    height:180px; display:flex; align-items:center; justify-content:center; margin-bottom:24px;
+    position:relative; overflow:hidden;
+  }
+  .fixation{font-size:2rem; color:var(--ink-soft); font-weight:300;}
+  .stimulus{
+    font-family:'Space Grotesk', sans-serif; font-size:2.6rem; font-weight:700;
+    letter-spacing:0.02em; user-select:none; text-align:center; padding:0 10px;
+  }
+  .color-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  button.color-btn{
+    border:none; border-radius:8px; padding:20px; font-family:'Space Grotesk', sans-serif;
+    font-weight:700; font-size:1rem; color:white; cursor:pointer; letter-spacing:0.02em;
+    transition:transform 0.08s ease, filter 0.08s ease; box-shadow:2px 2px 0 rgba(43,42,37,0.15);
+  }
+  button.color-btn:hover{filter:brightness(1.08); transform:translate(-1px,-1px);}
+  button.color-btn:active{transform:translate(0,0); filter:brightness(0.95);}
+  button.color-btn:disabled{opacity:0.4; cursor:default; transform:none; filter:none;}
+  .btn-red{background:var(--stroop-red);}
+  .btn-green{background:var(--stroop-green);}
+  .btn-blue{background:var(--stroop-blue);}
+  .btn-yellow{background:var(--stroop-yellow);}
+  .flash-correct{outline:3px solid var(--sage); outline-offset:-3px;}
+  .flash-wrong{outline:3px solid var(--red); outline-offset:-3px;}
+
+  /* --- Results screen --- */
+  .result-row{display:flex; align-items:center; gap:12px; margin:10px 0;}
+  .result-label{
+    font-family:'Courier Prime', monospace; font-size:0.78rem; color:var(--ink-soft);
+    width:110px; flex-shrink:0;
+  }
+  .bar-track{flex:1; background:var(--paper); border-radius:4px; height:22px; overflow:hidden; border:1px solid var(--line);}
+  .bar-fill{height:100%; border-radius:4px 0 0 4px;}
+  .bar-fill.neutral{background:var(--sage);}
+  .bar-fill.emotional{background:var(--red);}
+  .result-ms{font-family:'Courier Prime', monospace; font-size:0.82rem; width:60px; text-align:right; flex-shrink:0;}
+  .gap-callout{
+    background:var(--paper-dark); border-radius:6px; padding:16px 18px; margin:20px 0;
+    text-align:center;
+  }
+  .gap-number{font-size:2rem; font-weight:700; color:var(--navy);}
+  .gap-label{font-family:'Courier Prime', monospace; font-size:0.75rem; color:var(--ink-soft); margin-top:2px;}
+  .accuracy-line{
+    font-family:'Courier Prime', monospace; font-size:0.78rem; color:var(--ink-soft);
+    text-align:center; margin-top:6px;
+  }
+  .btn-row{display:flex; gap:10px; justify-content:center; margin-top:22px; flex-wrap:wrap;}
+  .ghost-btn{
+    background:transparent; color:var(--ink-soft); border:1px solid var(--line); border-radius:24px;
+    padding:11px 22px; font-family:'Space Grotesk', sans-serif; font-size:0.88rem; cursor:pointer;
+  }
+  .ghost-btn:hover{color:var(--ink); border-color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow" id="eyebrow">Psych Simulations &middot; Live Experiment</div>
+  <div class="panel">
+
+    <div class="screen active" id="screen-category">
+      <h1>Emotional Stroop Task</h1>
+      <p>This works like the classic Stroop task — you'll click the <strong>ink color</strong>, not what the word says. But this time, the words themselves belong to different categories, and some are more emotionally charged than others.</p>
+      <p>Pick a category to test your own attentional bias:</p>
+      <div class="category-grid" id="category-grid"></div>
+    </div>
+
+    <div class="screen" id="screen-intro">
+      <h1 id="intro-title">Ready?</h1>
+      <div class="rule" id="intro-rule"></div>
+      <p style="text-align:center; color:var(--ink-soft); font-size:0.85rem;">20 trials &middot; go as fast as you can while staying accurate</p>
+      <button class="primary-btn" id="btn-start">Start →</button>
+    </div>
+
+    <div class="screen" id="screen-trial">
+      <div class="progress" id="progress-text">Trial 1 of 20</div>
+      <div class="stage">
+        <div class="fixation" id="fixation">+</div>
+        <div class="stimulus" id="stimulus" style="display:none;"></div>
+      </div>
+      <div class="color-grid">
+        <button class="color-btn btn-red" data-color="RED">Red</button>
+        <button class="color-btn btn-green" data-color="GREEN">Green</button>
+        <button class="color-btn btn-blue" data-color="BLUE">Blue</button>
+        <button class="color-btn btn-yellow" data-color="YELLOW">Yellow</button>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-results">
+      <h2>Your Results</h2>
+      <div class="result-row">
+        <div class="result-label">Neutral</div>
+        <div class="bar-track"><div class="bar-fill neutral" id="bar-neutral"></div></div>
+        <div class="result-ms" id="ms-neutral">—</div>
+      </div>
+      <div class="result-row">
+        <div class="result-label" id="emotional-label">Category</div>
+        <div class="bar-track"><div class="bar-fill emotional" id="bar-emotional"></div></div>
+        <div class="result-ms" id="ms-emotional">—</div>
+      </div>
+
+      <div class="gap-callout">
+        <div class="gap-number" id="gap-number">—</div>
+        <div class="gap-label" id="gap-label">how much slower the category words were</div>
+      </div>
+      <div class="accuracy-line" id="accuracy-line"></div>
+
+      <p style="margin-top:18px;" id="explain-text"></p>
+
+      <div class="btn-row">
+        <button class="ghost-btn" id="btn-retry">↺ Try again</button>
+        <button class="ghost-btn" id="btn-change-category">Choose a different category</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const NEUTRAL_WORDS = ['TABLE','WINDOW','PENCIL','GARDEN','CLOCK','CHAIR','PAPER','BOTTLE','CARPET','LAMP'];
+
+  const CATEGORIES = {
+    spiders: {
+      label: 'Spiders',
+      sub: 'Arachnophobia',
+      words: ['SPIDER','WEB','CRAWL','FANGS','LEGS','CREEPY','SCUTTLE','ARACHNID']
+    },
+    heights: {
+      label: 'Heights',
+      sub: 'Acrophobia',
+      words: ['HEIGHT','CLIFF','LEDGE','FALLING','EDGE','DIZZY','PLUNGE','STEEP']
+    },
+    enclosed: {
+      label: 'Enclosed Spaces',
+      sub: 'Claustrophobia',
+      words: ['TRAPPED','TUNNEL','ELEVATOR','CRAMPED','LOCKED','TIGHT','SEALED','CONFINED']
+    },
+    needles: {
+      label: 'Needles / Blood',
+      sub: 'Trypanophobia',
+      words: ['NEEDLE','INJECTION','BLOOD','SYRINGE','SHOT','VEIN','PIERCE','PRICK']
+    },
+    social: {
+      label: 'Public Speaking',
+      sub: 'Social phobia',
+      words: ['JUDGED','STARING','EMBARRASS','AUDIENCE','MOCKED','EXPOSED','BLUSH','SPOTLIGHT']
+    }
+  };
+
+  const COLORS = [
+    { name: 'RED', hex: 'var(--stroop-red)' },
+    { name: 'GREEN', hex: 'var(--stroop-green)' },
+    { name: 'BLUE', hex: 'var(--stroop-blue)' },
+    { name: 'YELLOW', hex: 'var(--stroop-yellow)' }
+  ];
+  const TOTAL_TRIALS = 20;
+  const FIXATION_MS = 350;
+
+  let selectedCategoryKey = null;
+
+  function goTo(name){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+  }
+
+  // --- Category picker ---
+  const categoryGrid = document.getElementById('category-grid');
+  Object.entries(CATEGORIES).forEach(([key, cat]) => {
+    const btn = document.createElement('button');
+    btn.className = 'category-card';
+    btn.innerHTML = `${cat.label}<span>${cat.sub}</span>`;
+    btn.addEventListener('click', () => {
+      selectedCategoryKey = key;
+      document.getElementById('intro-title').textContent = cat.label;
+      document.getElementById('intro-rule').innerHTML =
+        `<strong>How it works</strong> You'll see words — some neutral, some from the "${cat.label}" category. Click the ink color the word is printed in, not what it says.`;
+      document.getElementById('emotional-label').textContent = cat.label;
+      document.getElementById('gap-label').textContent = `how much slower "${cat.label}" words were than neutral ones`;
+      goTo('intro');
+    });
+    categoryGrid.appendChild(btn);
+  });
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i = a.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function randomColor(){
+    return COLORS[Math.floor(Math.random() * COLORS.length)];
+  }
+
+  function buildTrials(){
+    const half = TOTAL_TRIALS / 2;
+    const categoryWords = CATEGORIES[selectedCategoryKey].words;
+    const trials = [];
+    for(let i = 0; i < half; i++){
+      const word = NEUTRAL_WORDS[Math.floor(Math.random() * NEUTRAL_WORDS.length)];
+      const ink = randomColor();
+      trials.push({ word, inkName: ink.name, inkHex: ink.hex, emotional: false });
+    }
+    for(let i = 0; i < half; i++){
+      const word = categoryWords[Math.floor(Math.random() * categoryWords.length)];
+      const ink = randomColor();
+      trials.push({ word, inkName: ink.name, inkHex: ink.hex, emotional: true });
+    }
+    return shuffle(trials);
+  }
+
+  let trials = [];
+  let trialIndex = 0;
+  let results = [];
+  let trialStartTime = 0;
+  let awaitingResponse = false;
+
+  function startTask(){
+    trials = buildTrials();
+    trialIndex = 0;
+    results = [];
+    goTo('trial');
+    showTrial();
+  }
+
+  function showTrial(){
+    if(trialIndex >= trials.length){
+      showResults();
+      return;
+    }
+    document.getElementById('progress-text').textContent = `Trial ${trialIndex + 1} of ${trials.length}`;
+    const fixation = document.getElementById('fixation');
+    const stimulus = document.getElementById('stimulus');
+    const buttons = document.querySelectorAll('.color-btn');
+
+    fixation.style.display = 'block';
+    stimulus.style.display = 'none';
+    buttons.forEach(b => { b.disabled = true; b.classList.remove('flash-correct', 'flash-wrong'); });
+    awaitingResponse = false;
+
+    setTimeout(() => {
+      const trial = trials[trialIndex];
+      fixation.style.display = 'none';
+      stimulus.style.display = 'block';
+      stimulus.textContent = trial.word;
+      stimulus.style.color = trial.inkHex;
+      buttons.forEach(b => b.disabled = false);
+      trialStartTime = performance.now();
+      awaitingResponse = true;
+    }, FIXATION_MS);
+  }
+
+  document.querySelectorAll('.color-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(!awaitingResponse) return;
+      awaitingResponse = false;
+      const rt = performance.now() - trialStartTime;
+      const trial = trials[trialIndex];
+      const chosen = btn.dataset.color;
+      const correct = chosen === trial.inkName;
+
+      btn.classList.add(correct ? 'flash-correct' : 'flash-wrong');
+      document.querySelectorAll('.color-btn').forEach(b => b.disabled = true);
+
+      results.push({ emotional: trial.emotional, correct, rt });
+
+      setTimeout(() => {
+        trialIndex++;
+        showTrial();
+      }, 220);
+    });
+  });
+
+  function showResults(){
+    goTo('results');
+
+    const neutralCorrect = results.filter(r => !r.emotional && r.correct);
+    const emotionalCorrect = results.filter(r => r.emotional && r.correct);
+    const avg = arr => arr.length ? arr.reduce((s, r) => s + r.rt, 0) / arr.length : 0;
+
+    const avgNeutral = avg(neutralCorrect);
+    const avgEmotional = avg(emotionalCorrect);
+    const gap = avgEmotional - avgNeutral;
+
+    const maxMs = Math.max(avgNeutral, avgEmotional, 1);
+    document.getElementById('bar-neutral').style.width = (avgNeutral / maxMs * 100) + '%';
+    document.getElementById('bar-emotional').style.width = (avgEmotional / maxMs * 100) + '%';
+    document.getElementById('ms-neutral').textContent = avgNeutral ? Math.round(avgNeutral) + 'ms' : '—';
+    document.getElementById('ms-emotional').textContent = avgEmotional ? Math.round(avgEmotional) + 'ms' : '—';
+
+    const gapEl = document.getElementById('gap-number');
+    if(neutralCorrect.length && emotionalCorrect.length){
+      gapEl.textContent = (gap >= 0 ? '+' : '') + Math.round(gap) + 'ms';
+    } else {
+      gapEl.textContent = 'n/a';
+    }
+
+    const totalCorrect = results.filter(r => r.correct).length;
+    document.getElementById('accuracy-line').textContent =
+      `${totalCorrect} of ${results.length} correct — averages above use correct trials only`;
+
+    const catLabel = CATEGORIES[selectedCategoryKey].label;
+    document.getElementById('explain-text').textContent =
+      `That gap is a sign of attentional bias — words related to ${catLabel.toLowerCase()} can grab your attention and briefly compete with the color-naming task, even though the word's meaning is irrelevant to what you're supposed to do. A bigger gap on a category you personally find unsettling is exactly what researchers look for when studying anxiety and phobias.`;
+  }
+
+  document.getElementById('btn-start').addEventListener('click', startTask);
+  document.getElementById('btn-retry').addEventListener('click', startTask);
+  document.getElementById('btn-change-category').addEventListener('click', () => goTo('category'));
+</script>
+</body>
+</html>
