@@ -54,6 +54,11 @@
       <div class="case-title">Stroop Task — Live Experiment</div>
       <div class="case-desc">Click the ink color, not the word. Fast, fun, and your results show up live on the class display — nothing is saved.</div>
     </div>
+
+    <div class="case-card" id="emotional-stroop-card" style="border-style:dashed;">
+      <div class="case-title">Emotional Stroop Task</div>
+      <div class="case-desc">Same idea, different twist — pick a phobia category and see if fear-related words slow you down more than ordinary ones.</div>
+    </div>
   </div>
 
   <script>
@@ -77,6 +82,10 @@
 
     document.getElementById('stroop-card').addEventListener('click', () => {
       window.location.href = 'stroop.html?live=1';
+    });
+
+    document.getElementById('emotional-stroop-card').addEventListener('click', () => {
+      window.location.href = 'emotional-stroop.html';
     });
   </script>
 </body>
