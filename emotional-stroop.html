@@ -241,7 +241,7 @@
       document.getElementById('intro-rule').innerHTML =
         `<strong>How it works</strong> You'll see words — some neutral, some from the "${cat.label}" category. Click the ink color the word is printed in, not what it says.`;
       document.getElementById('emotional-label').textContent = cat.label;
-      document.getElementById('gap-label').textContent = `how much slower "${cat.label}" words were than neutral ones`;
+      document.getElementById('gap-label').textContent = `RT difference: neutral vs "${cat.label}" words`;
       goTo('intro');
     });
     categoryGrid.appendChild(btn);
@@ -357,19 +357,33 @@
     document.getElementById('ms-emotional').textContent = avgEmotional ? Math.round(avgEmotional) + 'ms' : '—';
 
     const gapEl = document.getElementById('gap-number');
+    const gapLabelEl = document.getElementById('gap-label');
+    const explainEl = document.getElementById('explain-text');
+    const catLabel = CATEGORIES[selectedCategoryKey].label;
+    const NOISE_THRESHOLD = 15; // ms — gaps smaller than this aren't a meaningful signal either way
+
     if(neutralCorrect.length && emotionalCorrect.length){
       gapEl.textContent = (gap >= 0 ? '+' : '') + Math.round(gap) + 'ms';
+
+      if(gap > NOISE_THRESHOLD){
+        gapLabelEl.textContent = `how much slower "${catLabel}" words were than neutral ones`;
+        explainEl.textContent = `That gap is a sign of attentional bias — words related to ${catLabel.toLowerCase()} grabbed your attention and briefly competed with the color-naming task, even though the word's meaning was irrelevant to what you were supposed to do. A bigger gap on a category you personally find unsettling is exactly what researchers look for when studying anxiety and phobias.`;
+      } else if(gap < -NOISE_THRESHOLD){
+        gapLabelEl.textContent = `how much faster "${catLabel}" words were than neutral ones`;
+        explainEl.textContent = `You were actually faster on the "${catLabel.toLowerCase()}" words than the neutral ones. That means there was no attention competition slowing you down — in other words, no evidence of a phobic response to this category.`;
+      } else {
+        gapLabelEl.textContent = `RT difference: neutral vs "${catLabel}" words`;
+        explainEl.textContent = `Your times were close enough between the two conditions (within about ${NOISE_THRESHOLD}ms) that this isn't really evidence of attentional bias either way — it's within the range of normal trial-to-trial noise. A meaningful bias usually needs either a bigger gap or averaging over many more trials than one short run gives you.`;
+      }
     } else {
       gapEl.textContent = 'n/a';
+      gapLabelEl.textContent = `RT difference: neutral vs "${catLabel}" words`;
+      explainEl.textContent = `Not enough correct trials in one of the conditions to compare reliably — try again for a cleaner result.`;
     }
 
     const totalCorrect = results.filter(r => r.correct).length;
     document.getElementById('accuracy-line').textContent =
       `${totalCorrect} of ${results.length} correct — averages above use correct trials only`;
-
-    const catLabel = CATEGORIES[selectedCategoryKey].label;
-    document.getElementById('explain-text').textContent =
-      `That gap is a sign of attentional bias — words related to ${catLabel.toLowerCase()} can grab your attention and briefly compete with the color-naming task, even though the word's meaning is irrelevant to what you're supposed to do. A bigger gap on a category you personally find unsettling is exactly what researchers look for when studying anxiety and phobias.`;
   }
 
   document.getElementById('btn-start').addEventListener('click', startTask);
