@@ -506,11 +506,14 @@ function buildApp(CASE){
       const countMet = checkedCount >= cutoff.count;
       const anchorMet = !cutoff.requireAnyOf || cutoff.requireAnyOf.some(k => studentChecks.has(k));
       const met = countMet && anchorMet;
-      let status = `${checkedCount}/${cutoff.count}+ checked`;
+      const label = cutoff.criterionLabel || '';
+      let status = `${checkedCount}/${cutoff.count}+`;
       if(countMet && !anchorMet){
-        status += ` — count met, but still missing ${cutoff.requireAnyOfLabel || 'a required item'} — not met`;
+        status += ` — needs ${cutoff.requireAnyOfLabel || 'a required item'} too — not met`;
+      } else if(met){
+        status += ` — Criterion ${label} only met; other criteria still required`;
       } else {
-        status += met ? ' — met' : ' — not met';
+        status += ` — Criterion ${label} not met`;
       }
       el.innerHTML = `<strong>Cutoff:</strong> ${cutoff.note} <span class="cutoff-status">(${status})</span>`;
       el.classList.toggle('cutoff-met', met);
