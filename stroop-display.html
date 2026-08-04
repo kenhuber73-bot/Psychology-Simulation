@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stroop Task — Live Results</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body{
+    font-family: system-ui, sans-serif;
+    background:#2F4858;
+    color:white;
+    min-height:100vh; margin:0;
+    padding:30px 40px;
+  }
+  h1{
+    font-size:1.2rem; font-weight:500; color:#C9DCE6; margin:0 0 4px;
+    text-transform:uppercase; letter-spacing:0.08em;
+  }
+  #class-name{font-size:2rem; font-weight:700; margin:0 0 6px;}
+  #subhead{color:#C9DCE6; font-size:0.95rem; margin-bottom:28px;}
+
+  .summary-row{display:flex; gap:20px; margin-bottom:30px; flex-wrap:wrap;}
+  .summary-card{
+    background:rgba(255,255,255,0.08); border-radius:12px; padding:18px 26px; min-width:150px;
+  }
+  .summary-number{font-size:2.2rem; font-weight:700;}
+  .summary-label{font-size:0.8rem; color:#C9DCE6; text-transform:uppercase; letter-spacing:0.05em; margin-top:2px;}
+
+  table{width:100%; border-collapse:collapse; background:#FBF7EC; border-radius:12px; overflow:hidden;}
+  th, td{padding:14px 20px; text-align:left; color:#2B2A25;}
+  th{
+    background:#E3D5AE; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em;
+    color:#5C5648; font-weight:700;
+  }
+  tbody tr:nth-child(even){background:#F1E9D2;}
+  tbody tr{animation:slideIn 0.35s ease;}
+  @keyframes slideIn{from{opacity:0; transform:translateY(-6px);} to{opacity:1; transform:translateY(0);}}
+  .gap-cell{font-weight:700;}
+  .empty-state{
+    background:rgba(255,255,255,0.06); border-radius:12px; padding:50px; text-align:center;
+    color:#C9DCE6; font-size:1.05rem;
+  }
+  .error-msg{font-size:1.1rem; color:#F4C6C6; margin-top:20px;}
+</style>
+</head>
+<body>
+  <h1>Live Experiment</h1>
+  <div id="class-name">Loading...</div>
+  <div id="subhead"></div>
+
+  <div id="content"></div>
+
+  <div class="error-msg" id="error-msg" style="display:none;">
+    No class specified. Open this page from your dashboard's class list.
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const classId = params.get('class');
+    const className = params.get('name');
+
+    if(!classId){
+      document.getElementById('error-msg').style.display = 'block';
+    } else {
+      document.getElementById('class-name').textContent = className || '';
+      document.getElementById('subhead').textContent =
+        'Students click the matching ink color as fast as they can — results land here the moment each student finishes.';
+
+      const results = [];
+      const contentEl = document.getElementById('content');
+
+      function render(){
+        if(results.length === 0){
+          contentEl.innerHTML = '<div class="empty-state">Waiting for the first results to come in...</div>';
+          return;
+        }
+
+        const avg = arr => arr.length ? Math.round(arr.reduce((s, v) => s + v, 0) / arr.length) : 0;
+        const classAvgGap = avg(results.map(r => r.gap));
+
+        const rows = results.map(r => `
+          <tr>
+            <td>${r.nickname}</td>
+            <td>${r.avgCongruent}ms</td>
+            <td>${r.avgIncongruent}ms</td>
+            <td class="gap-cell">${r.gap >= 0 ? '+' : ''}${r.gap}ms</td>
+            <td>${r.accuracy}</td>
+          </tr>
+        `).join('');
+
+        contentEl.innerHTML = `
+          <div class="summary-row">
+            <div class="summary-card">
+              <div class="summary-number">${results.length}</div>
+              <div class="summary-label">Students finished</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-number">${classAvgGap >= 0 ? '+' : ''}${classAvgGap}ms</div>
+              <div class="summary-label">Class average Stroop effect</div>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr><th>Student</th><th>Congruent</th><th>Incongruent</th><th>Gap</th><th>Accuracy</th></tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        `;
+      }
+
+      render();
+
+      const channel = sb.channel('stroop-' + classId);
+      channel
+        .on('broadcast', { event: 'result' }, (msg) => {
+          results.push(msg.payload);
+          render();
+        })
+        .subscribe();
+    }
+  </script>
+</body>
+</html>

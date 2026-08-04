@@ -161,13 +161,19 @@
           <span style="display:flex; align-items:center; gap:10px;">
             <span class="join-code">${cls.join_code}</span>
             <button class="display-btn" data-code="${cls.join_code}" data-name="${cls.name}">Display</button>
+            <button class="display-btn" data-id="${cls.id}" data-name="${cls.name}" style="background:#5E7A52;">Stroop</button>
           </span>
         `;
         row.querySelector('.class-name').addEventListener('click', () => showResults(cls));
         row.querySelector('.join-code').addEventListener('click', () => showResults(cls));
-        row.querySelector('.display-btn').addEventListener('click', (e) => {
+        row.querySelectorAll('.display-btn')[0].addEventListener('click', (e) => {
           e.stopPropagation();
           const url = 'display.html?code=' + encodeURIComponent(cls.join_code) + '&name=' + encodeURIComponent(cls.name);
+          window.open(url, '_blank');
+        });
+        row.querySelectorAll('.display-btn')[1].addEventListener('click', (e) => {
+          e.stopPropagation();
+          const url = 'stroop-display.html?class=' + encodeURIComponent(cls.id) + '&name=' + encodeURIComponent(cls.name);
           window.open(url, '_blank');
         });
         listEl.appendChild(row);

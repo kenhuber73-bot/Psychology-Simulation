@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stroop Task — Psych Simulations</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1E9D2; --paper-dark:#E3D5AE; --folder:#D8C393; --ink:#2B2A25; --ink-soft:#5C5648;
+    --navy:#2F4858; --red:#A13D3D; --sage:#5E7A52; --line:#C7B78E; --white-card:#FBF7EC;
+    --stroop-red:#C0392B; --stroop-green:#2E7D46; --stroop-blue:#2A5DB0; --stroop-yellow:#B8901A;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:radial-gradient(circle at 20% 10%, rgba(0,0,0,0.03) 0, transparent 40%);
+    font-family:'Space Grotesk', sans-serif; color:var(--ink); min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .wrap{width:100%; max-width:560px;}
+  .eyebrow{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; text-transform:uppercase;
+    letter-spacing:0.08em; color:var(--ink-soft); text-align:center; margin-bottom:8px;
+  }
+  .panel{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:32px; box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+  }
+  .screen{display:none;}
+  .screen.active{display:block;}
+  h1{font-size:1.5rem; margin:0 0 14px; text-align:center;}
+  h2{font-size:1.15rem; margin:0 0 10px;}
+  p{line-height:1.6; font-size:0.95rem;}
+  .rule{
+    background:var(--paper-dark); border-left:3px solid var(--navy); border-radius:0 4px 4px 0;
+    padding:14px 16px; margin:16px 0; font-size:0.9rem; line-height:1.55;
+  }
+  .rule strong{display:block; margin-bottom:4px;}
+  .primary-btn{
+    background:var(--navy); color:white; border:none; border-radius:24px; padding:13px 26px;
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:0.95rem; cursor:pointer;
+    display:block; margin:20px auto 0; transition:transform 0.12s ease;
+  }
+  .primary-btn:hover{transform:translateY(-1px);}
+  .primary-btn:active{transform:translateY(0);}
+
+  /* --- Trial screen --- */
+  .progress{
+    font-family:'Courier Prime', monospace; font-size:0.75rem; color:var(--ink-soft);
+    text-align:center; margin-bottom:18px; letter-spacing:0.04em;
+  }
+  .stage{
+    background:var(--paper); border:1px solid var(--line); border-radius:8px;
+    height:180px; display:flex; align-items:center; justify-content:center; margin-bottom:24px;
+    position:relative; overflow:hidden;
+  }
+  .fixation{font-size:2rem; color:var(--ink-soft); font-weight:300;}
+  .stimulus{
+    font-family:'Space Grotesk', sans-serif; font-size:3rem; font-weight:700;
+    letter-spacing:0.02em; user-select:none;
+  }
+  .color-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  button.color-btn{
+    border:none; border-radius:8px; padding:20px; font-family:'Space Grotesk', sans-serif;
+    font-weight:700; font-size:1rem; color:white; cursor:pointer; letter-spacing:0.02em;
+    transition:transform 0.08s ease, filter 0.08s ease; box-shadow:2px 2px 0 rgba(43,42,37,0.15);
+  }
+  button.color-btn:hover{filter:brightness(1.08); transform:translate(-1px,-1px);}
+  button.color-btn:active{transform:translate(0,0); filter:brightness(0.95);}
+  button.color-btn:disabled{opacity:0.4; cursor:default; transform:none; filter:none;}
+  .btn-red{background:var(--stroop-red);}
+  .btn-green{background:var(--stroop-green);}
+  .btn-blue{background:var(--stroop-blue);}
+  .btn-yellow{background:var(--stroop-yellow);}
+  .flash-correct{outline:3px solid var(--sage); outline-offset:-3px;}
+  .flash-wrong{outline:3px solid var(--red); outline-offset:-3px;}
+
+  /* --- Results screen --- */
+  .result-row{display:flex; align-items:center; gap:12px; margin:10px 0;}
+  .result-label{
+    font-family:'Courier Prime', monospace; font-size:0.78rem; color:var(--ink-soft);
+    width:110px; flex-shrink:0;
+  }
+  .bar-track{flex:1; background:var(--paper); border-radius:4px; height:22px; overflow:hidden; border:1px solid var(--line);}
+  .bar-fill{height:100%; border-radius:4px 0 0 4px;}
+  .bar-fill.congruent{background:var(--sage);}
+  .bar-fill.incongruent{background:var(--red);}
+  .result-ms{font-family:'Courier Prime', monospace; font-size:0.82rem; width:60px; text-align:right; flex-shrink:0;}
+  .gap-callout{
+    background:var(--paper-dark); border-radius:6px; padding:16px 18px; margin:20px 0;
+    text-align:center;
+  }
+  .gap-number{font-size:2rem; font-weight:700; color:var(--navy);}
+  .gap-label{font-family:'Courier Prime', monospace; font-size:0.75rem; color:var(--ink-soft); margin-top:2px;}
+  .accuracy-line{
+    font-family:'Courier Prime', monospace; font-size:0.78rem; color:var(--ink-soft);
+    text-align:center; margin-top:6px;
+  }
+  .btn-row{display:flex; gap:10px; justify-content:center; margin-top:22px;}
+  .ghost-btn{
+    background:transparent; color:var(--ink-soft); border:1px solid var(--line); border-radius:24px;
+    padding:11px 22px; font-family:'Space Grotesk', sans-serif; font-size:0.88rem; cursor:pointer;
+  }
+  .ghost-btn:hover{color:var(--ink); border-color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow" id="eyebrow">Psych Simulations &middot; Live Experiment</div>
+  <div class="panel">
+
+    <div class="screen" id="screen-not-joined">
+      <h1>Join Your Class First</h1>
+      <p>This is a live session, which means your teacher needs you joined to the class before you can take part.</p>
+      <a href="join.html" class="primary-btn" style="display:block; text-decoration:none; text-align:center;">Go to Join Page</a>
+    </div>
+
+    <div class="screen active" id="screen-intro">
+      <h1>The Stroop Task</h1>
+      <div class="rule" id="live-banner" style="display:none;"></div>
+      <p>You'll see a series of color words, each printed in an ink color. Your job: click the button matching the <strong>ink color</strong> — not what the word says.</p>
+      <div class="rule">
+        <strong>Example</strong>
+        If the word "BLUE" appears printed in red ink, click the <strong>red</strong> button — the word says "blue," but the ink is red.
+      </div>
+      <p style="text-align:center; color:var(--ink-soft); font-size:0.85rem;">20 trials &middot; go as fast as you can while staying accurate</p>
+      <button class="primary-btn" id="btn-start">Start →</button>
+    </div>
+
+    <div class="screen" id="screen-trial">
+      <div class="progress" id="progress-text">Trial 1 of 20</div>
+      <div class="stage">
+        <div class="fixation" id="fixation">+</div>
+        <div class="stimulus" id="stimulus" style="display:none;"></div>
+      </div>
+      <div class="color-grid">
+        <button class="color-btn btn-red" data-color="RED">Red</button>
+        <button class="color-btn btn-green" data-color="GREEN">Green</button>
+        <button class="color-btn btn-blue" data-color="BLUE">Blue</button>
+        <button class="color-btn btn-yellow" data-color="YELLOW">Yellow</button>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-results">
+      <h2>Your Results</h2>
+      <div class="result-row">
+        <div class="result-label">Congruent</div>
+        <div class="bar-track"><div class="bar-fill congruent" id="bar-congruent"></div></div>
+        <div class="result-ms" id="ms-congruent">—</div>
+      </div>
+      <div class="result-row">
+        <div class="result-label">Incongruent</div>
+        <div class="bar-track"><div class="bar-fill incongruent" id="bar-incongruent"></div></div>
+        <div class="result-ms" id="ms-incongruent">—</div>
+      </div>
+
+      <div class="gap-callout">
+        <div class="gap-number" id="gap-number">—</div>
+        <div class="gap-label">the Stroop effect: how much slower incongruent trials were</div>
+      </div>
+      <div class="accuracy-line" id="accuracy-line"></div>
+
+      <p style="margin-top:18px;">That gap is the Stroop effect — reading the word is so automatic that your brain processes it even when you're only supposed to be naming the ink color, and the two compete for a moment before the correct answer wins out.</p>
+
+      <div class="accuracy-line" id="live-send-status" style="display:none;"></div>
+
+      <div class="btn-row">
+        <button class="ghost-btn" id="btn-retry">↺ Try again</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="js/supabase-config.js"></script>
+<script>
+  const COLORS = [
+    { name: 'RED', hex: 'var(--stroop-red)' },
+    { name: 'GREEN', hex: 'var(--stroop-green)' },
+    { name: 'BLUE', hex: 'var(--stroop-blue)' },
+    { name: 'YELLOW', hex: 'var(--stroop-yellow)' }
+  ];
+  const TOTAL_TRIALS = 20;
+  const FIXATION_MS = 350;
+
+  // --- Live session setup ---
+  // ?live=1 turns this into a classroom round: results broadcast to the
+  // teacher's live display via Supabase Realtime. Nothing is written to the
+  // database — the channel is purely ephemeral, like the bomb game / Kahoot-style
+  // experiments discussed for this site.
+  const urlParams = new URLSearchParams(window.location.search);
+  const isLive = urlParams.get('live') === '1';
+  let studentSession = null;
+  let liveChannel = null;
+
+  if(isLive){
+    const stored = localStorage.getItem('studentSession');
+    if(stored){
+      studentSession = JSON.parse(stored);
+      liveChannel = sb.channel('stroop-' + studentSession.classId);
+      liveChannel.subscribe();
+
+      const banner = document.getElementById('live-banner');
+      banner.style.display = 'block';
+      banner.innerHTML = `<strong>Live session</strong> Joined as ${studentSession.nickname} in ${studentSession.className}. Your results will show on the class display when you finish.`;
+      document.getElementById('eyebrow').textContent = 'Psych Simulations · Live Class Round';
+    } else {
+      document.getElementById('screen-intro').classList.remove('active');
+      document.getElementById('screen-not-joined').classList.add('active');
+    }
+  }
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i = a.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function buildTrials(){
+    const half = TOTAL_TRIALS / 2;
+    const trials = [];
+    for(let i = 0; i < half; i++){
+      const c = COLORS[Math.floor(Math.random() * COLORS.length)];
+      trials.push({ word: c.name, inkName: c.name, inkHex: c.hex, congruent: true });
+    }
+    for(let i = 0; i < half; i++){
+      const word = COLORS[Math.floor(Math.random() * COLORS.length)];
+      let ink = COLORS[Math.floor(Math.random() * COLORS.length)];
+      while(ink.name === word.name){
+        ink = COLORS[Math.floor(Math.random() * COLORS.length)];
+      }
+      trials.push({ word: word.name, inkName: ink.name, inkHex: ink.hex, congruent: false });
+    }
+    return shuffle(trials);
+  }
+
+  let trials = [];
+  let trialIndex = 0;
+  let results = [];
+  let trialStartTime = 0;
+  let awaitingResponse = false;
+
+  function goTo(name){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+  }
+
+  function startTask(){
+    trials = buildTrials();
+    trialIndex = 0;
+    results = [];
+    goTo('trial');
+    showTrial();
+  }
+
+  function showTrial(){
+    if(trialIndex >= trials.length){
+      showResults();
+      return;
+    }
+    document.getElementById('progress-text').textContent = `Trial ${trialIndex + 1} of ${trials.length}`;
+    const fixation = document.getElementById('fixation');
+    const stimulus = document.getElementById('stimulus');
+    const buttons = document.querySelectorAll('.color-btn');
+
+    fixation.style.display = 'block';
+    stimulus.style.display = 'none';
+    buttons.forEach(b => { b.disabled = true; b.classList.remove('flash-correct', 'flash-wrong'); });
+    awaitingResponse = false;
+
+    setTimeout(() => {
+      const trial = trials[trialIndex];
+      fixation.style.display = 'none';
+      stimulus.style.display = 'block';
+      stimulus.textContent = trial.word;
+      stimulus.style.color = trial.inkHex;
+      buttons.forEach(b => b.disabled = false);
+      trialStartTime = performance.now();
+      awaitingResponse = true;
+    }, FIXATION_MS);
+  }
+
+  document.querySelectorAll('.color-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(!awaitingResponse) return;
+      awaitingResponse = false;
+      const rt = performance.now() - trialStartTime;
+      const trial = trials[trialIndex];
+      const chosen = btn.dataset.color;
+      const correct = chosen === trial.inkName;
+
+      btn.classList.add(correct ? 'flash-correct' : 'flash-wrong');
+      document.querySelectorAll('.color-btn').forEach(b => b.disabled = true);
+
+      results.push({ congruent: trial.congruent, correct, rt });
+
+      setTimeout(() => {
+        trialIndex++;
+        showTrial();
+      }, 220);
+    });
+  });
+
+  function showResults(){
+    goTo('results');
+
+    const congruentCorrect = results.filter(r => r.congruent && r.correct);
+    const incongruentCorrect = results.filter(r => !r.congruent && r.correct);
+    const avg = arr => arr.length ? arr.reduce((s, r) => s + r.rt, 0) / arr.length : 0;
+
+    const avgCongruent = avg(congruentCorrect);
+    const avgIncongruent = avg(incongruentCorrect);
+    const gap = avgIncongruent - avgCongruent;
+
+    const maxMs = Math.max(avgCongruent, avgIncongruent, 1);
+    document.getElementById('bar-congruent').style.width = (avgCongruent / maxMs * 100) + '%';
+    document.getElementById('bar-incongruent').style.width = (avgIncongruent / maxMs * 100) + '%';
+    document.getElementById('ms-congruent').textContent = avgCongruent ? Math.round(avgCongruent) + 'ms' : '—';
+    document.getElementById('ms-incongruent').textContent = avgIncongruent ? Math.round(avgIncongruent) + 'ms' : '—';
+
+    const gapEl = document.getElementById('gap-number');
+    if(congruentCorrect.length && incongruentCorrect.length){
+      gapEl.textContent = (gap >= 0 ? '+' : '') + Math.round(gap) + 'ms';
+    } else {
+      gapEl.textContent = 'n/a';
+    }
+
+    const totalCorrect = results.filter(r => r.correct).length;
+    document.getElementById('accuracy-line').textContent =
+      `${totalCorrect} of ${results.length} correct — averages above use correct trials only`;
+
+    if(isLive && liveChannel && congruentCorrect.length && incongruentCorrect.length){
+      const statusEl = document.getElementById('live-send-status');
+      statusEl.style.display = 'block';
+      statusEl.textContent = 'Sending your results to the class display...';
+      liveChannel.send({
+        type: 'broadcast',
+        event: 'result',
+        payload: {
+          nickname: studentSession.nickname,
+          avgCongruent: Math.round(avgCongruent),
+          avgIncongruent: Math.round(avgIncongruent),
+          gap: Math.round(gap),
+          accuracy: totalCorrect + '/' + results.length
+        }
+      }).then(() => {
+        statusEl.textContent = 'Sent — check the class display for your results.';
+      });
+    }
+  }
+
+  document.getElementById('btn-start').addEventListener('click', startTask);
+  document.getElementById('btn-retry').addEventListener('click', startTask);
+</script>
+</body>
+</html>

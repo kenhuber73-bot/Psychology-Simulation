@@ -49,6 +49,11 @@
       <div class="case-title">Maya S. — Dysthymia vs. MDD vs. Bipolar</div>
       <div class="case-desc">A 17-year-old referred for persistent low mood. Interview to distinguish Persistent Depressive Disorder from Major Depressive Disorder and Bipolar Disorder.</div>
     </div>
+
+    <div class="case-card" id="stroop-card" style="border-style:dashed;">
+      <div class="case-title">Stroop Task — Live Experiment</div>
+      <div class="case-desc">Click the ink color, not the word. Fast, fun, and your results show up live on the class display — nothing is saved.</div>
+    </div>
   </div>
 
   <script>
@@ -61,13 +66,17 @@
         `Signed in as <strong>${session.nickname}</strong> — ${session.className} &nbsp;|&nbsp; <a href="join.html">Not you? Switch class</a>`;
     }
 
-    document.querySelectorAll('.case-card').forEach(card => {
+    document.querySelectorAll('.case-card[data-case]').forEach(card => {
       card.addEventListener('click', () => {
         const session = JSON.parse(localStorage.getItem('studentSession'));
         session.activityId = card.dataset.case;
         localStorage.setItem('studentSession', JSON.stringify(session));
         window.location.href = 'case.html';
       });
+    });
+
+    document.getElementById('stroop-card').addEventListener('click', () => {
+      window.location.href = 'stroop.html?live=1';
     });
   </script>
 </body>
