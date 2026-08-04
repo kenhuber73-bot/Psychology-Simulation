@@ -64,6 +64,10 @@
     letter-spacing:0.06em; color:var(--ink-soft); font-weight:700; margin-bottom:4px;
   }
   .bg-section p{margin:0; font-size:0.92rem;}
+  .bg-section .ref-summary{font-size:0.92rem;line-height:1.55;}
+  .bg-section .ref-summary ul{margin:6px 0;padding-left:20px;}
+  .bg-section .ref-summary li{margin-bottom:4px;}
+  .bg-section .ref-summary ul ul{margin:4px 0;}
   .choice-list{display:flex;flex-direction:column;gap:10px;margin-top:16px;}
   button.choice{
     text-align:left;background:var(--white-card);border:1px solid var(--ink);border-radius:6px;padding:12px 16px;
@@ -453,7 +457,7 @@ function buildApp(CASE){
       btn.addEventListener('click', () => {
         const div = document.createElement('div');
         div.className = 'bg-section';
-        div.innerHTML = `<div class="bg-label">${entry.name}</div><p>${entry.summary}</p>`;
+        div.innerHTML = `<div class="bg-label">${entry.name}</div><div class="ref-summary">${entry.summary}</div>`;
         refSectionsContainer.appendChild(div);
         btn.remove();
       });
@@ -888,7 +892,7 @@ function buildApp(CASE){
         btn.addEventListener('click', () => {
           const div = document.createElement('div');
           div.className = 'bg-section';
-          div.innerHTML = `<div class="bg-label">${entry.name}</div><p>${entry.summary}</p>`;
+          div.innerHTML = `<div class="bg-label">${entry.name}</div><div class="ref-summary">${entry.summary}</div>`;
           refSectionsContainer.appendChild(div);
           btn.remove();
         });
