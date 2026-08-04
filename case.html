@@ -209,15 +209,6 @@
   }
   .verdict.correct{background:var(--sage);color:white;}
   .verdict.miss{background:var(--red);color:white;}
-  .why-grid{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 4px;}
-  button.why-chip{
-    font-family:'Courier Prime', monospace;font-size:0.82rem;background:var(--white-card);
-    border:1.5px solid var(--ink-soft);border-radius:20px;padding:8px 16px;cursor:pointer;color:var(--ink-soft);
-  }
-  button.why-chip:hover:not(:disabled){border-color:var(--ink);color:var(--ink);}
-  button.why-chip.selected{background:var(--navy);border-color:var(--navy);color:white;font-weight:700;}
-  button.why-chip:disabled:not(.selected){opacity:0.35;cursor:not-allowed;}
-  .why-count{font-family:'Courier Prime', monospace;font-size:0.75rem;color:var(--ink-soft);margin-top:12px;}
   .debrief{margin-top:22px;border-top:1px dashed var(--line);padding-top:16px;}
   .debrief h3{margin-top:0;}
   .supervisor-note{
@@ -398,10 +389,7 @@ function buildApp(CASE){
       </div>
 
       <div class="screen" id="screen-why">
-        <h2>What made up your mind?</h2>
-        <p>From what you personally checked off, pick up to 3 pieces of evidence that mattered most to your diagnosis.</p>
-        <div id="why-options"></div>
-        <h3>Explain Your Reasoning</h3>
+        <h2>Explain Your Reasoning</h2>
         <p class="clipboard-hint" style="margin-top:-6px;">In your own words, write a short paragraph explaining why you think this diagnosis fits — refer to your notes if it helps.</p>
         <textarea class="notes-textarea" id="reasoning-paragraph" placeholder="Explain why you believe this diagnosis matches the case..." style="min-height:120px;"></textarea>
         <div id="reasoning-warning" class="message error" style="display:none; margin-top:10px;">Please write at least a short paragraph before continuing.</div>
@@ -494,10 +482,8 @@ function buildApp(CASE){
   (CASE.checklistCategories || []).forEach(cat => { allLabels = Object.assign(allLabels, cat.labels); });
   if(CASE.otherLabels) allLabels = Object.assign(allLabels, CASE.otherLabels);
 
-  const trueCriteria = new Set(Object.keys(CASE.symptomTruth).filter(k => CASE.symptomTruth[k]));
   const studentChecks = new Set();
   let selectedDx = null;
-  const whyChoices = new Set();
   let cutoffTrackers = [];
 
   function refreshCutoffNotes(){
@@ -646,44 +632,9 @@ function buildApp(CASE){
     const btn = document.createElement('button');
     btn.className = 'dx';
     btn.innerHTML = `<strong>${dx.name}</strong><span>${dx.blurb}</span>`;
-    btn.addEventListener('click', () => { selectedDx = dx; renderWhyScreen(); goTo('why'); });
+    btn.addEventListener('click', () => { selectedDx = dx; goTo('why'); });
     dxGrid.appendChild(btn);
   });
-
-  function renderWhyScreen(){
-    whyChoices.clear();
-    const container = document.getElementById('why-options');
-    container.innerHTML = '';
-    if(studentChecks.size === 0){
-      container.innerHTML = '<p>You didn\'t check off any checklist evidence — that\'s okay, just continue to see how your diagnosis holds up.</p>';
-      return;
-    }
-    const grid = document.createElement('div');
-    grid.className = 'why-grid';
-    [...studentChecks].forEach(key => {
-      const chip = document.createElement('button');
-      chip.type = 'button'; chip.className = 'why-chip'; chip.textContent = allLabels[key];
-      chip.addEventListener('click', () => toggleWhy(key, chip));
-      grid.appendChild(chip);
-    });
-    container.appendChild(grid);
-    const count = document.createElement('div');
-    count.className = 'why-count'; count.id = 'why-count'; count.textContent = '0 of 3 selected';
-    container.appendChild(count);
-  }
-
-  function toggleWhy(key, chip){
-    if(whyChoices.has(key)){
-      whyChoices.delete(key); chip.classList.remove('selected');
-    } else {
-      if(whyChoices.size >= 3) return;
-      whyChoices.add(key); chip.classList.add('selected');
-    }
-    document.getElementById('why-count').textContent = `${whyChoices.size} of 3 selected`;
-    document.querySelectorAll('.why-chip').forEach(c => {
-      if(!c.classList.contains('selected')) c.disabled = whyChoices.size >= 3;
-    });
-  }
 
   document.getElementById('btn-why-continue').addEventListener('click', () => {
     const paragraph = document.getElementById('reasoning-paragraph').value.trim();
@@ -761,32 +712,14 @@ function buildApp(CASE){
       : `You explored every area of the interview — nice thorough work.`;
     body.appendChild(coverage);
 
-    const matched = [...studentChecks].filter(c => trueCriteria.has(c));
-    const missed = [...trueCriteria].filter(c => !studentChecks.has(c));
-    const falsePos = [...studentChecks].filter(c => !trueCriteria.has(c));
-
-    const scoreBlock = document.createElement('div');
-    scoreBlock.className = 'note';
-    let scoreHtml = `<strong>Checklist accuracy: ${matched.length} of ${trueCriteria.size} true symptoms correctly identified.</strong>`;
-    if(missed.length) scoreHtml += `<br>Missed: ${missed.map(c => allLabels[c]).join(', ')}.`;
-    if(falsePos.length) scoreHtml += `<br>Checked but not actually supported: ${falsePos.map(c => allLabels[c]).join(', ')} — worth re-reading those notes.`;
-    if(!missed.length && !falsePos.length) scoreHtml += `<br>Clean read of the case — every box matched the evidence.`;
-    scoreBlock.innerHTML = scoreHtml;
-    body.appendChild(scoreBlock);
-
-    if(whyChoices.size > 0){
-      const reasonBlock = document.createElement('div');
-      reasonBlock.className = 'note';
-      const chosenLabels = [...whyChoices].map(k => allLabels[k]);
-      let reasonHtml = `<strong>Your stated reasoning:</strong> ${chosenLabels.join(', ')}.`;
-      const trapKey = CASE.trapCriterionKey;
-      if(trapKey && whyChoices.has(trapKey)){
-        reasonHtml += `<br><br>Worth a second look: that piece of evidence was designed as a trap — see the debrief below for why.`;
-      } else if(trapKey && studentChecks.has(trapKey)){
-        reasonHtml += `<br><br>Nice catch leaving that trap item out of your key reasoning — see the debrief below.`;
-      }
-      reasonBlock.innerHTML = reasonHtml;
-      body.appendChild(reasonBlock);
+    const trapKey = CASE.trapCriterionKey;
+    if(trapKey && allLabels[trapKey]){
+      const trapBlock = document.createElement('div');
+      trapBlock.className = 'note';
+      trapBlock.innerHTML = studentChecks.has(trapKey)
+        ? `Worth a second look: you flagged "${allLabels[trapKey]}" on your checklist — that detail was designed as a trap. See the debrief below for why.`
+        : `Nice catch — you didn't flag "${allLabels[trapKey]}" as relevant. See the debrief below for why that was a trap worth avoiding.`;
+      body.appendChild(trapBlock);
     }
 
     const reasoningParagraph = document.getElementById('reasoning-paragraph').value.trim();
@@ -813,7 +746,7 @@ function buildApp(CASE){
       case_id: CASE.id,
       notes: document.getElementById('clinical-notes').value,
       checklist_selections: [...studentChecks],
-      reasoning_selections: [...whyChoices],
+      reasoning_selections: [],
       reasoning_paragraph: reasoningParagraph,
       diagnosis: dx.name,
       was_correct: dx.correct
@@ -850,7 +783,6 @@ function buildApp(CASE){
       const tabName = t.id.replace('tab-', '');
       if(!visitedScreens.has(tabName)) return;
       if(tabName === 'synthesis') renderSynthesis();
-      if(tabName === 'why' && selectedDx) renderWhyScreen();
       goTo(tabName);
     });
   });
@@ -889,7 +821,7 @@ function buildApp(CASE){
   });
 
   document.getElementById('btn-restart').addEventListener('click', () => {
-    state.asked.clear(); studentChecks.clear(); whyChoices.clear(); selectedDx = null;
+    state.asked.clear(); studentChecks.clear(); selectedDx = null;
     visitedScreens = new Set(['intro']);
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('visited'));
     document.getElementById('tab-intro').classList.add('visited');
