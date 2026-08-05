@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eyewitness Memory: The Car Crash — Psych Simulations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1E9D2; --paper-dark:#E3D5AE; --folder:#D8C393; --ink:#2B2A25; --ink-soft:#5C5648;
+    --navy:#2F4858; --red:#A13D3D; --sage:#5E7A52; --line:#C7B78E; --white-card:#FBF7EC;
+    --car-red:#C0392B; --car-blue:#2A5DB0; --burst:#E8A93B;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:radial-gradient(circle at 20% 10%, rgba(0,0,0,0.03) 0, transparent 40%);
+    font-family:'Space Grotesk', sans-serif; color:var(--ink); min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .wrap{width:100%; max-width:560px;}
+  .eyebrow{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; text-transform:uppercase;
+    letter-spacing:0.08em; color:var(--ink-soft); text-align:center; margin-bottom:8px;
+  }
+  .panel{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:32px; box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+  }
+  .screen{display:none;}
+  .screen.active{display:block;}
+  h1{font-size:1.5rem; margin:0 0 14px; text-align:center;}
+  h2{font-size:1.15rem; margin:0 0 10px;}
+  p{line-height:1.6; font-size:0.95rem;}
+  .rule{
+    background:var(--paper-dark); border-left:3px solid var(--navy); border-radius:0 4px 4px 0;
+    padding:14px 16px; margin:16px 0; font-size:0.9rem; line-height:1.55;
+  }
+  .rule strong{display:block; margin-bottom:4px;}
+  .primary-btn{
+    background:var(--navy); color:white; border:none; border-radius:24px; padding:13px 26px;
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:0.95rem; cursor:pointer;
+    display:block; margin:20px auto 0; transition:transform 0.12s ease;
+  }
+  .primary-btn:hover{transform:translateY(-1px);}
+  .primary-btn:active{transform:translateY(0);}
+  .primary-btn:disabled{opacity:0.4; cursor:default; transform:none;}
+  .ghost-btn{
+    background:transparent; color:var(--ink-soft); border:1px solid var(--line); border-radius:24px;
+    padding:11px 22px; font-family:'Space Grotesk', sans-serif; font-size:0.88rem; cursor:pointer;
+  }
+  .ghost-btn:hover{color:var(--ink); border-color:var(--ink);}
+  .btn-row{display:flex; gap:10px; justify-content:center; margin-top:22px; flex-wrap:wrap;}
+
+  /* --- Scene / animation --- */
+  .scene{
+    position:relative; height:200px; margin:18px 0; overflow:hidden;
+    background:linear-gradient(var(--paper) 0%, var(--paper) 68%, #DDD0AA 68%, #DDD0AA 100%);
+    border:1px solid var(--line); border-radius:8px;
+  }
+  .road-line{
+    position:absolute; left:0; right:0; bottom:32px; height:3px;
+    background-image:repeating-linear-gradient(90deg, var(--ink-soft) 0 18px, transparent 18px 34px);
+    opacity:0.5;
+  }
+  .car{position:absolute; bottom:36px; width:74px; height:34px;}
+  .car .body{position:absolute; left:0; right:0; bottom:10px; height:18px; border-radius:8px;}
+  .car .cabin{position:absolute; left:18px; right:18px; bottom:22px; height:14px; border-radius:6px 6px 0 0;}
+  .car .wheel{position:absolute; bottom:0; width:14px; height:14px; border-radius:50%; background:#2B2A25;}
+  .car .wheel.l{left:10px;} .car .wheel.r{right:10px;}
+  .car-a .body, .car-a .cabin{background:var(--car-red);}
+  .car-b .body, .car-b .cabin{background:var(--car-blue);}
+  .car-a{left:-140px; transition:none;}
+  .car-b{right:-140px; transition:none;}
+  .scene.playing .car-a{left:calc(50% - 75px); transition:left 1.3s cubic-bezier(0.4,0,0.7,1);}
+  .scene.playing .car-b{right:calc(50% - 75px); transition:right 1.3s cubic-bezier(0.4,0,0.7,1);}
+  .scene.impact .car-a{left:calc(50% - 62px);}
+  .scene.impact .car-b{right:calc(50% - 62px);}
+  .scene.impact{animation:shake 0.4s ease-in-out;}
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-4px);}
+    40%{transform:translateX(4px);}
+    60%{transform:translateX(-3px);}
+    80%{transform:translateX(3px);}
+  }
+  .impact-burst{
+    position:absolute; top:50%; left:50%; width:60px; height:60px;
+    transform:translate(-50%,-50%) scale(0); opacity:0;
+    background:radial-gradient(circle, var(--burst) 0%, rgba(232,169,59,0) 70%);
+    border-radius:50%; pointer-events:none;
+  }
+  .scene.impact .impact-burst{
+    animation:burst 0.5s ease-out forwards;
+  }
+  @keyframes burst{
+    0%{transform:translate(-50%,-50%) scale(0.2); opacity:0.9;}
+    100%{transform:translate(-50%,-50%) scale(2.4); opacity:0;}
+  }
+  .scene-caption{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; color:var(--ink-soft);
+    text-align:center; margin-top:6px;
+  }
+
+  /* --- Question screens --- */
+  .question-text{font-size:1.1rem; font-weight:600; text-align:center; margin:18px 0;}
+  .speed-input-row{display:flex; align-items:center; justify-content:center; gap:10px; margin:18px 0;}
+  .speed-input-row input{
+    width:110px; font-family:'Space Grotesk', sans-serif; font-size:1.3rem; font-weight:600;
+    text-align:center; padding:10px; border:1px solid var(--line); border-radius:6px; background:var(--paper);
+  }
+  .speed-input-row span{font-family:'Courier Prime', monospace; font-size:0.85rem; color:var(--ink-soft);}
+  .choice-row{display:flex; gap:10px; justify-content:center; margin-top:18px; flex-wrap:wrap;}
+  button.choice-btn{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:24px;
+    padding:12px 24px; font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:0.92rem;
+    cursor:pointer; box-shadow:2px 2px 0 rgba(43,42,37,0.15); transition:transform 0.1s ease;
+  }
+  button.choice-btn:hover{transform:translate(-1px,-1px);}
+  button.choice-btn:active{transform:translate(0,0);}
+
+  /* --- Results --- */
+  .stat-row{display:flex; justify-content:space-between; align-items:center; margin:10px 0; font-size:0.92rem;}
+  .stat-label{color:var(--ink-soft);}
+  .stat-value{font-weight:700;}
+  .verb-callout{
+    background:var(--paper-dark); border-radius:6px; padding:14px 16px; margin:16px 0; text-align:center;
+  }
+  .verb-word{font-size:1.4rem; font-weight:700; color:var(--navy); text-transform:capitalize;}
+  .verb-sub{font-family:'Courier Prime', monospace; font-size:0.75rem; color:var(--ink-soft); margin-top:2px;}
+  .footer-note{
+    margin-top:18px; font-size:0.8rem; color:var(--ink-soft); border-top:1px dashed var(--line);
+    padding-top:14px; line-height:1.55;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Psych Simulations &middot; Research Study</div>
+  <div class="panel">
+
+    <div class="screen active" id="screen-intro">
+      <h1>Eyewitness Memory: The Car Crash</h1>
+      <p>You're about to watch a short animated clip of a car accident. Afterward, you'll be asked a few questions about what you saw — just answer as accurately as you can, based on your memory of the clip.</p>
+      <div class="rule">
+        <strong>Just watch for now</strong>
+        Pay attention — you won't be able to rewatch it before answering the first question.
+      </div>
+      <button class="primary-btn" id="btn-to-video">Watch the Clip →</button>
+    </div>
+
+    <div class="screen" id="screen-video">
+      <h2>Watch Closely</h2>
+      <div class="scene" id="scene">
+        <div class="road-line"></div>
+        <div class="car car-a" id="carA">
+          <div class="cabin"></div><div class="body"></div>
+          <div class="wheel l"></div><div class="wheel r"></div>
+        </div>
+        <div class="car car-b" id="carB">
+          <div class="cabin"></div><div class="body"></div>
+          <div class="wheel l"></div><div class="wheel r"></div>
+        </div>
+        <div class="impact-burst"></div>
+      </div>
+      <div class="scene-caption" id="scene-caption">Click play to start the clip</div>
+      <div class="btn-row">
+        <button class="ghost-btn" id="btn-replay">↺ Replay</button>
+        <button class="primary-btn" id="btn-continue-video" disabled>Continue →</button>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-speed">
+      <h2>Question 1</h2>
+      <div class="question-text" id="speed-question"></div>
+      <div class="speed-input-row">
+        <input type="number" id="speed-input" min="0" max="200" placeholder="—">
+        <span>km/h</span>
+      </div>
+      <button class="primary-btn" id="btn-submit-speed">Submit →</button>
+    </div>
+
+    <div class="screen" id="screen-glass">
+      <h2>Question 2</h2>
+      <div class="question-text">Did you see any broken glass in the clip?</div>
+      <div class="choice-row">
+        <button class="choice-btn" data-answer="yes">Yes</button>
+        <button class="choice-btn" data-answer="no">No</button>
+        <button class="choice-btn" data-answer="unsure">Not sure</button>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-results">
+      <h2>Debrief</h2>
+
+      <div class="verb-callout">
+        <div class="verb-word" id="reveal-verb"></div>
+        <div class="verb-sub">the verb your question used</div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-label">Your speed estimate</div>
+        <div class="stat-value" id="reveal-speed"></div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-label">Broken glass in the clip?</div>
+        <div class="stat-value">No — there wasn't any</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-label">Your answer</div>
+        <div class="stat-value" id="reveal-glass-answer"></div>
+      </div>
+
+      <p style="margin-top:18px;" id="explain-text"></p>
+
+      <div class="footer-note">
+        This is based on Loftus &amp; Palmer's classic 1974 study. Participants who watched the same footage but were asked with a more intense verb (like "smashed") gave higher speed estimates than those asked with a milder verb (like "contacted") — and in a follow-up, "smashed" participants were also more likely to falsely remember seeing broken glass that was never in the film. Memory isn't a recording; it's reconstructed each time you recall it, and the wording of a question can quietly reshape what you "remember." Your result here is just one data point, not a diagnosis of your memory.
+      </div>
+
+      <div class="btn-row">
+        <button class="ghost-btn" id="btn-retry">↺ Try Again</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const VERBS = [
+    { word: 'smashed',  desc: 'the most intense verb condition' },
+    { word: 'collided',  desc: 'a strong-intensity verb condition' },
+    { word: 'bumped',    desc: 'a mild-intensity verb condition' },
+    { word: 'hit',       desc: 'the mildest verb condition' }
+  ];
+
+  let chosenVerb = null;
+  let submittedSpeed = null;
+  let glassAnswer = null;
+
+  function goTo(name){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+  }
+
+  function pickVerb(){
+    chosenVerb = VERBS[Math.floor(Math.random() * VERBS.length)];
+  }
+
+  // --- Animation ---
+  const scene = document.getElementById('scene');
+  const caption = document.getElementById('scene-caption');
+  const continueVideoBtn = document.getElementById('btn-continue-video');
+
+  function playAnimation(){
+    continueVideoBtn.disabled = true;
+    caption.textContent = 'Playing…';
+    scene.classList.remove('impact');
+    scene.classList.remove('playing');
+    void scene.offsetWidth; // force reflow so the animation restarts cleanly
+    scene.classList.add('playing');
+
+    setTimeout(() => {
+      scene.classList.add('impact');
+    }, 1300);
+
+    setTimeout(() => {
+      caption.textContent = 'Clip finished';
+      continueVideoBtn.disabled = false;
+    }, 1300 + 500);
+  }
+
+  document.getElementById('btn-to-video').addEventListener('click', () => {
+    pickVerb();
+    goTo('video');
+    setTimeout(playAnimation, 250);
+  });
+  document.getElementById('btn-replay').addEventListener('click', playAnimation);
+
+  document.getElementById('btn-continue-video').addEventListener('click', () => {
+    document.getElementById('speed-question').textContent =
+      `About how fast were the cars going when they ${chosenVerb.word} each other?`;
+    document.getElementById('speed-input').value = '';
+    goTo('speed');
+  });
+
+  document.getElementById('btn-submit-speed').addEventListener('click', () => {
+    const val = document.getElementById('speed-input').value;
+    if(val === '' || isNaN(val)){
+      document.getElementById('speed-input').focus();
+      return;
+    }
+    submittedSpeed = Math.round(Number(val));
+    goTo('glass');
+  });
+
+  document.querySelectorAll('.choice-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      glassAnswer = btn.dataset.answer;
+      showResults();
+    });
+  });
+
+  function showResults(){
+    goTo('results');
+    document.getElementById('reveal-verb').textContent = chosenVerb.word;
+    document.getElementById('reveal-speed').textContent = submittedSpeed + ' km/h';
+
+    const glassLabel = { yes: 'Yes', no: 'No', unsure: 'Not sure' }[glassAnswer];
+    document.getElementById('reveal-glass-answer').textContent = glassLabel;
+
+    const explainEl = document.getElementById('explain-text');
+    const isIntense = chosenVerb.word === 'smashed' || chosenVerb.word === 'collided';
+
+    if(glassAnswer === 'yes'){
+      explainEl.textContent = `You reported seeing broken glass — but there wasn't any in the clip. This is a classic example of a false memory: your mind filled in a plausible detail that fits the "story" of a crash, especially ${isIntense ? `after being asked about it with an intense word like "${chosenVerb.word}"` : 'even with a milder question wording'}.`;
+    } else if(glassAnswer === 'unsure'){
+      explainEl.textContent = `You weren't sure whether there was broken glass — a reasonable response given how briefly the clip played. Loftus & Palmer found that more intense verbs (like "smashed") made people more likely to confidently — and incorrectly — recall broken glass than milder verbs did.`;
+    } else {
+      explainEl.textContent = `You correctly recalled that there was no broken glass. In the original study, people were more likely to get this right after being asked with a milder verb like "hit" than after intense verbs like "smashed."`;
+    }
+  }
+
+  document.getElementById('btn-retry').addEventListener('click', () => {
+    submittedSpeed = null;
+    glassAnswer = null;
+    goTo('intro');
+  });
+</script>
+</body>
+</html>
