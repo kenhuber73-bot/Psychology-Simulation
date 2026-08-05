@@ -12,6 +12,7 @@
     --paper:#F1E9D2; --paper-dark:#E3D5AE; --folder:#D8C393; --ink:#2B2A25; --ink-soft:#5C5648;
     --navy:#2F4858; --red:#A13D3D; --sage:#5E7A52; --line:#C7B78E; --white-card:#FBF7EC;
     --stroop-red:#C0392B; --stroop-green:#2E7D46; --stroop-blue:#2A5DB0; --stroop-yellow:#B8901A;
+    --stroop-purple:#7B4B94; --stroop-orange:#C76B2A;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -76,6 +77,8 @@
   .btn-green{background:var(--stroop-green);}
   .btn-blue{background:var(--stroop-blue);}
   .btn-yellow{background:var(--stroop-yellow);}
+  .btn-purple{background:var(--stroop-purple);}
+  .btn-orange{background:var(--stroop-orange);}
   .flash-correct{outline:3px solid var(--sage); outline-offset:-3px;}
   .flash-wrong{outline:3px solid var(--red); outline-offset:-3px;}
 
@@ -127,12 +130,20 @@
         <strong>Example</strong>
         If the word "BLUE" appears printed in red ink, click the <strong>red</strong> button — the word says "blue," but the ink is red.
       </div>
-      <p style="text-align:center; color:var(--ink-soft); font-size:0.85rem;">20 trials &middot; go as fast as you can while staying accurate</p>
+      <p style="text-align:center; color:var(--ink-soft); font-size:0.85rem;">20 trials in two blocks &middot; go as fast as you can while staying accurate</p>
       <button class="primary-btn" id="btn-start">Start →</button>
     </div>
 
+    <div class="screen" id="screen-block-transition">
+      <h2>Block 2</h2>
+      <div class="rule">
+        <strong>Heads up</strong> The next 10 trials are trickier — the ink color won't always match the word. Keep going as fast and accurately as you can.
+      </div>
+      <button class="primary-btn" id="btn-continue-block2">Continue →</button>
+    </div>
+
     <div class="screen" id="screen-trial">
-      <div class="progress" id="progress-text">Trial 1 of 20</div>
+      <div class="progress" id="progress-text">Block 1 &middot; Trial 1 of 10</div>
       <div class="stage">
         <div class="fixation" id="fixation">+</div>
         <div class="stimulus" id="stimulus" style="display:none;"></div>
@@ -142,6 +153,8 @@
         <button class="color-btn btn-green" data-color="GREEN">Green</button>
         <button class="color-btn btn-blue" data-color="BLUE">Blue</button>
         <button class="color-btn btn-yellow" data-color="YELLOW">Yellow</button>
+        <button class="color-btn btn-purple" data-color="PURPLE">Purple</button>
+        <button class="color-btn btn-orange" data-color="ORANGE">Orange</button>
       </div>
     </div>
 
@@ -182,7 +195,9 @@
     { name: 'RED', hex: 'var(--stroop-red)' },
     { name: 'GREEN', hex: 'var(--stroop-green)' },
     { name: 'BLUE', hex: 'var(--stroop-blue)' },
-    { name: 'YELLOW', hex: 'var(--stroop-yellow)' }
+    { name: 'YELLOW', hex: 'var(--stroop-yellow)' },
+    { name: 'PURPLE', hex: 'var(--stroop-purple)' },
+    { name: 'ORANGE', hex: 'var(--stroop-orange)' }
   ];
   const TOTAL_TRIALS = 20;
   const FIXATION_MS = 350;
@@ -223,22 +238,26 @@
     return a;
   }
 
+  // Blocked design: block 1 is all congruent trials, block 2 is all incongruent
+  // trials. Each block is internally shuffled, but block 1 always precedes
+  // block 2 (as opposed to interleaving them across the whole run).
   function buildTrials(){
     const half = TOTAL_TRIALS / 2;
-    const trials = [];
+    const congruentBlock = [];
     for(let i = 0; i < half; i++){
       const c = COLORS[Math.floor(Math.random() * COLORS.length)];
-      trials.push({ word: c.name, inkName: c.name, inkHex: c.hex, congruent: true });
+      congruentBlock.push({ word: c.name, inkName: c.name, inkHex: c.hex, congruent: true });
     }
+    const incongruentBlock = [];
     for(let i = 0; i < half; i++){
       const word = COLORS[Math.floor(Math.random() * COLORS.length)];
       let ink = COLORS[Math.floor(Math.random() * COLORS.length)];
       while(ink.name === word.name){
         ink = COLORS[Math.floor(Math.random() * COLORS.length)];
       }
-      trials.push({ word: word.name, inkName: ink.name, inkHex: ink.hex, congruent: false });
+      incongruentBlock.push({ word: word.name, inkName: ink.name, inkHex: ink.hex, congruent: false });
     }
-    return shuffle(trials);
+    return shuffle(congruentBlock).concat(shuffle(incongruentBlock));
   }
 
   let trials = [];
@@ -246,6 +265,7 @@
   let results = [];
   let trialStartTime = 0;
   let awaitingResponse = false;
+  let blockTransitionShown = false;
 
   function goTo(name){
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -256,6 +276,7 @@
     trials = buildTrials();
     trialIndex = 0;
     results = [];
+    blockTransitionShown = false;
     goTo('trial');
     showTrial();
   }
@@ -265,7 +286,15 @@
       showResults();
       return;
     }
-    document.getElementById('progress-text').textContent = `Trial ${trialIndex + 1} of ${trials.length}`;
+    const half = trials.length / 2;
+    if(trialIndex === half && !blockTransitionShown){
+      blockTransitionShown = true;
+      goTo('block-transition');
+      return;
+    }
+    const blockNum = trialIndex < half ? 1 : 2;
+    const blockTrialNum = trialIndex < half ? trialIndex + 1 : trialIndex - half + 1;
+    document.getElementById('progress-text').textContent = `Block ${blockNum} · Trial ${blockTrialNum} of ${half}`;
     const fixation = document.getElementById('fixation');
     const stimulus = document.getElementById('stimulus');
     const buttons = document.querySelectorAll('.color-btn');
@@ -358,6 +387,10 @@
 
   document.getElementById('btn-start').addEventListener('click', startTask);
   document.getElementById('btn-retry').addEventListener('click', startTask);
+  document.getElementById('btn-continue-block2').addEventListener('click', () => {
+    goTo('trial');
+    showTrial();
+  });
 </script>
 </body>
 </html>
