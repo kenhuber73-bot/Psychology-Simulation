@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scrambled Sentences Task — Psych Simulations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1E9D2; --paper-dark:#E3D5AE; --folder:#D8C393; --ink:#2B2A25; --ink-soft:#5C5648;
+    --navy:#2F4858; --red:#A13D3D; --sage:#5E7A52; --line:#C7B78E; --white-card:#FBF7EC;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:radial-gradient(circle at 20% 10%, rgba(0,0,0,0.03) 0, transparent 40%);
+    font-family:'Space Grotesk', sans-serif; color:var(--ink); min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .wrap{width:100%; max-width:560px;}
+  .eyebrow{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; text-transform:uppercase;
+    letter-spacing:0.08em; color:var(--ink-soft); text-align:center; margin-bottom:8px;
+  }
+  .panel{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:32px; box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+  }
+  .screen{display:none;}
+  .screen.active{display:block;}
+  h1{font-size:1.5rem; margin:0 0 14px; text-align:center;}
+  h2{font-size:1.15rem; margin:0 0 10px;}
+  p{line-height:1.6; font-size:0.95rem;}
+  .rule{
+    background:var(--paper-dark); border-left:3px solid var(--navy); border-radius:0 4px 4px 0;
+    padding:14px 16px; margin:16px 0; font-size:0.9rem; line-height:1.55;
+  }
+  .rule strong{display:block; margin-bottom:4px;}
+  .primary-btn{
+    background:var(--navy); color:white; border:none; border-radius:24px; padding:13px 26px;
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:0.95rem; cursor:pointer;
+    display:block; margin:20px auto 0; transition:transform 0.12s ease;
+  }
+  .primary-btn:hover{transform:translateY(-1px);}
+  .primary-btn:active{transform:translateY(0);}
+  .ghost-btn{
+    background:transparent; color:var(--ink-soft); border:1px solid var(--line); border-radius:24px;
+    padding:11px 22px; font-family:'Space Grotesk', sans-serif; font-size:0.88rem; cursor:pointer;
+  }
+  .ghost-btn:hover{color:var(--ink); border-color:var(--ink);}
+  .btn-row{display:flex; gap:10px; justify-content:center; margin-top:22px; flex-wrap:wrap;}
+
+  .progress{
+    font-family:'Courier Prime', monospace; font-size:0.75rem; color:var(--ink-soft);
+    text-align:center; margin-bottom:18px; letter-spacing:0.04em;
+  }
+  .built-sentence{
+    font-family:'Courier Prime', monospace; font-size:1.05rem; text-align:center; font-weight:700;
+    color:var(--navy); min-height:30px; margin-bottom:18px; padding:0 8px;
+  }
+  .word-tiles{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:14px;}
+  button.word-tile{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:20px;
+    padding:10px 18px; font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:0.95rem;
+    cursor:pointer; box-shadow:2px 2px 0 rgba(43,42,37,0.15); transition:transform 0.1s ease, opacity 0.15s ease;
+  }
+  button.word-tile:hover{transform:translate(-1px,-1px);}
+  button.word-tile:active{transform:translate(0,0);}
+  button.word-tile.used, button.word-tile:disabled{opacity:0.25; pointer-events:none; box-shadow:none;}
+  .feedback-line{
+    font-family:'Courier Prime', monospace; font-size:0.82rem; color:var(--ink-soft);
+    text-align:center; min-height:20px; margin-top:4px;
+  }
+  .feedback-line.retry{color:var(--red);}
+
+  /* --- Results --- */
+  .stat-row{display:flex; justify-content:space-between; align-items:center; margin:10px 0; font-size:0.92rem;}
+  .stat-label{color:var(--ink-soft);}
+  .stat-value{font-weight:700;}
+  .gap-callout{
+    background:var(--paper-dark); border-radius:6px; padding:16px 18px; margin:20px 0; text-align:center;
+  }
+  .gap-number{font-size:2rem; font-weight:700; color:var(--navy);}
+  .gap-label{font-family:'Courier Prime', monospace; font-size:0.75rem; color:var(--ink-soft); margin-top:2px;}
+  .footer-note{
+    margin-top:18px; font-size:0.8rem; color:var(--ink-soft); border-top:1px dashed var(--line);
+    padding-top:14px; line-height:1.55;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Psych Simulations &middot; Research-Based Task</div>
+  <div class="panel">
+
+    <div class="screen active" id="screen-intro">
+      <h1>Scrambled Sentences</h1>
+      <p>You'll see 6 words, shuffled out of order. Tap 5 of them — in order — to build a grammatically correct sentence. One word won't be used.</p>
+      <div class="rule">
+        <strong>Example</strong>
+        Words: <em>my joke was pretty funny lame</em><br>
+        Two different 5-word sentences are possible here, depending on which word you leave out. Both are grammatically fine — go with whichever comes to mind first. If you tap a combination that isn't a valid sentence, you'll be told and the words will reset so you can try again.
+      </div>
+      <p style="text-align:center; color:var(--ink-soft); font-size:0.85rem;">10 sentences &middot; go with your first instinct, don't overthink it</p>
+      <button class="primary-btn" id="btn-start">Start →</button>
+    </div>
+
+    <div class="screen" id="screen-trial">
+      <div class="progress" id="progress-text">Sentence 1 of 10</div>
+      <div class="built-sentence" id="built-sentence">Tap 5 of the 6 words to build a sentence…</div>
+      <div class="word-tiles" id="word-tiles"></div>
+      <div class="btn-row">
+        <button class="ghost-btn" id="btn-undo">↺ Undo</button>
+      </div>
+      <div class="feedback-line" id="feedback-line"></div>
+    </div>
+
+    <div class="screen" id="screen-results">
+      <h2>Your Results</h2>
+
+      <div class="gap-callout">
+        <div class="gap-number" id="neg-ratio">—</div>
+        <div class="gap-label">of your sentences resolved negatively</div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-label">Negative completions</div>
+        <div class="stat-value" id="neg-count">—</div>
+      </div>
+
+      <p style="margin-top:18px;" id="explain-text"></p>
+
+      <div class="footer-note">
+        This task is modeled on the Scrambled Sentences Task used in interpretation-bias research (the sentences here are original, not the published research stimuli). The idea: every one of these sentences was genuinely ambiguous — either completion was equally grammatical. Which one your mind reached for first is the "interpretation." Research on social anxiety has found this measure correlates fairly strongly with self-reported anxiety symptoms — worth comparing against your Social Situations Reflection or SIAS score if you tried those. This is a classroom demonstration, not a diagnostic tool, and nothing is saved.
+      </div>
+
+      <div class="btn-row">
+        <button class="ghost-btn" id="btn-retry">↺ Try Again</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Each item: 6 words. Exactly 5 of them, in the listed order, form the
+  // "pos" (positive) or "neg" (negative) resolution of the ambiguous sentence.
+  const ITEMS = [
+    { words: ['my','joke','was','pretty','funny','lame'],
+      pos: ['my','joke','was','pretty','funny'], neg: ['my','joke','was','pretty','lame'] },
+    { words: ['my','teacher','gave','harsh','kind','feedback'],
+      pos: ['my','teacher','gave','kind','feedback'], neg: ['my','teacher','gave','harsh','feedback'] },
+    { words: ['my','friends','seemed','glad','annoyed','today'],
+      pos: ['my','friends','seemed','glad','today'], neg: ['my','friends','seemed','annoyed','today'] },
+    { words: ['the','group','found','me','interesting','awkward'],
+      pos: ['the','group','found','me','interesting'], neg: ['the','group','found','me','awkward'] },
+    { words: ['my','answer','sounded','confident','foolish','today'],
+      pos: ['my','answer','sounded','confident','today'], neg: ['my','answer','sounded','foolish','today'] },
+    { words: ['she','replied','to','me','warmly','coldly'],
+      pos: ['she','replied','to','me','warmly'], neg: ['she','replied','to','me','coldly'] },
+    { words: ['my','idea','got','praised','mocked','today'],
+      pos: ['my','idea','got','praised','today'], neg: ['my','idea','got','mocked','today'] },
+    { words: ['my','comment','made','people','laugh','uncomfortable'],
+      pos: ['my','comment','made','people','laugh'], neg: ['my','comment','made','people','uncomfortable'] },
+    { words: ['my','essay','received','positive','negative','comments'],
+      pos: ['my','essay','received','positive','comments'], neg: ['my','essay','received','negative','comments'] },
+    { words: ['my','project','impressed','disappointed','the','judges'],
+      pos: ['my','project','impressed','the','judges'], neg: ['my','project','disappointed','the','judges'] }
+  ];
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i = a.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function arraysEqual(a, b){
+    return a.length === b.length && a.every((v, i) => v === b[i]);
+  }
+
+  function goTo(name){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+  }
+
+  let order = [];
+  let itemIndex = 0;
+  let chosen = [];
+  let results = [];
+
+  function startTask(){
+    order = shuffle(ITEMS.map((_, i) => i));
+    itemIndex = 0;
+    results = [];
+    goTo('trial');
+    loadItem();
+  }
+
+  function loadItem(){
+    if(itemIndex >= order.length){
+      showResults();
+      return;
+    }
+    document.getElementById('progress-text').textContent = `Sentence ${itemIndex + 1} of ${order.length}`;
+    resetTiles();
+  }
+
+  function resetTiles(){
+    chosen = [];
+    const feedback = document.getElementById('feedback-line');
+    feedback.classList.remove('retry');
+    renderTiles(ITEMS[order[itemIndex]]);
+    updateBuiltSentence();
+  }
+
+  function renderTiles(item){
+    const container = document.getElementById('word-tiles');
+    container.innerHTML = '';
+    shuffle(item.words).forEach(word => {
+      const btn = document.createElement('button');
+      btn.className = 'word-tile';
+      btn.textContent = word;
+      btn.addEventListener('click', () => tapWord(word, btn));
+      container.appendChild(btn);
+    });
+  }
+
+  function updateBuiltSentence(){
+    document.getElementById('built-sentence').textContent =
+      chosen.length ? chosen.join(' ') : 'Tap 5 of the 6 words to build a sentence…';
+  }
+
+  function tapWord(word, btn){
+    if(chosen.length >= 5 || btn.classList.contains('used')) return;
+    chosen.push(word);
+    btn.classList.add('used');
+    updateBuiltSentence();
+    if(chosen.length === 5){
+      checkSentence();
+    }
+  }
+
+  function checkSentence(){
+    const item = ITEMS[order[itemIndex]];
+    const feedback = document.getElementById('feedback-line');
+    document.querySelectorAll('.word-tile').forEach(b => b.disabled = true);
+
+    if(arraysEqual(chosen, item.pos)){
+      results.push('pos');
+      feedback.classList.remove('retry');
+      feedback.textContent = 'Nice — moving on…';
+      setTimeout(() => { itemIndex++; loadItem(); }, 650);
+    } else if(arraysEqual(chosen, item.neg)){
+      results.push('neg');
+      feedback.classList.remove('retry');
+      feedback.textContent = 'Nice — moving on…';
+      setTimeout(() => { itemIndex++; loadItem(); }, 650);
+    } else {
+      feedback.classList.add('retry');
+      feedback.textContent = "That's not a valid sentence — resetting the words so you can try again…";
+      setTimeout(() => {
+        resetTiles();
+      }, 1100);
+    }
+  }
+
+  document.getElementById('btn-undo').addEventListener('click', () => {
+    if(chosen.length === 0) return;
+    const lastWord = chosen.pop();
+    const feedback = document.getElementById('feedback-line');
+    feedback.textContent = '';
+    feedback.classList.remove('retry');
+    document.querySelectorAll('.word-tile.used').forEach(t => {
+      if(t.textContent === lastWord) t.classList.remove('used');
+    });
+    updateBuiltSentence();
+  });
+
+  function showResults(){
+    goTo('results');
+    const negCount = results.filter(r => r === 'neg').length;
+    const total = results.length;
+    const ratio = total ? Math.round((negCount / total) * 100) : 0;
+
+    document.getElementById('neg-count').textContent = `${negCount} of ${total}`;
+    document.getElementById('neg-ratio').textContent = ratio + '%';
+
+    const explainEl = document.getElementById('explain-text');
+    if(ratio >= 60){
+      explainEl.textContent = `You resolved most of the ambiguous sentences negatively. In interpretation-bias research, a higher negativity ratio like this is associated with higher self-reported social anxiety — the idea being that when a situation is genuinely unclear, the mind defaults to assuming the worse outcome.`;
+    } else if(ratio <= 30){
+      explainEl.textContent = `You resolved most of the ambiguous sentences positively (or neutrally, in the sense of not defaulting negative). Lower negativity ratios like this are generally associated with lower self-reported social anxiety in this line of research.`;
+    } else {
+      explainEl.textContent = `You landed roughly in the middle — a mix of positive and negative resolutions. That's a common pattern; interpretation bias is usually a matter of degree rather than an all-or-nothing tendency.`;
+    }
+  }
+
+  document.getElementById('btn-start').addEventListener('click', startTask);
+  document.getElementById('btn-retry').addEventListener('click', startTask);
+</script>
+</body>
+</html>

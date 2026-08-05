@@ -98,6 +98,11 @@
       <div class="case-title">Loftus &amp; Palmer (1974) — Eyewitness Memory</div>
       <div class="case-desc">Watch an animated car crash, then answer a question with a randomly assigned verb. See how leading questions can distort memory.</div>
     </div>
+
+    <div class="case-card" id="sst-card" style="border-style:dashed;">
+      <div class="case-title">Scrambled Sentences — Interpretation Bias</div>
+      <div class="case-desc">Unscramble ambiguous sentences that can resolve positively or negatively. Which one you land on first reveals your interpretation bias.</div>
+    </div>
   </div>
 
   <script>
@@ -145,6 +150,10 @@
 
     document.getElementById('loftus-card').addEventListener('click', () => {
       window.location.href = 'loftus-1974-car-crash.html';
+    });
+
+    document.getElementById('sst-card').addEventListener('click', () => {
+      window.location.href = 'scrambled-sentences-task.html';
     });
   </script>
 </body>
