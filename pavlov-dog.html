@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Condition the Dog — Psych Simulations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1E9D2; --paper-dark:#E3D5AE; --folder:#D8C393; --ink:#2B2A25; --ink-soft:#5C5648;
+    --navy:#2F4858; --red:#A13D3D; --sage:#5E7A52; --line:#C7B78E; --white-card:#FBF7EC;
+    --dog-fur:#C58B4E; --dog-fur-dark:#A56E36; --dog-ear:#8B5A2B; --collar:#2F4858;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:radial-gradient(circle at 20% 10%, rgba(0,0,0,0.03) 0, transparent 40%);
+    font-family:'Space Grotesk', sans-serif; color:var(--ink); min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .wrap{width:100%; max-width:640px;}
+  .eyebrow{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; text-transform:uppercase;
+    letter-spacing:0.08em; color:var(--ink-soft); text-align:center; margin-bottom:8px;
+  }
+  .panel{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:14px;
+    padding:28px; box-shadow:5px 5px 0 rgba(43,42,37,0.1); position:relative; overflow:hidden;
+  }
+  .screen{display:none;}
+  .screen.active{display:block;}
+  h1{font-size:1.4rem; margin:0 0 10px; text-align:center;}
+  p{line-height:1.6; font-size:0.94rem;}
+  .rule{
+    background:var(--paper-dark); border-left:3px solid var(--navy); border-radius:0 4px 4px 0;
+    padding:14px 16px; margin:14px 0; font-size:0.87rem; line-height:1.5;
+  }
+  input#dog-name{
+    width:100%; padding:11px 14px; border:2px solid var(--ink); border-radius:8px;
+    font-family:'Space Grotesk', sans-serif; font-size:1rem; margin:10px 0; text-align:center;
+  }
+  .primary-btn{
+    background:var(--navy); color:white; border:none; border-radius:24px; padding:13px 26px;
+    font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:0.95rem; cursor:pointer;
+    display:block; margin:16px auto 0; transition:transform 0.12s ease;
+  }
+  .primary-btn:hover{transform:translateY(-2px) scale(1.03);}
+  .primary-btn:active{transform:translateY(0) scale(0.98);}
+  .ghost-btn{
+    background:transparent; color:var(--ink-soft); border:1px solid var(--line); border-radius:24px;
+    padding:9px 18px; font-family:'Space Grotesk', sans-serif; font-size:0.85rem; cursor:pointer;
+  }
+  .ghost-btn:hover{color:var(--ink); border-color:var(--ink);}
+
+  /* --- Stage --- */
+  .stage{
+    background:linear-gradient(180deg, #EFE6C8 0%, #E3D5AE 100%);
+    border:2px solid var(--line); border-radius:12px; height:230px; position:relative;
+    margin-bottom:16px; overflow:hidden;
+  }
+  .stage-name{
+    position:absolute; top:10px; left:14px; font-family:'Courier Prime', monospace;
+    font-size:0.78rem; color:var(--ink-soft); font-weight:700;
+  }
+  .dog-svg-wrap{
+    position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:180px; height:180px;
+  }
+  .drop{
+    position:absolute; width:8px; height:11px; background:#9FD3E8; border-radius:0 50% 50% 50%;
+    transform:rotate(45deg); opacity:0; pointer-events:none;
+  }
+  @keyframes dropFall{
+    0%{opacity:0; transform:translateY(0) rotate(45deg);}
+    15%{opacity:1;}
+    100%{opacity:0; transform:translateY(50px) rotate(45deg);}
+  }
+  .drop.falling{animation:dropFall 0.9s ease-in forwards;}
+
+  .bell-icon{
+    position:absolute; top:16px; right:20px; font-size:2rem; cursor:pointer;
+    transform-origin:top center; user-select:none;
+  }
+  @keyframes ringShake{
+    0%,100%{transform:rotate(0deg);}
+    20%{transform:rotate(-18deg);}
+    40%{transform:rotate(14deg);}
+    60%{transform:rotate(-10deg);}
+    80%{transform:rotate(6deg);}
+  }
+  .bell-icon.ringing{animation:ringShake 0.5s ease;}
+
+  .food-icon{
+    position:absolute; top:16px; left:20px; font-size:2rem; cursor:pointer; user-select:none;
+    transition:transform 0.15s ease;
+  }
+  .food-icon.given{transform:scale(1.3) translateY(4px);}
+
+  @keyframes tailWag{
+    0%,100%{transform:rotate(22deg);}
+    50%{transform:rotate(52deg);}
+  }
+  .tail{transform-origin:135px 145px; animation:tailWag 0.6s ease-in-out infinite;}
+  .tail.calm{animation-duration:2.2s;}
+
+  @keyframes earPerk{
+    0%{transform:rotate(0deg);}
+    50%{transform:rotate(-12deg) translateY(-3px);}
+    100%{transform:rotate(0deg);}
+  }
+  .ears.alert{animation:earPerk 0.4s ease;}
+
+  @keyframes blink{
+    0%, 92%, 100%{transform:scaleY(1);}
+    96%{transform:scaleY(0.1);}
+  }
+  .eye{transform-origin:center; animation:blink 4s ease-in-out infinite;}
+  .eye.eye2{animation-delay:0.05s;}
+
+  .mouth-happy{display:none;}
+  .drooling .mouth-neutral{display:none;}
+  .drooling .mouth-happy{display:block;}
+
+  /* --- Meter --- */
+  .meter-label{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:'Courier Prime', monospace; font-size:0.75rem; color:var(--ink-soft); margin-bottom:4px;
+  }
+  .meter-track{
+    background:var(--paper); border:2px solid var(--ink); border-radius:10px; height:20px;
+    overflow:hidden; position:relative;
+  }
+  .meter-fill{
+    height:100%; background:linear-gradient(90deg, var(--sage), #7FA86A);
+    width:0%; transition:width 0.5s cubic-bezier(0.34,1.56,0.64,1); border-radius:8px 0 0 8px;
+  }
+  .meter-fill.hot{background:linear-gradient(90deg, #E8B84B, var(--sage));}
+  .meter-fill.dropping{animation:meterPulse 0.5s ease;}
+  @keyframes meterPulse{
+    0%{box-shadow:0 0 0 0 rgba(161,61,61,0.6);}
+    100%{box-shadow:0 0 0 8px rgba(161,61,61,0);}
+  }
+  .threshold-mark{
+    position:absolute; top:0; bottom:0; width:2px; background:var(--navy); left:38%;
+  }
+
+  /* --- Buttons row --- */
+  .action-row{display:flex; gap:10px; margin-top:18px; flex-wrap:wrap;}
+  .action-btn{
+    flex:1; min-width:130px; background:var(--white-card); border:2px solid var(--ink); border-radius:12px;
+    padding:14px 10px; font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:0.88rem;
+    cursor:pointer; text-align:center; box-shadow:3px 3px 0 rgba(43,42,37,0.15);
+    transition:transform 0.1s ease, box-shadow 0.1s ease;
+  }
+  .action-btn:hover{transform:translate(-2px,-2px); box-shadow:5px 5px 0 rgba(43,42,37,0.22);}
+  .action-btn:active{transform:translate(0,0); box-shadow:1px 1px 0 rgba(43,42,37,0.15);}
+  .action-btn .emoji{font-size:1.4rem; display:block; margin-bottom:4px;}
+  .action-btn.bell-btn{border-color:var(--navy);}
+  .action-btn.food-btn{border-color:var(--dog-ear);}
+
+  /* --- Tip + Log --- */
+  .tip-box{
+    background:var(--paper-dark); border-radius:8px; padding:12px 14px; margin-top:16px;
+    font-size:0.86rem; line-height:1.5; min-height:44px; display:flex; align-items:center;
+  }
+  .timer-box{
+    display:none; align-items:center; gap:12px; background:var(--white-card);
+    border:2px solid var(--red); border-radius:10px; padding:12px 16px; margin-top:14px;
+  }
+  .timer-box.active{display:flex;}
+  .timer-track{
+    flex:1; background:var(--paper); border-radius:6px; height:14px; overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .timer-fill{
+    height:100%; background:var(--red); width:100%; border-radius:6px 0 0 6px;
+    transition:width 0.1s linear;
+  }
+  .timer-label{
+    font-family:'Courier Prime', monospace; font-size:0.78rem; font-weight:700;
+    color:var(--red); flex-shrink:0; white-space:nowrap;
+  }
+  .log-panel{
+    margin-top:14px; max-height:120px; overflow-y:auto; font-family:'Courier Prime', monospace;
+    font-size:0.76rem; color:var(--ink-soft); border-top:1px dashed var(--line); padding-top:10px;
+  }
+  .log-entry{margin-bottom:4px; opacity:0; animation:logIn 0.3s ease forwards;}
+  @keyframes logIn{from{opacity:0; transform:translateX(-6px);} to{opacity:1; transform:translateX(0);}}
+
+  .footer-row{display:flex; justify-content:space-between; align-items:center; margin-top:16px;}
+
+  /* --- Achievement popup --- */
+  .achievement{
+    position:absolute; inset:0; background:rgba(43,42,37,0.55); display:none;
+    align-items:center; justify-content:center; z-index:10; border-radius:14px;
+  }
+  .achievement.show{display:flex;}
+  .achievement-card{
+    background:var(--white-card); border-radius:14px; padding:28px 24px; text-align:center;
+    max-width:320px; box-shadow:0 10px 30px rgba(0,0,0,0.3);
+    animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn{from{transform:scale(0.7); opacity:0;} to{transform:scale(1); opacity:1;}}
+  .achievement-card h2{margin:0 0 8px; font-size:1.2rem;}
+  .achievement-card p{font-size:0.88rem; margin-bottom:16px;}
+
+  /* --- Confetti --- */
+  .confetti-piece{
+    position:absolute; width:8px; height:8px; top:40%; left:50%; opacity:0; z-index:11;
+    border-radius:2px;
+  }
+  @keyframes confettiBurst{
+    0%{opacity:1; transform:translate(0,0) rotate(0deg);}
+    100%{opacity:0; transform:var(--end) rotate(var(--rot));}
+  }
+  .confetti-piece.burst{animation:confettiBurst 1s ease-out forwards;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Psych Simulations &middot; Live Experiment</div>
+  <div class="panel">
+
+    <div class="screen active" id="screen-intro">
+      <h1>Condition the Dog</h1>
+      <p>You're running a classical conditioning experiment. Give your dog a name, then use the bell and the food bowl to see how a brand-new response can be trained into existence.</p>
+      <div class="rule">
+        <strong>The idea</strong>
+        Right now, the bell means nothing to your dog. Food, on the other hand, automatically makes any dog drool — no training needed. Ring the bell, and a short timer starts — get food to your dog before it runs out and that counts as pairing them. Wait too long, and nothing is learned that time. Your goal: get the bell <em>alone</em> to start making your dog drool.
+      </div>
+      <input type="text" id="dog-name" placeholder="Name your dog (e.g. Rex)" maxlength="16">
+      <button class="primary-btn" id="btn-start">Start the experiment →</button>
+    </div>
+
+    <div class="screen" id="screen-lab">
+      <div class="stage" id="stage">
+        <div class="stage-name" id="stage-name">Rex</div>
+        <div class="bell-icon" id="bell-icon" title="Ring the bell">🔔</div>
+        <div class="food-icon" id="food-icon" title="Give food">🍖</div>
+        <div class="dog-svg-wrap" id="dog-wrap"></div>
+      </div>
+
+      <div class="meter-label">
+        <span>Learned Association</span>
+        <span id="meter-percent">0%</span>
+      </div>
+      <div class="meter-track">
+        <div class="meter-fill" id="meter-fill"></div>
+        <div class="threshold-mark"></div>
+      </div>
+
+      <div class="action-row">
+        <button class="action-btn bell-btn" id="btn-bell-only"><span class="emoji">🔔</span>Ring Bell</button>
+        <button class="action-btn food-btn" id="btn-food-only"><span class="emoji">🍖</span>Give Food</button>
+      </div>
+
+      <div class="tip-box" id="tip-box">You've got a bell and food — that's it. Figure out how to use them to train a new response into your dog.</div>
+
+      <div class="timer-box" id="timer-box">
+        <span class="timer-label" id="timer-label">2.5s</span>
+        <div class="timer-track"><div class="timer-fill" id="timer-fill"></div></div>
+        <span style="font-size:1.3rem;">🍖</span>
+      </div>
+
+      <div class="log-panel" id="log-panel"></div>
+
+      <div class="footer-row">
+        <button class="ghost-btn" id="btn-reset">↺ Start over with a new dog</button>
+        <span style="font-family:'Courier Prime', monospace; font-size:0.72rem; color:var(--ink-soft);" id="trial-count">0 trials</span>
+      </div>
+
+      <div class="achievement" id="achievement">
+        <div class="achievement-card">
+          <h2 id="achievement-title">🎉 It worked!</h2>
+          <p id="achievement-text"></p>
+          <button class="primary-btn" id="btn-continue" style="margin-top:0;">Keep experimenting →</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ---------- Audio (synthesized, no external files) ----------
+  let audioCtx = null;
+  function getAudioCtx(){
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+  }
+  function playTone(freq, duration, type){
+    try{
+      const ctx = getAudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    } catch(e){ /* audio not available, fail silently */ }
+  }
+  function playBellSound(){
+    playTone(1200, 0.35, 'sine');
+    setTimeout(() => playTone(1600, 0.25, 'sine'), 60);
+  }
+  function playChompSound(){
+    playTone(180, 0.12, 'square');
+    setTimeout(() => playTone(140, 0.1, 'square'), 90);
+  }
+  function playChimeSound(){
+    [523, 659, 784, 1047].forEach((f, i) => {
+      setTimeout(() => playTone(f, 0.3, 'sine'), i * 90);
+    });
+  }
+
+  // ---------- Dog SVG ----------
+  const DOG_SVG = `
+    <svg viewBox="0 0 200 200" width="100%" height="100%">
+      <ellipse class="tail" cx="142" cy="140" rx="13" ry="36" fill="var(--dog-fur-dark)"/>
+      <ellipse cx="100" cy="150" rx="55" ry="38" fill="var(--dog-fur)"/>
+      <rect x="70" y="150" width="60" height="14" rx="4" fill="var(--collar)"/>
+      <circle cx="100" cy="180" r="4" fill="#E8B84B"/>
+      <g class="ears">
+        <ellipse cx="62" cy="78" rx="16" ry="26" fill="var(--dog-ear)" transform="rotate(-20 62 78)"/>
+        <ellipse cx="138" cy="78" rx="16" ry="26" fill="var(--dog-ear)" transform="rotate(20 138 78)"/>
+      </g>
+      <circle cx="100" cy="105" r="48" fill="var(--dog-fur)"/>
+      <ellipse cx="100" cy="128" rx="22" ry="16" fill="#F0DEC0"/>
+      <ellipse class="eye eye1" cx="80" cy="95" rx="6" ry="7" fill="var(--ink)"/>
+      <ellipse class="eye eye2" cx="120" cy="95" rx="6" ry="7" fill="var(--ink)"/>
+      <ellipse cx="100" cy="122" rx="8" ry="6" fill="var(--ink)"/>
+      <path class="mouth-neutral" d="M 85 138 Q 100 145 115 138" stroke="var(--ink)" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path class="mouth-happy" d="M 82 136 Q 100 155 118 136" stroke="var(--ink)" stroke-width="3" fill="none" stroke-linecap="round"/>
+    </svg>
+  `;
+  document.getElementById('dog-wrap').innerHTML = DOG_SVG;
+
+  // ---------- State ----------
+  let strength = 0; // 0-100, the "learned association" meter
+  const THRESHOLD = 38;
+  let hasAchievedCR = false;
+  let trialCount = 0;
+  let dogName = 'Rex';
+
+  function goTo(name){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+  }
+
+  function log(emoji, text){
+    const panel = document.getElementById('log-panel');
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    entry.textContent = `${emoji} ${text}`;
+    panel.appendChild(entry);
+    panel.scrollTop = panel.scrollHeight;
+  }
+
+  function setTip(text){
+    document.getElementById('tip-box').textContent = text;
+  }
+
+  function updateMeter(){
+    const fill = document.getElementById('meter-fill');
+    fill.style.width = strength + '%';
+    fill.classList.toggle('hot', strength >= THRESHOLD);
+    document.getElementById('meter-percent').textContent = Math.round(strength) + '%';
+  }
+
+  function ringBellAnim(){
+    const bell = document.getElementById('bell-icon');
+    bell.classList.remove('ringing');
+    void bell.offsetWidth; // restart animation
+    bell.classList.add('ringing');
+  }
+
+  function giveFoodAnim(){
+    const food = document.getElementById('food-icon');
+    food.classList.add('given');
+    setTimeout(() => food.classList.remove('given'), 300);
+  }
+
+  function earPerkAnim(){
+    const ears = document.querySelector('.ears');
+    ears.classList.remove('alert');
+    void ears.offsetWidth;
+    ears.classList.add('alert');
+  }
+
+  function drool(){
+    const stage = document.getElementById('stage');
+    document.getElementById('dog-wrap').classList.add('drooling');
+    for(let i = 0; i < 3; i++){
+      setTimeout(() => {
+        const drop = document.createElement('div');
+        drop.className = 'drop';
+        drop.style.left = (95 + i * 6) + 'px';
+        drop.style.bottom = '55px';
+        stage.appendChild(drop);
+        void drop.offsetWidth;
+        drop.classList.add('falling');
+        setTimeout(() => drop.remove(), 1000);
+      }, i * 140);
+    }
+    setTimeout(() => document.getElementById('dog-wrap').classList.remove('drooling'), 1200);
+  }
+
+  function tailWagFast(){
+    const tail = document.querySelector('.tail');
+    tail.classList.remove('calm');
+  }
+  function tailWagCalm(){
+    const tail = document.querySelector('.tail');
+    tail.classList.add('calm');
+  }
+
+  function bumpTrialCount(){
+    trialCount++;
+    document.getElementById('trial-count').textContent = trialCount + (trialCount === 1 ? ' trial' : ' trials');
+  }
+
+  function showAchievement(title, text){
+    document.getElementById('achievement-title').textContent = title;
+    document.getElementById('achievement-text').textContent = text;
+    document.getElementById('achievement').classList.add('show');
+    launchConfetti();
+    playChimeSound();
+  }
+
+  function launchConfetti(){
+    const colors = ['#A13D3D', '#5E7A52', '#2F4858', '#E8B84B', '#C58B4E'];
+    const panel = document.querySelector('.panel');
+    for(let i = 0; i < 26; i++){
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 100 + Math.random() * 140;
+      const x = Math.cos(angle) * dist;
+      const y = Math.sin(angle) * dist - 40;
+      piece.style.setProperty('--end', `translate(${x}px, ${y}px)`);
+      piece.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
+      panel.appendChild(piece);
+      void piece.offsetWidth;
+      piece.classList.add('burst');
+      setTimeout(() => piece.remove(), 1100);
+    }
+  }
+
+  // ---------- Trial logic ----------
+  // No "correct" button — students control the bell and food independently.
+  // Ringing the bell starts a visible countdown; if food is given before it
+  // runs out, that counts as a paired trial. Too slow, and nothing is learned.
+  const PAIR_WINDOW_MS = 2500;
+  let pairingActive = false;
+  let pairingTimeoutId = null;
+  let pairingIntervalId = null;
+  let wasConditionedAtRing = false;
+  let pendingPairingWindowAfterAchievement = false;
+
+  function startPairingWindow(){
+    pairingActive = true;
+    const box = document.getElementById('timer-box');
+    const fill = document.getElementById('timer-fill');
+    const label = document.getElementById('timer-label');
+    box.classList.add('active');
+    fill.style.transition = 'none';
+    fill.style.width = '100%';
+    void fill.offsetWidth;
+    fill.style.transition = `width ${PAIR_WINDOW_MS}ms linear`;
+    fill.style.width = '0%';
+
+    const startTime = Date.now();
+    clearInterval(pairingIntervalId);
+    pairingIntervalId = setInterval(() => {
+      const remaining = Math.max(0, PAIR_WINDOW_MS - (Date.now() - startTime));
+      label.textContent = (remaining / 1000).toFixed(1) + 's';
+    }, 50);
+
+    clearTimeout(pairingTimeoutId);
+    pairingTimeoutId = setTimeout(() => {
+      endPairingWindow();
+      if(strength > 0){
+        const wasAboveThreshold = strength >= THRESHOLD;
+        strength = Math.max(0, strength - strength * 0.3);
+        updateMeter();
+        const fillEl = document.getElementById('meter-fill');
+        fillEl.classList.remove('dropping');
+        void fillEl.offsetWidth;
+        fillEl.classList.add('dropping');
+        if(wasAboveThreshold && strength < THRESHOLD){
+          log('⏱️', `No food followed the bell — the association has fully extinguished.`);
+          setTip(`The response is gone — extinction complete. Pair the bell with food again if you want to recondition your dog.`);
+        } else if(wasAboveThreshold){
+          log('⏱️', `No food followed the bell — the association weakens, down to ${Math.round(strength)}%. This weakening is called extinction.`);
+          setTip(`That's extinction — ringing the bell without follow-up food is slowly unlearning the association.`);
+        } else {
+          log('⏱️', `No food followed the bell — even this weak, partly-formed association fades a bit further, down to ${Math.round(strength)}%.`);
+          setTip(`Without reinforcement, the association keeps fading — even one that never fully "took" in the first place.`);
+        }
+      } else {
+        log('⏱️', `Too slow — the window closed before food arrived. No pairing that time.`);
+        setTip(`You waited too long — the bell and food need to happen close together for learning to occur.`);
+      }
+    }, PAIR_WINDOW_MS);
+  }
+
+  function endPairingWindow(){
+    pairingActive = false;
+    clearInterval(pairingIntervalId);
+    clearTimeout(pairingTimeoutId);
+    document.getElementById('timer-box').classList.remove('active');
+  }
+
+  function ringBellOnly(){
+    bumpTrialCount();
+    ringBellAnim();
+    earPerkAnim();
+    playBellSound();
+    wasConditionedAtRing = strength >= THRESHOLD;
+    let isFirstConditioning = false;
+
+    if(wasConditionedAtRing){
+      drool();
+      tailWagFast();
+      log('🔔', `Bell rung — ${dogName} drools right away. That's a Conditioned Response (CR).`);
+      setTip(`The bell alone caused that. Give food now to reinforce it further, or wait and see what happens without it.`);
+      if(!hasAchievedCR){
+        hasAchievedCR = true;
+        isFirstConditioning = true;
+        setTimeout(() => showAchievement(
+          `🎉 ${dogName} is conditioned!`,
+          `The bell alone (Conditioned Stimulus) now triggers drooling (Conditioned Response), with no food involved. If you ring the bell and don't follow up with food in time, that unrewarded pairing will start to weaken the association — that's called extinction.`
+        ), 400);
+      }
+    } else {
+      tailWagCalm();
+      if(hasAchievedCR){
+        log('🔔', `Bell rung — nothing happens anymore. The association has fully extinguished.`);
+        setTip(`The response is gone. Pair the bell with food again if you want to recondition your dog.`);
+      } else {
+        log('🔔', `Bell rung — nothing happens. Still just a Neutral Stimulus (NS).`);
+        setTip(`Nothing happened. Now give food quickly, while the timer is running, to start building an association.`);
+      }
+    }
+
+    if(isFirstConditioning){
+      // Don't start the countdown yet — the achievement popup is about to cover
+      // the screen, and we don't want extinction to fire silently behind it.
+      pendingPairingWindowAfterAchievement = true;
+    } else {
+      startPairingWindow();
+    }
+  }
+
+  function giveFoodOnly(){
+    bumpTrialCount();
+    giveFoodAnim();
+    playChompSound();
+    drool();
+    tailWagFast();
+
+    if(pairingActive){
+      endPairingWindow();
+      strength = Math.min(100, strength + (100 - strength) * 0.10);
+      updateMeter();
+      log('🍖', `Food given in time — paired with the bell! Association strength: ${Math.round(strength)}%.`);
+      setTip(strength < THRESHOLD
+        ? `That pairing counted — the bell and food are getting linked together a little more each time.`
+        : `That's a strong association now. Try ringing the bell by itself and see what happens.`);
+    } else {
+      log('🍖', `Food given — ${dogName} drools automatically, like always. That's an Unconditioned Response (UCR) to an Unconditioned Stimulus (UCS).`);
+      setTip(`Food alone always causes drooling — that part never changes. Ring the bell first if you want to start pairing.`);
+    }
+  }
+
+  // ---------- Wiring ----------
+  document.getElementById('btn-bell-only').addEventListener('click', ringBellOnly);
+  document.getElementById('btn-food-only').addEventListener('click', giveFoodOnly);
+  document.getElementById('bell-icon').addEventListener('click', ringBellOnly);
+  document.getElementById('food-icon').addEventListener('click', giveFoodOnly);
+
+  document.getElementById('btn-continue').addEventListener('click', () => {
+    document.getElementById('achievement').classList.remove('show');
+    if(pendingPairingWindowAfterAchievement){
+      pendingPairingWindowAfterAchievement = false;
+      startPairingWindow();
+    }
+  });
+
+  document.getElementById('btn-start').addEventListener('click', () => {
+    const nameInput = document.getElementById('dog-name').value.trim();
+    dogName = nameInput || 'Rex';
+    document.getElementById('stage-name').textContent = dogName;
+    goTo('lab');
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    strength = 0;
+    hasAchievedCR = false;
+    trialCount = 0;
+    wasConditionedAtRing = false;
+    pendingPairingWindowAfterAchievement = false;
+    endPairingWindow();
+    updateMeter();
+    document.getElementById('log-panel').innerHTML = '';
+    document.getElementById('trial-count').textContent = '0 trials';
+    setTip("You've got a bell and food — that's it. Figure out how to use them to train a new response into your dog.");
+    document.getElementById('dog-name').value = '';
+    goTo('intro');
+  });
+</script>
+</body>
+</html>
