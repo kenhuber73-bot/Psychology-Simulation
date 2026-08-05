@@ -116,24 +116,12 @@
     <div class="screen active" id="screen-intro">
       <h1>Social Anxiety Stroop Task</h1>
       <p>Same rule as the classic Stroop task: click the <strong>ink color</strong> a word is printed in, not what the word says. This version mixes in words related to social judgment and embarrassment alongside ordinary neutral words.</p>
-      <div class="rule">
-        <strong>What this measures</strong>
-        If words like "judged" or "teased" slow you down more than neutral words like "chair" or "window," that's a sign those words are grabbing your attention — a behavioral measure of social-evaluative concern, separate from how you'd describe yourself on a self-report scale.
-      </div>
-      <p style="text-align:center; color:var(--ink-soft); font-size:0.85rem;">20 trials in two blocks &middot; go as fast as you can while staying accurate</p>
+      <p style="text-align:center; color:var(--ink-soft); font-size:0.85rem;">20 trials &middot; go as fast as you can while staying accurate</p>
       <button class="primary-btn" id="btn-start">Start →</button>
     </div>
 
-    <div class="screen" id="screen-block-transition">
-      <h2>Block 2</h2>
-      <div class="rule">
-        <strong>Heads up</strong> The next 10 trials all use social-anxiety words. Keep going as fast and accurately as you can.
-      </div>
-      <button class="primary-btn" id="btn-continue-block2">Continue →</button>
-    </div>
-
     <div class="screen" id="screen-trial">
-      <div class="progress" id="progress-text">Block 1 &middot; Trial 1 of 10</div>
+      <div class="progress" id="progress-text">Trial 1 of 20</div>
       <div class="stage">
         <div class="fixation" id="fixation">+</div>
         <div class="stimulus" id="stimulus" style="display:none;"></div>
@@ -210,24 +198,20 @@
     return COLORS[Math.floor(Math.random() * COLORS.length)];
   }
 
-  // Blocked design: block 1 is all neutral words, block 2 is all social-anxiety
-  // words. Each block is internally shuffled, but block 1 always precedes
-  // block 2 rather than interleaving them across the whole run.
   function buildTrials(){
     const half = TOTAL_TRIALS / 2;
-    const neutralBlock = [];
+    const trials = [];
     for(let i = 0; i < half; i++){
       const word = NEUTRAL_WORDS[Math.floor(Math.random() * NEUTRAL_WORDS.length)];
       const ink = randomColor();
-      neutralBlock.push({ word, inkName: ink.name, inkHex: ink.hex, social: false });
+      trials.push({ word, inkName: ink.name, inkHex: ink.hex, social: false });
     }
-    const socialBlock = [];
     for(let i = 0; i < half; i++){
       const word = SOCIAL_WORDS[Math.floor(Math.random() * SOCIAL_WORDS.length)];
       const ink = randomColor();
-      socialBlock.push({ word, inkName: ink.name, inkHex: ink.hex, social: true });
+      trials.push({ word, inkName: ink.name, inkHex: ink.hex, social: true });
     }
-    return shuffle(neutralBlock).concat(shuffle(socialBlock));
+    return shuffle(trials);
   }
 
   let trials = [];
@@ -235,13 +219,11 @@
   let results = [];
   let trialStartTime = 0;
   let awaitingResponse = false;
-  let blockTransitionShown = false;
 
   function startTask(){
     trials = buildTrials();
     trialIndex = 0;
     results = [];
-    blockTransitionShown = false;
     goTo('trial');
     showTrial();
   }
@@ -251,15 +233,7 @@
       showResults();
       return;
     }
-    const half = trials.length / 2;
-    if(trialIndex === half && !blockTransitionShown){
-      blockTransitionShown = true;
-      goTo('block-transition');
-      return;
-    }
-    const blockNum = trialIndex < half ? 1 : 2;
-    const blockTrialNum = trialIndex < half ? trialIndex + 1 : trialIndex - half + 1;
-    document.getElementById('progress-text').textContent = `Block ${blockNum} · Trial ${blockTrialNum} of ${half}`;
+    document.getElementById('progress-text').textContent = `Trial ${trialIndex + 1} of ${trials.length}`;
     const fixation = document.getElementById('fixation');
     const stimulus = document.getElementById('stimulus');
     const buttons = document.querySelectorAll('.color-btn');
@@ -350,10 +324,6 @@
 
   document.getElementById('btn-start').addEventListener('click', startTask);
   document.getElementById('btn-retry').addEventListener('click', startTask);
-  document.getElementById('btn-continue-block2').addEventListener('click', () => {
-    goTo('trial');
-    showTrial();
-  });
 </script>
 </body>
 </html>

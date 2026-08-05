@@ -127,25 +127,19 @@
     <div class="screen active" id="screen-category">
       <h1>Emotional Stroop Task</h1>
       <p>This works like the classic Stroop task — you'll click the <strong>ink color</strong>, not what the word says. But this time, the words themselves belong to different categories, and some are more emotionally charged than others.</p>
-      <p>Pick a category to test your own attentional bias:</p>
+      <p>Pick a category to begin:</p>
       <div class="category-grid" id="category-grid"></div>
     </div>
 
     <div class="screen" id="screen-intro">
       <h1 id="intro-title">Ready?</h1>
       <div class="rule" id="intro-rule"></div>
-      <p style="text-align:center; color:var(--ink-soft); font-size:0.85rem;">20 trials in two blocks &middot; go as fast as you can while staying accurate</p>
+      <p style="text-align:center; color:var(--ink-soft); font-size:0.85rem;">20 trials &middot; go as fast as you can while staying accurate</p>
       <button class="primary-btn" id="btn-start">Start →</button>
     </div>
 
-    <div class="screen" id="screen-block-transition">
-      <h2>Block 2</h2>
-      <div class="rule" id="block-transition-rule"></div>
-      <button class="primary-btn" id="btn-continue-block2">Continue →</button>
-    </div>
-
     <div class="screen" id="screen-trial">
-      <div class="progress" id="progress-text">Block 1 &middot; Trial 1 of 10</div>
+      <div class="progress" id="progress-text">Trial 1 of 20</div>
       <div class="stage">
         <div class="fixation" id="fixation">+</div>
         <div class="stimulus" id="stimulus" style="display:none;"></div>
@@ -248,8 +242,6 @@
         `<strong>How it works</strong> You'll see words — some neutral, some from the "${cat.label}" category. Click the ink color the word is printed in, not what it says.`;
       document.getElementById('emotional-label').textContent = cat.label;
       document.getElementById('gap-label').textContent = `RT difference: neutral vs "${cat.label}" words`;
-      document.getElementById('block-transition-rule').innerHTML =
-        `<strong>Heads up</strong> The next 10 trials all use words from the "${cat.label}" category. Keep going as fast and accurately as you can.`;
       goTo('intro');
     });
     categoryGrid.appendChild(btn);
@@ -268,25 +260,21 @@
     return COLORS[Math.floor(Math.random() * COLORS.length)];
   }
 
-  // Blocked design: block 1 is all neutral words, block 2 is all category
-  // words. Each block is internally shuffled, but block 1 always precedes
-  // block 2 rather than interleaving them across the whole run.
   function buildTrials(){
     const half = TOTAL_TRIALS / 2;
     const categoryWords = CATEGORIES[selectedCategoryKey].words;
-    const neutralBlock = [];
+    const trials = [];
     for(let i = 0; i < half; i++){
       const word = NEUTRAL_WORDS[Math.floor(Math.random() * NEUTRAL_WORDS.length)];
       const ink = randomColor();
-      neutralBlock.push({ word, inkName: ink.name, inkHex: ink.hex, emotional: false });
+      trials.push({ word, inkName: ink.name, inkHex: ink.hex, emotional: false });
     }
-    const emotionalBlock = [];
     for(let i = 0; i < half; i++){
       const word = categoryWords[Math.floor(Math.random() * categoryWords.length)];
       const ink = randomColor();
-      emotionalBlock.push({ word, inkName: ink.name, inkHex: ink.hex, emotional: true });
+      trials.push({ word, inkName: ink.name, inkHex: ink.hex, emotional: true });
     }
-    return shuffle(neutralBlock).concat(shuffle(emotionalBlock));
+    return shuffle(trials);
   }
 
   let trials = [];
@@ -294,13 +282,11 @@
   let results = [];
   let trialStartTime = 0;
   let awaitingResponse = false;
-  let blockTransitionShown = false;
 
   function startTask(){
     trials = buildTrials();
     trialIndex = 0;
     results = [];
-    blockTransitionShown = false;
     goTo('trial');
     showTrial();
   }
@@ -310,15 +296,7 @@
       showResults();
       return;
     }
-    const half = trials.length / 2;
-    if(trialIndex === half && !blockTransitionShown){
-      blockTransitionShown = true;
-      goTo('block-transition');
-      return;
-    }
-    const blockNum = trialIndex < half ? 1 : 2;
-    const blockTrialNum = trialIndex < half ? trialIndex + 1 : trialIndex - half + 1;
-    document.getElementById('progress-text').textContent = `Block ${blockNum} · Trial ${blockTrialNum} of ${half}`;
+    document.getElementById('progress-text').textContent = `Trial ${trialIndex + 1} of ${trials.length}`;
     const fixation = document.getElementById('fixation');
     const stimulus = document.getElementById('stimulus');
     const buttons = document.querySelectorAll('.color-btn');
@@ -411,10 +389,6 @@
   document.getElementById('btn-start').addEventListener('click', startTask);
   document.getElementById('btn-retry').addEventListener('click', startTask);
   document.getElementById('btn-change-category').addEventListener('click', () => goTo('category'));
-  document.getElementById('btn-continue-block2').addEventListener('click', () => {
-    goTo('trial');
-    showTrial();
-  });
 </script>
 </body>
 </html>
