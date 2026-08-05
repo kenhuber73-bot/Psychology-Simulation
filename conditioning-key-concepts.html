@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Key Concepts: Conditioning — Psych Simulations</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1E9D2; --paper-dark:#E3D5AE; --folder:#D8C393; --ink:#2B2A25; --ink-soft:#5C5648;
+    --navy:#2F4858; --red:#A13D3D; --sage:#5E7A52; --line:#C7B78E; --white-card:#FBF7EC;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:radial-gradient(circle at 20% 10%, rgba(0,0,0,0.03) 0, transparent 40%);
+    font-family:'Space Grotesk', sans-serif; color:var(--ink); min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .wrap{width:100%; max-width:640px;}
+  .eyebrow{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; text-transform:uppercase;
+    letter-spacing:0.08em; color:var(--ink-soft); text-align:center; margin-bottom:8px;
+  }
+  .panel{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:32px; box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+  }
+  .screen{display:none;}
+  .screen.active{display:block;}
+  h1{font-size:1.35rem; margin:0 0 14px; text-align:center;}
+  h2{font-size:1.1rem; margin:24px 0 6px;}
+  h2:first-of-type{margin-top:0;}
+  p{line-height:1.6; font-size:0.94rem;}
+  .term-card{
+    background:var(--paper-dark); border-left:3px solid var(--navy); border-radius:0 6px 6px 0;
+    padding:12px 16px; margin:10px 0;
+  }
+  .term-name{font-weight:700; font-size:0.92rem;}
+  .term-abbr{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; color:var(--ink-soft);
+    text-transform:uppercase; letter-spacing:0.04em;
+  }
+  .term-def{font-size:0.88rem; margin-top:4px; line-height:1.5;}
+  .primary-btn{
+    background:var(--navy); color:white; border:none; border-radius:24px; padding:13px 26px;
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:0.95rem; cursor:pointer;
+    display:block; margin:20px auto 0; transition:transform 0.12s ease;
+  }
+  .primary-btn:hover{transform:translateY(-1px);}
+  .primary-btn:disabled{opacity:0.4; cursor:default; transform:none;}
+  .ghost-btn{
+    background:transparent; color:var(--ink-soft); border:1px solid var(--line); border-radius:24px;
+    padding:11px 22px; font-family:'Space Grotesk', sans-serif; font-size:0.88rem; cursor:pointer;
+  }
+
+  /* --- Matching activity --- */
+  .role-item{
+    border:1px solid var(--line); border-radius:8px; padding:14px 16px; margin:12px 0;
+  }
+  .role-text{font-size:0.9rem; margin-bottom:10px;}
+  .role-options{display:flex; gap:8px; flex-wrap:wrap;}
+  .role-option{
+    background:var(--paper); border:1.5px solid var(--ink-soft); border-radius:6px;
+    padding:8px 14px; font-family:'Courier Prime', monospace; font-size:0.78rem; cursor:pointer;
+    color:var(--ink-soft); transition:all 0.1s ease;
+  }
+  .role-option:hover:not(:disabled){border-color:var(--ink); color:var(--ink);}
+  .role-option:disabled{cursor:default;}
+  .role-option.correct{background:#E4EDE1; border-color:var(--sage); color:#3E5233; font-weight:700;}
+  .role-option.incorrect{background:#F4E1E1; border-color:var(--red); color:#7A2E2E;}
+  .role-feedback{font-size:0.82rem; margin-top:8px; color:var(--ink-soft); min-height:18px;}
+
+  /* --- Paragraph screen --- */
+  .notes-textarea{
+    width:100%; min-height:160px; padding:14px; border:2px solid var(--ink); border-radius:8px;
+    font-family:'Space Grotesk', sans-serif; font-size:0.92rem; line-height:1.5; resize:vertical;
+  }
+  .message{margin-top:10px; font-size:0.85rem; padding:10px; border-radius:5px;}
+  .message.error{background:#F4E1E1; color:#7A2E2E;}
+  .save-status{margin-top:12px; font-family:'Courier Prime', monospace; font-size:0.8rem; color:var(--ink-soft); text-align:center;}
+  .save-status.error{color:var(--red);}
+  .save-status.success{color:var(--sage); font-weight:700;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Psych Simulations &middot; Key Concepts</div>
+  <div class="panel">
+
+    <div class="screen active" id="screen-concepts">
+      <h1>Key Concepts: Classical Conditioning</h1>
+
+      <div class="term-card">
+        <div class="term-name">Unconditioned Stimulus <span class="term-abbr">UCS</span></div>
+        <div class="term-def">Something that naturally and automatically triggers a response, with no learning required.</div>
+      </div>
+      <div class="term-card">
+        <div class="term-name">Unconditioned Response <span class="term-abbr">UCR</span></div>
+        <div class="term-def">The automatic, unlearned reaction triggered by the UCS.</div>
+      </div>
+      <div class="term-card">
+        <div class="term-name">Conditioned Stimulus <span class="term-abbr">CS</span></div>
+        <div class="term-def">Something that used to mean nothing, but through repeated pairing with a UCS, has learned to trigger a response on its own.</div>
+      </div>
+      <div class="term-card">
+        <div class="term-name">Conditioned Response <span class="term-abbr">CR</span></div>
+        <div class="term-def">The learned reaction triggered by the CS — usually similar to the UCR, but now happening in response to something that originally meant nothing.</div>
+      </div>
+
+      <h2>Apply it to your experiment</h2>
+      <p style="font-size:0.88rem; color:var(--ink-soft); margin-top:-4px;">For each part of the "Condition the Dog" experiment, pick the term that matches.</p>
+      <div id="role-list"></div>
+
+      <button class="primary-btn" id="btn-to-paragraph" disabled>Continue →</button>
+    </div>
+
+    <div class="screen" id="screen-paragraph">
+      <h1>Apply It: Social Anxiety</h1>
+      <p>Social anxiety disorder doesn't come from nowhere — like a lot of learned fears, it can develop through classical conditioning. Using the terms <strong>UCS, UCR, CS,</strong> and <strong>CR</strong>, write a paragraph explaining how someone might develop social anxiety this way.</p>
+      <div class="term-card">
+        <div class="term-def">Need a starting point? Think about a student who has a bad experience in a social situation — being bullied, or a class presentation that goes badly — and how that experience could turn ordinary social situations into something feared. You can use that example, or come up with your own.</div>
+      </div>
+      <textarea class="notes-textarea" id="social-anxiety-paragraph" placeholder="Explain how someone might develop social anxiety, using UCS, UCR, CS, and CR..."></textarea>
+      <div class="message error" id="paragraph-warning" style="display:none;">Please write a fuller paragraph — you'll want to use all four terms to explain this well.</div>
+      <button class="primary-btn" id="btn-submit">Submit →</button>
+      <div class="save-status" id="save-status"></div>
+    </div>
+
+    <div class="screen" id="screen-done">
+      <h1>🎉 Nice work</h1>
+      <p style="text-align:center;">Your explanation has been submitted. You've walked through how a genuinely learned fear gets built, term by term — that's the same logic researchers and clinicians use to understand real anxiety disorders.</p>
+      <button class="ghost-btn" id="btn-restart" style="display:block; margin:20px auto 0;">↺ Do it again</button>
+    </div>
+
+  </div>
+</div>
+
+<script src="js/supabase-config.js"></script>
+<script>
+  // ---------- Session gate ----------
+  const rawSession = localStorage.getItem('studentSession');
+  if(!rawSession){
+    window.location.href = 'join.html';
+  }
+  const studentSession = rawSession ? JSON.parse(rawSession) : null;
+
+  function goTo(name){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+  }
+
+  // ---------- Matching activity ----------
+  const ROLES = [
+    { id: 'food', text: 'The food itself', correct: 'UCS' },
+    { id: 'drool-food', text: 'Drooling caused by the food', correct: 'UCR' },
+    { id: 'bell-conditioned', text: 'The bell, once your dog is conditioned', correct: 'CS' },
+    { id: 'drool-bell', text: 'Drooling caused by the bell alone (after conditioning)', correct: 'CR' }
+  ];
+  const TERMS = ['UCS', 'UCR', 'CS', 'CR'];
+  let answeredCount = 0;
+
+  function renderRoles(){
+    const list = document.getElementById('role-list');
+    list.innerHTML = '';
+    ROLES.forEach(role => {
+      const item = document.createElement('div');
+      item.className = 'role-item';
+      item.innerHTML = `
+        <div class="role-text">${role.text}</div>
+        <div class="role-options" id="opts-${role.id}"></div>
+        <div class="role-feedback" id="fb-${role.id}"></div>
+      `;
+      list.appendChild(item);
+      const optsEl = item.querySelector('.role-options');
+      TERMS.forEach(term => {
+        const btn = document.createElement('button');
+        btn.className = 'role-option';
+        btn.textContent = term;
+        btn.addEventListener('click', () => {
+          const opts = optsEl.querySelectorAll('.role-option');
+          opts.forEach(o => o.disabled = true);
+          const fb = document.getElementById('fb-' + role.id);
+          if(term === role.correct){
+            btn.classList.add('correct');
+            fb.textContent = `Correct — ${term} is right.`;
+          } else {
+            btn.classList.add('incorrect');
+            opts.forEach(o => { if(o.textContent === role.correct) o.classList.add('correct'); });
+            fb.textContent = `Not quite — the answer is ${role.correct}.`;
+          }
+          answeredCount++;
+          document.getElementById('btn-to-paragraph').disabled = answeredCount < ROLES.length;
+        });
+        optsEl.appendChild(btn);
+      });
+    });
+  }
+  renderRoles();
+
+  document.getElementById('btn-to-paragraph').addEventListener('click', () => goTo('paragraph'));
+
+  // ---------- Paragraph + save ----------
+  document.getElementById('btn-submit').addEventListener('click', async () => {
+    const paragraph = document.getElementById('social-anxiety-paragraph').value.trim();
+    const warningEl = document.getElementById('paragraph-warning');
+    const statusEl = document.getElementById('save-status');
+    const btn = document.getElementById('btn-submit');
+
+    if(paragraph.length < 60){
+      warningEl.style.display = 'block';
+      return;
+    }
+    warningEl.style.display = 'none';
+    btn.disabled = true;
+    statusEl.textContent = 'Saving...';
+    statusEl.className = 'save-status';
+
+    const { error } = await sb.from('case_attempts').insert({
+      student_session_id: studentSession.sessionId,
+      case_id: 'conditioning_social_anxiety_v1',
+      notes: '',
+      checklist_selections: [],
+      reasoning_selections: [],
+      reasoning_paragraph: paragraph,
+      diagnosis: 'Social Anxiety — Conditioning Explanation',
+      was_correct: true
+    });
+
+    if(error){
+      statusEl.textContent = 'Something went wrong saving: ' + error.message;
+      statusEl.className = 'save-status error';
+      btn.disabled = false;
+      return;
+    }
+
+    goTo('done');
+  });
+
+  document.getElementById('btn-restart').addEventListener('click', () => {
+    answeredCount = 0;
+    document.getElementById('btn-to-paragraph').disabled = true;
+    renderRoles();
+    document.getElementById('social-anxiety-paragraph').value = '';
+    document.getElementById('paragraph-warning').style.display = 'none';
+    document.getElementById('save-status').textContent = '';
+    document.getElementById('btn-submit').disabled = false;
+    goTo('concepts');
+  });
+</script>
+</body>
+</html>

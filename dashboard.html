@@ -59,6 +59,9 @@
   td{padding:8px 6px; border-bottom:1px dashed #C7B78E;}
   .correct-tag{background:#E4EDE1; color:#3E5233; padding:2px 8px; border-radius:4px; font-size:0.78rem; font-weight:600;}
   .incorrect-tag{background:#F4E1E1; color:#7A2E2E; padding:2px 8px; border-radius:4px; font-size:0.78rem; font-weight:600;}
+  .reflection-tag{background:#E3D5AE; color:#2F4858; padding:2px 8px; border-radius:4px; font-size:0.78rem; font-weight:600;}
+  .paragraph-preview{cursor:pointer; text-decoration:underline dotted; text-underline-offset:2px;}
+  .paragraph-full{white-space:pre-wrap; max-width:340px;}
 </style>
 </head>
 <body>
@@ -102,11 +105,22 @@
       return code;
     }
 
+    function escapeHtml(str){
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
     const activityLabels = {
       jordan_gad_mdd_v1: 'Anxiety vs. Depression — Jordan R.',
       alex_adhd_gad_v1: 'ADHD vs. Anxiety — Alex M.',
-      maya_dysthymia_v1: 'Dysthymia vs. MDD vs. Bipolar — Maya S.'
+      maya_dysthymia_v1: 'Dysthymia vs. MDD vs. Bipolar — Maya S.',
+      conditioning_social_anxiety_v1: 'Social Anxiety — Conditioning Reflection'
     };
+
+    // Activities that are a written reflection, not a graded diagnosis —
+    // rendered differently in the results table (no Correct/Incorrect tag).
+    const reflectionActivities = new Set(['conditioning_social_anxiety_v1']);
 
     async function init(){
       const { data: { session } } = await sb.auth.getSession();
@@ -189,7 +203,7 @@
 
       const { data, error } = await sb
         .from('case_attempts')
-        .select('id, case_id, diagnosis, was_correct, completed_at, student_sessions!inner(nickname, class_id)')
+        .select('id, case_id, diagnosis, was_correct, reasoning_paragraph, completed_at, student_sessions!inner(nickname, class_id)')
         .eq('student_sessions.class_id', cls.id)
         .order('completed_at', { ascending: false });
 
@@ -203,13 +217,32 @@
         return;
       }
 
+      let rowIdCounter = 0;
       let rows = data.map(attempt => {
         const date = new Date(attempt.completed_at);
         const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        const caseLabel = activityLabels[attempt.case_id] || attempt.case_id;
+
+        if(reflectionActivities.has(attempt.case_id)){
+          const rowId = 'refl-' + (rowIdCounter++);
+          const paragraph = attempt.reasoning_paragraph || '';
+          const preview = paragraph.length > 70 ? paragraph.slice(0, 70) + '…' : paragraph;
+          return `
+            <tr>
+              <td>${attempt.student_sessions.nickname}</td>
+              <td>${caseLabel}</td>
+              <td colspan="2">
+                <span class="paragraph-preview" id="${rowId}-preview" onclick="document.getElementById('${rowId}-preview').style.display='none'; document.getElementById('${rowId}-full').style.display='block';">${escapeHtml(preview) || '(no response)'}</span>
+                <span class="paragraph-full" id="${rowId}-full" style="display:none;">${escapeHtml(paragraph)}</span>
+              </td>
+              <td>${dateStr}</td>
+            </tr>
+          `;
+        }
+
         const tag = attempt.was_correct
           ? '<span class="correct-tag">Correct</span>'
           : '<span class="incorrect-tag">Incorrect</span>';
-        const caseLabel = activityLabels[attempt.case_id] || attempt.case_id;
         return `
           <tr>
             <td>${attempt.student_sessions.nickname}</td>
