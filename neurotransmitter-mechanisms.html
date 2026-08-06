@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inside the Synapse — SSRI vs Benzodiazepine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B1220;
+    --panel:#141B2E;
+    --panel-border:#2A3752;
+    --text:#E7ECF6;
+    --text-dim:#8FA0C2;
+    --cyan:#5EEAD4;
+    --amber:#FBBF24;
+    --violet:#C4B5FD;
+    --rose:#FB7185;
+    --ion:#7DD3FC;
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'IBM Plex Sans', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at 20% -10%, #1B2745 0%, transparent 55%),
+      radial-gradient(ellipse at 90% 110%, #1A2A2C 0%, transparent 50%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    min-height:100vh;
+    padding:40px 20px 80px;
+  }
+  .wrap{max-width:920px; margin:0 auto;}
+  header{margin-bottom:28px;}
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--cyan);
+    margin:0 0 10px;
+  }
+  h1{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:clamp(28px,4vw,42px);
+    margin:0 0 10px;
+    letter-spacing:-0.01em;
+  }
+  .sub{color:var(--text-dim); font-size:16px; line-height:1.5; max-width:600px; margin:0;}
+
+  .controls{
+    display:flex; flex-wrap:wrap; gap:14px; align-items:center;
+    margin:28px 0 20px;
+    padding:14px 16px;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:14px;
+  }
+  .tabs{display:flex; gap:6px; background:#0E1526; padding:4px; border-radius:10px;}
+  .tab{
+    font-family:var(--font-mono);
+    font-size:13px;
+    letter-spacing:.03em;
+    color:var(--text-dim);
+    background:transparent;
+    border:none;
+    padding:9px 16px;
+    border-radius:7px;
+    cursor:pointer;
+    transition:background .2s, color .2s;
+  }
+  .tab[aria-pressed="true"]{background:#233152; color:var(--text);}
+  .tab:focus-visible, .toggle:focus-visible{outline:2px solid var(--cyan); outline-offset:2px;}
+
+  .toggle-group{display:flex; align-items:center; gap:10px; margin-left:auto;}
+  .toggle-label{font-family:var(--font-mono); font-size:12px; color:var(--text-dim); letter-spacing:.06em; text-transform:uppercase;}
+  .toggle{
+    position:relative; width:52px; height:28px; border-radius:999px;
+    background:#233152; border:1px solid var(--panel-border);
+    cursor:pointer; padding:0;
+  }
+  .toggle::after{
+    content:''; position:absolute; top:2px; left:2px; width:22px; height:22px;
+    border-radius:50%; background:var(--text-dim); transition:left .2s ease, background .2s ease;
+  }
+  .toggle[aria-pressed="true"]{background:#2E4A3E;}
+  .toggle[aria-pressed="true"]::after{left:26px; background:#6EE7A0;}
+
+  .diagram-card{
+    background:var(--panel); border:1px solid var(--panel-border); border-radius:16px;
+    padding:12px 12px 4px; overflow:hidden;
+  }
+  svg{display:block; width:100%; height:auto;}
+
+  .legend{
+    display:flex; flex-wrap:wrap; gap:18px;
+    padding:14px 10px 18px; font-family:var(--font-mono); font-size:12px; color:var(--text-dim);
+  }
+  .legend span{display:inline-flex; align-items:center; gap:7px;}
+  .swatch{width:10px; height:10px; border-radius:50%; display:inline-block;}
+
+  .readout{
+    margin-top:20px; background:var(--panel); border:1px solid var(--panel-border);
+    border-radius:14px; padding:22px 24px;
+  }
+  .readout-label{font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; color:var(--amber); text-transform:uppercase; margin:0 0 10px;}
+  .readout h2{font-family:var(--font-display); font-size:22px; margin:0 0 10px; font-weight:700;}
+  .readout p{color:var(--text); line-height:1.6; margin:0 0 12px; font-size:15px;}
+  .readout .note{color:var(--text-dim); font-size:13.5px; line-height:1.55; border-top:1px solid var(--panel-border); padding-top:12px; margin:0;}
+
+  .compare{
+    margin-top:20px; display:grid; grid-template-columns:1fr 1fr; gap:14px;
+  }
+  @media (max-width:600px){ .compare{grid-template-columns:1fr;} }
+  .compare-card{
+    background:var(--panel); border:1px solid var(--panel-border); border-radius:14px; padding:18px 20px;
+  }
+  .compare-card h3{
+    font-family:var(--font-mono); font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+    margin:0 0 12px; display:flex; align-items:center; gap:8px;
+  }
+  .compare-card ul{margin:0; padding-left:18px; color:var(--text-dim); font-size:14px; line-height:1.7;}
+  .compare-card ul li b{color:var(--text); font-weight:600;}
+
+  /* --- SVG animation --- */
+  .dot-cross{ animation: crossAndRoamA 5.4s ease-in-out infinite; }
+  .dot-cross.dot-cross-alt{ animation-name: crossAndRoamB; }
+  .dot-recycle{ animation: roundTrip 6s ease-in-out infinite; }
+  .ion-flow{ animation: ionFlow 1.6s linear infinite; }
+  .d1{animation-delay:0s;} .d2{animation-delay:.85s;} .d3{animation-delay:1.7s;} .d4{animation-delay:2.5s;}
+  .r1{animation-delay:0s;} .r2{animation-delay:1.5s;} .r3{animation-delay:3s;}
+  .i1{animation-delay:0s;} .i2{animation-delay:.8s;} .i3{animation-delay:.3s;} .i4{animation-delay:1.1s;} .i5{animation-delay:.55s;} .i6{animation-delay:1.3s;}
+
+  /* SSRI drug ON: serotonin crosses the cleft, binds a receptor, unbinds, floats around in the cleft for a moment, then drifts to a DIFFERENT nearby receptor rather than rebinding the same spot -- SERT is blocked, so it keeps getting these chances instead of being cleared out */
+  @keyframes crossAndRoamA{
+    0%{ transform:translate(0px,0px); opacity:0; }
+    8%{ opacity:1; }
+    24%{ transform:translate(373px,2px); }        /* cross to middle receptor */
+    30%{ opacity:1; }                               /* bound */
+    36%{ transform:translate(378px,-4px); opacity:.3; }   /* unbind */
+    44%{ transform:translate(366px,-16px); opacity:.5; }  /* floating */
+    50%{ transform:translate(383px,-10px); opacity:.4; }  /* floating */
+    57%{ transform:translate(370px,-30px); opacity:.55; } /* floating, drifting up */
+    66%{ transform:translate(373px,-70px); opacity:.75; } /* approaching top receptor */
+    73%{ transform:translate(373px,-98px); opacity:1; }   /* bind top receptor */
+    82%{ opacity:1; }
+    88%{ transform:translate(378px,-90px); opacity:.3; }  /* unbind */
+    93%{ transform:translate(366px,-70px); opacity:.5; }  /* floating near top */
+    97%{ transform:translate(373px,-20px); opacity:.7; }  /* drifting back down */
+    100%{ transform:translate(373px,2px); opacity:0; }
+  }
+  @keyframes crossAndRoamB{
+    0%{ transform:translate(0px,0px); opacity:0; }
+    8%{ opacity:1; }
+    24%{ transform:translate(373px,2px); }
+    30%{ opacity:1; }
+    36%{ transform:translate(378px,8px); opacity:.3; }
+    44%{ transform:translate(366px,20px); opacity:.5; }
+    50%{ transform:translate(383px,14px); opacity:.4; }
+    57%{ transform:translate(370px,38px); opacity:.55; }
+    66%{ transform:translate(373px,75px); opacity:.75; }
+    73%{ transform:translate(373px,102px); opacity:1; }
+    82%{ opacity:1; }
+    88%{ transform:translate(378px,94px); opacity:.3; }
+    93%{ transform:translate(366px,75px); opacity:.5; }
+    97%{ transform:translate(373px,25px); opacity:.7; }
+    100%{ transform:translate(373px,2px); opacity:0; }
+  }
+  /* Baseline (drug OFF): serotonin crosses the cleft, floats and binds receptors for a while, THEN drifts back -- not to the release point, but to SERT's location further along the membrane -- and is recaptured */
+  @keyframes roundTrip{
+    0%{ transform:translate(0px,0px); opacity:0; }
+    6%{ opacity:1; }
+    35%{ transform:translate(340px,-8px); }
+    45%{ transform:translate(365px,-4px); }
+    60%{ transform:translate(355px,6px); opacity:1; }
+    80%{ transform:translate(150px,40px); }
+    94%{ transform:translate(30px,84px); opacity:1; }
+    100%{ transform:translate(26px,88px); opacity:0; }
+  }
+  @keyframes ionFlow{
+    0%{ transform:translate(0px,0px); opacity:0; }
+    12%{ opacity:1; }
+    85%{ opacity:1; }
+    100%{ transform:translate(110px,0px); opacity:0; }
+  }
+  .firing-dot{ animation: firePulse 0.95s ease-in-out infinite; transform-origin:center; }
+  @keyframes firePulse{
+    0%,100%{ transform:scale(1); opacity:.55; }
+    50%{ transform:scale(1.55); opacity:1; }
+  }
+
+  .ssri-blocker, .benzo-blocker{ opacity:0; transition:opacity .5s ease; }
+  .receptor-glow{ transition: opacity .5s ease; opacity:.35; }
+  .pore-wide{ opacity:0; transition:opacity .4s ease; }
+  .pore-narrow{ opacity:1; transition:opacity .4s ease; }
+
+  [data-mode="ssri"] .benzo-only{ display:none; }
+  [data-mode="benzo"] .ssri-only{ display:none; }
+
+  [data-mode="ssri"][data-drug="on"] .ssri-blocker{ opacity:1; }
+  [data-mode="ssri"][data-drug="on"] .receptor-glow{ opacity:1; }
+  /* OFF: only the round-trip (recycled) dots show -- this is the normal serotonin lifecycle */
+  [data-mode="ssri"][data-drug="off"] .dot-cross{ display:none; }
+  /* ON: SERT is blocked, so nothing recycles -- only the cross-and-stay-bound dots show, and more of them */
+  [data-mode="ssri"][data-drug="on"] .dot-recycle{ display:none; }
+
+
+  [data-mode="benzo"][data-drug="on"] .benzo-blocker{ opacity:1; }
+  [data-mode="benzo"][data-drug="on"] .pore-narrow{ opacity:0; }
+  [data-mode="benzo"][data-drug="on"] .pore-wide{ opacity:1; }
+  [data-mode="benzo"][data-drug="on"] .firing-dot{ animation-duration:2.3s; }
+  [data-mode="benzo"][data-drug="off"] .extra-ion{ display:none; }
+  [data-mode="benzo"][data-drug="on"] .extra-ion{ display:block; }
+
+  @media (prefers-reduced-motion: reduce){
+    .dot-cross, .dot-recycle, .ion-flow, .firing-dot{ animation:none !important; opacity:.9; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Biological treatment · Social anxiety disorder</p>
+    <h1>Inside the synapse</h1>
+    <p class="sub">Two very different drugs, two very different targets. See what an SSRI and a benzodiazepine actually change at the synapse — and why one is first-line and the other isn't.</p>
+  </header>
+
+  <div class="controls">
+    <div class="tabs" role="tablist" aria-label="Drug mechanism">
+      <button class="tab" id="tab-ssri" role="tab" aria-pressed="true" onclick="setMode('ssri')">SSRI</button>
+      <button class="tab" id="tab-benzo" role="tab" aria-pressed="false" onclick="setMode('benzo')">Benzodiazepine</button>
+    </div>
+    <div class="toggle-group">
+      <span class="toggle-label" id="drugLabel">Drug: off</span>
+      <button class="toggle" id="drugToggle" aria-pressed="false" aria-labelledby="drugLabel" onclick="setDrug(!drugOn)"></button>
+    </div>
+  </div>
+
+  <div class="diagram-card">
+    <svg viewBox="0 0 900 480" id="synapse" data-mode="ssri" data-drug="off" role="img" aria-label="Diagram of a synapse showing neurotransmitter release, reuptake, and receptor binding">
+
+      <defs>
+        <!-- Serotonin: simplified skeletal shape -- fused six-ring + five-ring (indole) with the ethylamine side chain -->
+        <g id="molSerotonin">
+          <path d="M-8,-2 L-8,2 L-5,4.3 L-2,2.4 L-2,-2.4 L-5,-4.3 Z" fill="var(--cyan)" fill-opacity="0.22" stroke="var(--cyan)" stroke-width="1.3" stroke-linejoin="round"/>
+          <path d="M-2,2.4 L2,3.8 L5,0.3 L2,-3.8 L-2,-2.4 Z" fill="var(--cyan)" fill-opacity="0.22" stroke="var(--cyan)" stroke-width="1.3" stroke-linejoin="round"/>
+          <line x1="5" y1="0.3" x2="8.5" y2="-3" stroke="var(--cyan)" stroke-width="1.4" stroke-linecap="round"/>
+          <circle cx="9.2" cy="-4.2" r="1.7" fill="var(--cyan)"/>
+        </g>
+        <!-- GABA: real GABA is a straight chain, not a ring -- shape is deliberately chain-like -->
+        <g id="molGABA">
+          <polyline points="-6.5,3 -3.2,-3 0,3 3.2,-3 6.5,1.5" fill="none" stroke="var(--violet)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="-6.5" cy="3" r="1.9" fill="var(--violet)"/>
+          <circle cx="6.5" cy="1.5" r="1.9" fill="var(--violet)"/>
+        </g>
+        <!-- SSRI: angular synthetic-looking molecule, reads as "foreign" next to serotonin's rounded shape -->
+        <g id="molSSRI">
+          <polygon points="-11,0 -5.5,-9.5 5.5,-9.5 11,0 5.5,9.5 -5.5,9.5" fill="var(--amber)"/>
+          <circle cx="0" cy="0" r="3" fill="#0B1220" opacity="0.35"/>
+        </g>
+        <!-- Benzodiazepine: fused double-ring, matching the real fused benzene + diazepine ring system -->
+        <g id="molBenzo">
+          <polygon points="-10,-4 -4,-9 4,-6 6,0 2,7 -6,8 -11,3" fill="var(--rose)" opacity="0.95"/>
+          <polygon points="2,-6 9,-8 13,-2 11,5 5,7 2,3" fill="var(--rose)" opacity="0.7"/>
+        </g>
+      </defs>
+
+      <!-- Presynaptic terminal -->
+      <rect x="40" y="80" width="220" height="320" rx="100" fill="#1B2740" stroke="#33456B" stroke-width="2"/>
+      <text x="150" y="435" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8FA0C2">SENDING NEURON</text>
+
+      <!-- static vesicles -->
+      <circle cx="215" cy="150" r="15" fill="none" stroke="#3A4C74" stroke-width="2"/>
+      <circle cx="212" cy="146" r="3.2" class="ssri-only" fill="var(--cyan)"/>
+      <circle cx="219" cy="153" r="3.2" class="ssri-only" fill="var(--cyan)"/>
+      <circle cx="212" cy="146" r="3.2" class="benzo-only" fill="var(--violet)"/>
+      <circle cx="219" cy="153" r="3.2" class="benzo-only" fill="var(--violet)"/>
+
+      <circle cx="215" cy="330" r="15" fill="none" stroke="#3A4C74" stroke-width="2"/>
+      <circle cx="212" cy="326" r="3.2" class="ssri-only" fill="var(--cyan)"/>
+      <circle cx="219" cy="333" r="3.2" class="ssri-only" fill="var(--cyan)"/>
+      <circle cx="212" cy="326" r="3.2" class="benzo-only" fill="var(--violet)"/>
+      <circle cx="219" cy="333" r="3.2" class="benzo-only" fill="var(--violet)"/>
+
+      <!-- active vesicle, fusing -->
+      <circle cx="240" cy="240" r="17" fill="none" stroke="#4C6693" stroke-width="2.5"/>
+
+      <!-- reuptake transporter (SSRI only) -- deliberately placed away from the release site: SERT is spread across the membrane, not clustered right where vesicles dock -->
+      <g class="ssri-only">
+        <rect x="252" y="312" width="26" height="36" rx="7" fill="#243255" stroke="#3A4C74" stroke-width="2"/>
+        <use class="ssri-blocker" href="#molSSRI" x="265" y="330"/>
+        <text x="265" y="302" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8FA0C2">SERT</text>
+      </g>
+
+      <!-- cleft label -->
+      <text x="450" y="45" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8FA0C2">SYNAPTIC CLEFT</text>
+
+      <!-- released dots: SSRI serotonin -->
+      <g class="ssri-only">
+        <g transform="translate(240,236)"><g class="dot-cross d1"><use href="#molSerotonin"/></g></g>
+        <g transform="translate(240,240)"><g class="dot-cross dot-cross-alt d2"><use href="#molSerotonin"/></g></g>
+        <g transform="translate(240,244)"><g class="dot-cross d3"><use href="#molSerotonin"/></g></g>
+        <g transform="translate(240,238)"><g class="dot-cross dot-cross-alt d4"><use href="#molSerotonin"/></g></g>
+
+        <g transform="translate(240,238)"><g class="dot-recycle r1"><use href="#molSerotonin"/></g></g>
+        <g transform="translate(240,242)"><g class="dot-recycle r2"><use href="#molSerotonin"/></g></g>
+        <g transform="translate(240,246)"><g class="dot-recycle r3"><use href="#molSerotonin"/></g></g>
+      </g>
+
+      <!-- released dots: GABA -->
+      <g class="benzo-only">
+        <g transform="translate(240,236)"><g class="dot-cross d1"><use href="#molGABA"/></g></g>
+        <g transform="translate(240,240)"><g class="dot-cross d2"><use href="#molGABA"/></g></g>
+        <g transform="translate(240,244)"><g class="dot-cross d3"><use href="#molGABA"/></g></g>
+      </g>
+
+      <!-- Postsynaptic membrane -->
+      <rect x="620" y="60" width="42" height="360" rx="18" fill="#1B2740" stroke="#33456B" stroke-width="2"/>
+      <path d="M662,60 C740,60 800,140 820,240 C800,340 740,420 662,420 L640,420 C640,300 640,180 640,60 Z" fill="#161F35" stroke="#2A3752" stroke-width="1.5"/>
+      <text x="740" y="450" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8FA0C2">RECEIVING NEURON</text>
+
+      <!-- SSRI receptors -->
+      <g class="ssri-only">
+        <text x="613" y="118" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8FA0C2">5-HT receptors</text>
+        <rect class="receptor-glow" x="600" y="130" width="26" height="20" rx="5" fill="var(--cyan)"/>
+        <rect x="600" y="130" width="26" height="20" rx="5" fill="none" stroke="#4C6693" stroke-width="2"/>
+        <rect class="receptor-glow" x="600" y="230" width="26" height="20" rx="5" fill="var(--cyan)"/>
+        <rect x="600" y="230" width="26" height="20" rx="5" fill="none" stroke="#4C6693" stroke-width="2"/>
+        <rect class="receptor-glow" x="600" y="330" width="26" height="20" rx="5" fill="var(--cyan)"/>
+        <rect x="600" y="330" width="26" height="20" rx="5" fill="none" stroke="#4C6693" stroke-width="2"/>
+      </g>
+
+      <!-- GABA-A receptor with chloride channel -->
+      <g class="benzo-only">
+        <text x="613" y="196" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8FA0C2">GABA-A receptor</text>
+        <rect x="596" y="205" width="34" height="70" rx="10" fill="#243255" stroke="#4C6693" stroke-width="2"/>
+        <use class="benzo-blocker" href="#molBenzo" x="596" y="212"/>
+        <!-- pore -->
+        <line class="pore-narrow" x1="608" y1="222" x2="608" y2="258" stroke="#5A7099" stroke-width="4" stroke-linecap="round"/>
+        <line class="pore-narrow" x1="618" y1="222" x2="618" y2="258" stroke="#5A7099" stroke-width="4" stroke-linecap="round"/>
+        <line class="pore-wide" x1="602" y1="218" x2="602" y2="262" stroke="var(--ion)" stroke-width="4" stroke-linecap="round"/>
+        <line class="pore-wide" x1="624" y1="218" x2="624" y2="262" stroke="var(--ion)" stroke-width="4" stroke-linecap="round"/>
+
+        <!-- chloride ions -->
+        <g transform="translate(630,232)"><g class="ion-flow i1"><circle r="4" fill="var(--ion)"/></g></g>
+        <g transform="translate(630,246)"><g class="ion-flow i2"><circle r="4" fill="var(--ion)"/></g></g>
+        <g transform="translate(630,238)"><g class="ion-flow i3 extra-ion"><circle r="4" fill="var(--ion)"/></g></g>
+        <g transform="translate(630,228)"><g class="ion-flow i4 extra-ion"><circle r="4" fill="var(--ion)"/></g></g>
+        <g transform="translate(630,250)"><g class="ion-flow i5 extra-ion"><circle r="4" fill="var(--ion)"/></g></g>
+        <g transform="translate(630,242)"><g class="ion-flow i6 extra-ion"><circle r="4" fill="var(--ion)"/></g></g>
+
+        <!-- firing rate indicator -->
+        <text x="820" y="200" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8FA0C2">FIRING</text>
+        <circle class="firing-dot" cx="820" cy="240" r="9" fill="var(--rose)"/>
+      </g>
+
+    </svg>
+  </div>
+
+  <div class="legend">
+    <span class="ssri-only"><span class="swatch" style="background:var(--cyan)"></span>Serotonin</span>
+    <span class="ssri-only"><span class="swatch" style="background:var(--amber)"></span>SSRI molecule</span>
+    <span class="benzo-only"><span class="swatch" style="background:var(--violet)"></span>GABA</span>
+    <span class="benzo-only"><span class="swatch" style="background:var(--rose)"></span>Benzodiazepine molecule</span>
+    <span class="benzo-only"><span class="swatch" style="background:var(--ion)"></span>Chloride ion (Cl⁻)</span>
+  </div>
+
+  <div class="readout">
+    <p class="readout-label">Readout</p>
+    <h2 id="rTitle"></h2>
+    <p id="rBody"></p>
+    <p class="note" id="rNote"></p>
+  </div>
+
+  <div class="compare">
+    <div class="compare-card">
+      <h3><span class="swatch" style="background:var(--cyan)"></span>SSRI / SNRI</h3>
+      <ul>
+        <li><b>First-line</b> treatment for SAD</li>
+        <li>Gradual onset — benefit builds over <b>8–12 weeks</b></li>
+        <li>~50–60% of people respond</li>
+        <li>No addiction or dependence risk</li>
+      </ul>
+    </div>
+    <div class="compare-card">
+      <h3><span class="swatch" style="background:var(--rose)"></span>Benzodiazepine</h3>
+      <ul>
+        <li><b>Second-line</b> — used when SSRIs haven't worked</li>
+        <li>Fast onset — improvement possible within <b>one week</b></li>
+        <li>~78% respond in clinical trials</li>
+        <li>Risk of tolerance, dependence, withdrawal</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+  const svg = document.getElementById('synapse');
+  const tabSsri = document.getElementById('tab-ssri');
+  const tabBenzo = document.getElementById('tab-benzo');
+  const drugToggle = document.getElementById('drugToggle');
+  const drugLabel = document.getElementById('drugLabel');
+  let mode = 'ssri';
+  let drugOn = false;
+
+  const READOUTS = {
+    'ssri-off': {
+      title: 'Baseline: serotonin diffuses, binds, and gets recaptured',
+      body: "Once released, serotonin diffuses randomly through the synaptic cleft. Along the way it may bind a receptor, unbind, and bind again elsewhere. Eventually many molecules encounter SERT on the sending neuron, which transports them back inside to be repackaged and used again.",
+      note: 'Switch the drug toggle on to see what an SSRI changes.'
+    },
+    'ssri-on': {
+      title: 'SSRI: reuptake is greatly reduced',
+      body: "Drugs like sertraline dock onto SERT and block it. This doesn't make serotonin stick to receptors longer -- individual binding events are just as brief as before, and after unbinding a molecule often drifts on to a different nearby receptor rather than the same one. What changes is that with SERT blocked, serotonin stays in the cleft much longer before it's ever recaptured, so it gets far more of these binding chances over time -- and overall signaling builds up.",
+      note: "Synaptic serotonin rises within hours of the first dose, but symptom improvement in SAD typically takes 8–12 weeks. One leading explanation: it takes time for serotonin autoreceptors to desensitize before downstream signaling actually strengthens — the buildup shown here isn't the whole story."
+    },
+    'benzo-off': {
+      title: 'Baseline: GABA opens the channel briefly',
+      body: "GABA binds its site on the GABA-A receptor, opening a chloride channel for a short time. A modest amount of chloride flows in, mildly damping the neuron's firing.",
+      note: 'Switch the drug toggle on to see what a benzodiazepine changes.'
+    },
+    'benzo-on': {
+      title: 'Benzodiazepine: the channel opens wider',
+      body: "Drugs like clonazepam bind a separate site on the same receptor. This doesn't open the channel by itself — it makes GABA far more effective, so more chloride floods in, reducing firing in fear circuits such as the amygdala.",
+      note: "That's why relief can start within a week — but tolerance and dependence make benzodiazepines a second-line option, used mainly when SSRIs haven't worked."
+    }
+  };
+
+  function render(){
+    svg.dataset.mode = mode;
+    svg.dataset.drug = drugOn ? 'on' : 'off';
+    tabSsri.setAttribute('aria-pressed', mode === 'ssri');
+    tabBenzo.setAttribute('aria-pressed', mode === 'benzo');
+    drugToggle.setAttribute('aria-pressed', drugOn);
+    drugLabel.textContent = 'Drug: ' + (drugOn ? 'on' : 'off');
+
+    const r = READOUTS[mode + '-' + (drugOn ? 'on' : 'off')];
+    document.getElementById('rTitle').textContent = r.title;
+    document.getElementById('rBody').textContent = r.body;
+    document.getElementById('rNote').textContent = r.note;
+  }
+
+  function setMode(m){ mode = m; render(); }
+  function setDrug(v){ drugOn = v; render(); }
+
+  render();
+</script>
+</body>
+</html>
