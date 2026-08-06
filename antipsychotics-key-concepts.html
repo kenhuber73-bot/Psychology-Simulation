@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Key Concepts: Antipsychotics — Psych Simulations</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1E9D2; --paper-dark:#E3D5AE; --folder:#D8C393; --ink:#2B2A25; --ink-soft:#5C5648;
+    --navy:#2F4858; --red:#A13D3D; --sage:#5E7A52; --line:#C7B78E; --white-card:#FBF7EC;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:radial-gradient(circle at 20% 10%, rgba(0,0,0,0.03) 0, transparent 40%);
+    font-family:'Space Grotesk', sans-serif; color:var(--ink); min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .wrap{width:100%; max-width:680px;}
+  .eyebrow{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; text-transform:uppercase;
+    letter-spacing:0.08em; color:var(--ink-soft); text-align:center; margin-bottom:8px;
+  }
+  .panel{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:32px; box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+  }
+  .screen{display:none;}
+  .screen.active{display:block;}
+  h1{font-size:1.35rem; margin:0 0 14px; text-align:center;}
+  h2{font-size:1.1rem; margin:24px 0 6px;}
+  h2:first-of-type{margin-top:0;}
+  p{line-height:1.6; font-size:0.94rem;}
+  .step-label{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; text-transform:uppercase;
+    letter-spacing:0.06em; color:var(--ink-soft); text-align:center; margin-bottom:4px;
+  }
+  .caption{font-size:0.92rem; text-align:center; color:var(--ink-soft); margin:14px 0 4px; min-height:44px;}
+  .frame-wrap{
+    background:#0B1220; border:1px solid var(--ink); border-radius:10px; overflow:auto;
+    height:420px;
+  }
+  .frame-wrap iframe{ width:100%; height:100%; border:none; display:block; }
+
+  .term-card{
+    background:var(--paper-dark); border-left:3px solid var(--navy); border-radius:0 6px 6px 0;
+    padding:12px 16px; margin:10px 0;
+  }
+  .term-name{font-weight:700; font-size:0.92rem;}
+  .term-def{font-size:0.88rem; margin-top:4px; line-height:1.5;}
+
+  .primary-btn{
+    background:var(--navy); color:white; border:none; border-radius:24px; padding:13px 26px;
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:0.95rem; cursor:pointer;
+    display:block; margin:20px auto 0; transition:transform 0.12s ease;
+  }
+  .primary-btn:hover{transform:translateY(-1px);}
+  .primary-btn:disabled{opacity:0.4; cursor:default; transform:none;}
+  .ghost-btn{
+    background:transparent; color:var(--ink-soft); border:1px solid var(--line); border-radius:24px;
+    padding:11px 22px; font-family:'Space Grotesk', sans-serif; font-size:0.88rem; cursor:pointer;
+  }
+
+  /* --- Identify round --- */
+  .identify-options{display:flex; gap:10px; justify-content:center; margin-top:18px;}
+  .identify-option{
+    background:var(--paper); border:1.5px solid var(--ink-soft); border-radius:8px;
+    padding:12px 24px; font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:0.92rem;
+    cursor:pointer; color:var(--ink-soft); transition:all 0.1s ease;
+  }
+  .identify-option:hover:not(:disabled){border-color:var(--ink); color:var(--ink);}
+  .identify-option:disabled{cursor:default;}
+  .identify-option.correct{background:#E4EDE1; border-color:var(--sage); color:#3E5233;}
+  .identify-option.incorrect{background:#F4E1E1; border-color:var(--red); color:#7A2E2E;}
+  .identify-feedback{font-size:0.86rem; margin-top:10px; text-align:center; color:var(--ink-soft); min-height:20px;}
+  .round-tally{font-family:'Courier Prime', monospace; font-size:0.75rem; color:var(--ink-soft); text-align:center; margin-top:6px;}
+
+  /* --- Paragraph screen --- */
+  .notes-textarea{
+    width:100%; min-height:160px; padding:14px; border:2px solid var(--ink); border-radius:8px;
+    font-family:'Space Grotesk', sans-serif; font-size:0.92rem; line-height:1.5; resize:vertical;
+  }
+  .message{margin-top:10px; font-size:0.85rem; padding:10px; border-radius:5px;}
+  .message.error{background:#F4E1E1; color:#7A2E2E;}
+  .save-status{margin-top:12px; font-family:'Courier Prime', monospace; font-size:0.8rem; color:var(--ink-soft); text-align:center;}
+  .save-status.error{color:var(--red);}
+  .save-status.success{color:var(--sage); font-weight:700;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Psych Simulations &middot; Key Concepts</div>
+  <div class="panel">
+
+    <!-- SCREEN 1: Watch -->
+    <div class="screen active" id="screen-watch">
+      <h1>Watch: Two Kinds of Antipsychotics</h1>
+      <div class="step-label" id="watch-step-label">Step 1 of 4</div>
+      <div class="frame-wrap">
+        <iframe id="watch-frame" src="" title="Synapse diagram"></iframe>
+      </div>
+      <div class="caption" id="watch-caption"></div>
+      <button class="primary-btn" id="btn-watch-next">Next →</button>
+    </div>
+
+    <!-- SCREEN 2: Identify -->
+    <div class="screen" id="screen-identify">
+      <h1>Identify: Typical or Atypical?</h1>
+      <p style="text-align:center; color:var(--ink-soft); font-size:0.88rem;">The drug is on in both rounds. Look at how many receptors are blocked, and where.</p>
+      <div class="frame-wrap">
+        <iframe id="identify-frame" src="" title="Synapse diagram"></iframe>
+      </div>
+      <div class="identify-options">
+        <button class="identify-option" id="btn-guess-typical">Typical</button>
+        <button class="identify-option" id="btn-guess-atypical">Atypical</button>
+      </div>
+      <div class="identify-feedback" id="identify-feedback"></div>
+      <div class="round-tally" id="round-tally">Round 1 of 2</div>
+      <button class="primary-btn" id="btn-identify-next" style="display:none;">Next round →</button>
+      <button class="primary-btn" id="btn-to-reading" style="display:none;">Continue to reading →</button>
+    </div>
+
+    <!-- SCREEN 3: Read -->
+    <div class="screen" id="screen-read">
+      <h1>Read: Typical vs. Atypical</h1>
+      <div class="term-card">
+        <div class="term-name">Typical (1st-generation) antipsychotics</div>
+        <div class="term-def">Drugs like chlorpromazine and haloperidol work mainly by blocking D2 dopamine receptors. Blocking D2 reduces dopamine signaling, which can reduce positive symptoms of schizophrenia (hallucinations, delusions, disorganized thinking) by decreasing excessive dopamine activity in pathways associated with them. Because typical antipsychotics block D2 receptors broadly — including in movement-related pathways — they carry a higher risk of extrapyramidal (movement-related) side effects.</div>
+      </div>
+      <div class="term-card">
+        <div class="term-name">Atypical (2nd-generation) antipsychotics</div>
+        <div class="term-def">Drugs like clozapine, risperidone, and olanzapine still block D2 receptors, reducing dopamine signaling the same way typical antipsychotics do. They also block serotonin 5-HT2A receptors — this doesn't "increase serotonin," it blocks certain serotonin receptors, and that blockade alters dopamine regulation in other brain regions. This second mechanism is associated with a lower risk of movement-related side effects compared with many typical antipsychotics, while remaining effective against positive symptoms.</div>
+      </div>
+      <div class="term-card">
+        <div class="term-name">A note on the dopamine hypothesis</div>
+        <div class="term-def">The dopamine hypothesis links excessive dopamine activity (especially in the mesolimbic pathway) to positive symptoms of schizophrenia. This is a useful model, not the full story — modern research suggests schizophrenia involves a more complex interaction across multiple neurotransmitter systems and brain circuits.</div>
+      </div>
+      <button class="primary-btn" id="btn-to-paragraph">Continue →</button>
+    </div>
+
+    <!-- SCREEN 4: Reflect -->
+    <div class="screen" id="screen-paragraph">
+      <h1>Reflect</h1>
+      <p>Using what you just watched, identified, and read, explain <strong>why atypical antipsychotics are generally associated with a lower risk of movement-related side effects than typical antipsychotics</strong>. Describe what's happening at the synapse for each type.</p>
+      <textarea class="notes-textarea" id="antipsychotic-paragraph" placeholder="Explain the difference between typical and atypical antipsychotics, and why that difference affects side-effect risk..."></textarea>
+      <div class="message error" id="paragraph-warning" style="display:none;">Please write a fuller paragraph — try to explain both the D2 mechanism and what the 5-HT2A blockade adds.</div>
+      <button class="primary-btn" id="btn-submit">Submit →</button>
+      <div class="save-status" id="save-status"></div>
+    </div>
+
+    <!-- SCREEN 5: Done -->
+    <div class="screen" id="screen-done">
+      <h1>🎉 Nice work</h1>
+      <p style="text-align:center;">Your explanation has been submitted. You've walked through how two related drug classes act on the same dopamine pathway in different ways — and why that difference matters for the people taking them.</p>
+      <button class="ghost-btn" id="btn-restart" style="display:block; margin:20px auto 0;">↺ Do it again</button>
+    </div>
+
+  </div>
+</div>
+
+<script src="js/supabase-config.js"></script>
+<script>
+  // ---------- Session gate ----------
+  const rawSession = localStorage.getItem('studentSession');
+  if(!rawSession){
+    window.location.href = 'join.html';
+  }
+  const studentSession = rawSession ? JSON.parse(rawSession) : null;
+
+  function goTo(name){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+  }
+
+  function frameUrl(subtype, drug, readout){
+    return 'neurotransmitter-mechanisms.html?embed=1&subtype=' + subtype + '&drug=' + drug + '&readout=' + (readout ? '1' : '0');
+  }
+
+  // ---------- Screen 1: Watch ----------
+  const WATCH_STEPS = [
+    { subtype:'typical', drug:'off', caption:'Baseline: dopamine binding D2 receptors freely (the dopamine hypothesis — excess dopamine activity is associated with positive symptoms).' },
+    { subtype:'typical', drug:'on', caption:'Typical antipsychotic, drug on: the D2 receptor is blocked. One synapse, one receptor blocked.' },
+    { subtype:'atypical', drug:'off', caption:'Same baseline, but now watch both a dopamine synapse and a separate serotonin synapse.' },
+    { subtype:'atypical', drug:'on', caption:'Atypical antipsychotic, drug on: both the D2 receptor and the 5-HT2A receptor are blocked — two separate synapses, two blockades.' }
+  ];
+  let watchIndex = 0;
+
+  function renderWatchStep(){
+    const step = WATCH_STEPS[watchIndex];
+    document.getElementById('watch-step-label').textContent = 'Step ' + (watchIndex + 1) + ' of ' + WATCH_STEPS.length;
+    document.getElementById('watch-frame').src = frameUrl(step.subtype, step.drug, true);
+    document.getElementById('watch-caption').textContent = step.caption;
+    document.getElementById('btn-watch-next').textContent = (watchIndex === WATCH_STEPS.length - 1) ? 'Continue →' : 'Next →';
+  }
+  renderWatchStep();
+
+  document.getElementById('btn-watch-next').addEventListener('click', () => {
+    if(watchIndex < WATCH_STEPS.length - 1){
+      watchIndex++;
+      renderWatchStep();
+    } else {
+      startIdentify();
+      goTo('identify');
+    }
+  });
+
+  // ---------- Screen 2: Identify ----------
+  let identifyRounds = [];
+  let identifyRoundIndex = 0;
+  let identifyCorrectCount = 0;
+  let identifyAnswered = false;
+
+  function startIdentify(){
+    // one typical round, one atypical round, order randomized
+    identifyRounds = Math.random() < 0.5 ? ['typical', 'atypical'] : ['atypical', 'typical'];
+    identifyRoundIndex = 0;
+    identifyCorrectCount = 0;
+    renderIdentifyRound();
+  }
+
+  function renderIdentifyRound(){
+    identifyAnswered = false;
+    const answer = identifyRounds[identifyRoundIndex];
+    document.getElementById('identify-frame').src = frameUrl(answer, 'on', false);
+    document.getElementById('round-tally').textContent = 'Round ' + (identifyRoundIndex + 1) + ' of ' + identifyRounds.length;
+    document.getElementById('identify-feedback').textContent = '';
+    ['btn-guess-typical','btn-guess-atypical'].forEach(id => {
+      const btn = document.getElementById(id);
+      btn.disabled = false;
+      btn.classList.remove('correct','incorrect');
+    });
+    document.getElementById('btn-identify-next').style.display = 'none';
+    document.getElementById('btn-to-reading').style.display = 'none';
+  }
+
+  function handleGuess(guess){
+    if(identifyAnswered) return;
+    identifyAnswered = true;
+    const answer = identifyRounds[identifyRoundIndex];
+    const guessBtn = document.getElementById(guess === 'typical' ? 'btn-guess-typical' : 'btn-guess-atypical');
+    const answerBtn = document.getElementById(answer === 'typical' ? 'btn-guess-typical' : 'btn-guess-atypical');
+    ['btn-guess-typical','btn-guess-atypical'].forEach(id => document.getElementById(id).disabled = true);
+
+    const feedbackEl = document.getElementById('identify-feedback');
+    if(guess === answer){
+      guessBtn.classList.add('correct');
+      identifyCorrectCount++;
+      feedbackEl.textContent = 'Correct — that\'s ' + answer + '.';
+    } else {
+      guessBtn.classList.add('incorrect');
+      answerBtn.classList.add('correct');
+      feedbackEl.textContent = 'Not quite — that was ' + answer + '.';
+    }
+
+    if(identifyRoundIndex < identifyRounds.length - 1){
+      document.getElementById('btn-identify-next').style.display = 'block';
+    } else {
+      document.getElementById('btn-to-reading').style.display = 'block';
+    }
+  }
+
+  document.getElementById('btn-guess-typical').addEventListener('click', () => handleGuess('typical'));
+  document.getElementById('btn-guess-atypical').addEventListener('click', () => handleGuess('atypical'));
+  document.getElementById('btn-identify-next').addEventListener('click', () => {
+    identifyRoundIndex++;
+    renderIdentifyRound();
+  });
+  document.getElementById('btn-to-reading').addEventListener('click', () => goTo('read'));
+
+  // ---------- Screen 3: Read ----------
+  document.getElementById('btn-to-paragraph').addEventListener('click', () => goTo('paragraph'));
+
+  // ---------- Screen 4: Reflect + save ----------
+  document.getElementById('btn-submit').addEventListener('click', async () => {
+    const paragraph = document.getElementById('antipsychotic-paragraph').value.trim();
+    const warningEl = document.getElementById('paragraph-warning');
+    const statusEl = document.getElementById('save-status');
+    const btn = document.getElementById('btn-submit');
+
+    if(paragraph.length < 60){
+      warningEl.style.display = 'block';
+      return;
+    }
+    warningEl.style.display = 'none';
+    btn.disabled = true;
+    statusEl.textContent = 'Saving...';
+    statusEl.className = 'save-status';
+
+    const { error } = await sb.from('case_attempts').insert({
+      student_session_id: studentSession.sessionId,
+      case_id: 'antipsychotics_reflection_v1',
+      notes: '',
+      checklist_selections: [],
+      reasoning_selections: [],
+      reasoning_paragraph: paragraph,
+      diagnosis: 'Antipsychotics — Mechanism Reflection (identify score: ' + identifyCorrectCount + '/' + identifyRounds.length + ')',
+      was_correct: true
+    });
+
+    if(error){
+      statusEl.textContent = 'Something went wrong saving: ' + error.message;
+      statusEl.className = 'save-status error';
+      btn.disabled = false;
+      return;
+    }
+
+    goTo('done');
+  });
+
+  document.getElementById('btn-restart').addEventListener('click', () => {
+    watchIndex = 0;
+    renderWatchStep();
+    document.getElementById('antipsychotic-paragraph').value = '';
+    document.getElementById('paragraph-warning').style.display = 'none';
+    document.getElementById('save-status').textContent = '';
+    document.getElementById('btn-submit').disabled = false;
+    goTo('watch');
+  });
+</script>
+</body>
+</html>

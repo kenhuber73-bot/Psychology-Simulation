@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inside the Synapse — SSRI vs Benzodiazepine</title>
+<title>Inside the Synapse — SSRI, Benzodiazepine &amp; Antipsychotics</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
@@ -19,6 +19,9 @@
     --violet:#C4B5FD;
     --rose:#FB7185;
     --ion:#7DD3FC;
+    --dopamine:#F472B6;
+    --antipsy:#FDBA74;
+    --antipsy2:#C084FC;
     --font-display:'Space Grotesk', sans-serif;
     --font-body:'IBM Plex Sans', sans-serif;
     --font-mono:'IBM Plex Mono', monospace;
@@ -77,6 +80,9 @@
   }
   .tab[aria-pressed="true"]{background:#233152; color:var(--text);}
   .tab:focus-visible, .toggle:focus-visible{outline:2px solid var(--cyan); outline-offset:2px;}
+
+  .subtype-tabs{display:flex; gap:6px; background:#0E1526; padding:4px; border-radius:10px;}
+  .subtype-tabs .tab{font-size:12px; padding:8px 14px;}
 
   .toggle-group{display:flex; align-items:center; gap:10px; margin-left:auto;}
   .toggle-label{font-family:var(--font-mono); font-size:12px; color:var(--text-dim); letter-spacing:.06em; text-transform:uppercase;}
@@ -195,13 +201,72 @@
     50%{ transform:scale(1.55); opacity:1; }
   }
 
-  .ssri-blocker, .benzo-blocker{ opacity:0; transition:opacity .5s ease; }
-  .receptor-glow{ transition: opacity .5s ease; opacity:.35; }
+  /* Antipsychotics tab: dopamine crossing the cleft and binding D2 (drug off = binds freely; drug on = arrives, meets the blocker, and bounces back unbound) */
+  .dot-dopamine{ animation: dopamineDock 3.4s ease-in-out infinite; }
+  [data-mode="anti"][data-drug="on"] .dot-dopamine{ animation-name: dopamineBlocked; }
+  @keyframes dopamineDock{
+    0%{ transform:translate(0px,0px); opacity:0; }
+    10%{ opacity:1; }
+    42%{ transform:translate(370px,-3px); opacity:1; }  /* dock at D2 */
+    68%{ opacity:1; }
+    82%{ transform:translate(360px,10px); opacity:.5; }  /* unbind, drift back */
+    100%{ transform:translate(6px,20px); opacity:0; }
+  }
+  @keyframes dopamineBlocked{
+    0%{ transform:translate(0px,0px); opacity:0; }
+    10%{ opacity:1; }
+    38%{ transform:translate(352px,-3px); opacity:1; }   /* approach D2 -- blocker is in the way */
+    46%{ transform:translate(340px,-6px); opacity:.85; } /* bounce off */
+    70%{ transform:translate(200px,4px); opacity:.5; }
+    100%{ transform:translate(6px,20px); opacity:0; }
+  }
+
+  /* Atypical view: compact dual-synapse diagrams. Same dock/blocked shape reused for both the dopamine->D2 pair and the serotonin->5-HT2A pair since the geometry is symmetric -- only the molecule icon/color differs. */
+  .dot-compact{ animation: dockCompact 3.4s ease-in-out infinite; }
+  [data-mode="anti"][data-drug="on"] .dot-compact{ animation-name: blockedCompact; }
+  @keyframes dockCompact{
+    0%{ transform:translate(0px,0px); opacity:0; }
+    10%{ opacity:1; }
+    42%{ transform:translate(455px,-2px); opacity:1; }
+    68%{ opacity:1; }
+    82%{ transform:translate(445px,8px); opacity:.5; }
+    100%{ transform:translate(6px,16px); opacity:0; }
+  }
+  @keyframes blockedCompact{
+    0%{ transform:translate(0px,0px); opacity:0; }
+    10%{ opacity:1; }
+    38%{ transform:translate(435px,-2px); opacity:1; }
+    46%{ transform:translate(421px,-5px); opacity:.85; }
+    70%{ transform:translate(255px,4px); opacity:.5; }
+    100%{ transform:translate(6px,16px); opacity:0; }
+  }
+
+  .firing-dot-anti{ animation: firePulseAntiHigh 0.85s ease-in-out infinite; transform-origin:center; }
+  [data-mode="anti"][data-drug="on"] .firing-dot-anti{ animation-name: firePulseAntiLow; animation-duration:1.7s; }
+  @keyframes firePulseAntiHigh{
+    0%,100%{ transform:scale(1); opacity:.6; }
+    50%{ transform:scale(1.7); opacity:1; }
+  }
+  @keyframes firePulseAntiLow{
+    0%,100%{ transform:scale(1); opacity:.5; }
+    50%{ transform:scale(1.15); opacity:.85; }
+  }
+
+  .ssri-blocker, .benzo-blocker, .antipsy-blocker{ opacity:0; transition:opacity .5s ease; }
+  .receptor-glow, .anti-receptor-glow{ transition: opacity .5s ease; opacity:.35; }
   .pore-wide{ opacity:0; transition:opacity .4s ease; }
   .pore-narrow{ opacity:1; transition:opacity .4s ease; }
 
-  [data-mode="ssri"] .benzo-only{ display:none; }
-  [data-mode="benzo"] .ssri-only{ display:none; }
+  [data-mode="ssri"] .benzo-only, [data-mode="ssri"] .anti-only{ display:none; }
+  [data-mode="benzo"] .ssri-only, [data-mode="benzo"] .anti-only{ display:none; }
+  [data-mode="anti"] .ssri-only, [data-mode="anti"] .benzo-only{ display:none; }
+
+  [data-subtype="typical"] .subtype-atypical-only{ display:none; }
+  [data-mode="anti"][data-subtype="atypical"] .shared-synapse-shell{ display:none; }
+  [data-mode="anti"][data-subtype="atypical"] .typical-diagram{ display:none; }
+
+  [data-mode="anti"][data-drug="on"] .antipsy-blocker{ opacity:1; }
+  [data-mode="anti"][data-drug="on"] .anti-receptor-glow{ opacity:1; }
 
   [data-mode="ssri"][data-drug="on"] .ssri-blocker{ opacity:1; }
   [data-mode="ssri"][data-drug="on"] .receptor-glow{ opacity:1; }
@@ -219,22 +284,32 @@
   [data-mode="benzo"][data-drug="on"] .extra-ion{ display:block; }
 
   @media (prefers-reduced-motion: reduce){
-    .dot-cross, .dot-recycle, .ion-flow, .firing-dot{ animation:none !important; opacity:.9; }
+    .dot-cross, .dot-recycle, .ion-flow, .firing-dot, .dot-dopamine, .dot-compact, .firing-dot-anti{ animation:none !important; opacity:.9; }
   }
+
+  body.embed-mode{ padding:0; background:transparent; }
+  body.embed-mode .wrap{ max-width:none; }
+  body.embed-mode header, body.embed-mode .controls, body.embed-mode .compare{ display:none !important; }
+  body.embed-mode .diagram-card{ border-radius:10px; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <p class="eyebrow">Biological treatment · Social anxiety disorder</p>
-    <h1>Inside the synapse</h1>
-    <p class="sub">Two very different drugs, two very different targets. See what an SSRI and a benzodiazepine actually change at the synapse — and why one is first-line and the other isn't.</p>
+    <p class="eyebrow" id="hEyebrow">Biological treatment · Social anxiety disorder</p>
+    <h1 id="hTitle">Inside the synapse</h1>
+    <p class="sub" id="hSub">Two very different drugs, two very different targets. See what an SSRI and a benzodiazepine actually change at the synapse — and why one is first-line and the other isn't.</p>
   </header>
 
   <div class="controls">
     <div class="tabs" role="tablist" aria-label="Drug mechanism">
       <button class="tab" id="tab-ssri" role="tab" aria-pressed="true" onclick="setMode('ssri')">SSRI</button>
       <button class="tab" id="tab-benzo" role="tab" aria-pressed="false" onclick="setMode('benzo')">Benzodiazepine</button>
+      <button class="tab" id="tab-anti" role="tab" aria-pressed="false" onclick="setMode('anti')">Antipsychotics</button>
+    </div>
+    <div class="subtype-tabs" id="subtypeTabs" role="tablist" aria-label="Antipsychotic generation" style="display:none;">
+      <button class="tab" id="tab-typical" role="tab" aria-pressed="true" onclick="setSubtype('typical')">Typical</button>
+      <button class="tab" id="tab-atypical" role="tab" aria-pressed="false" onclick="setSubtype('atypical')">Atypical</button>
     </div>
     <div class="toggle-group">
       <span class="toggle-label" id="drugLabel">Drug: off</span>
@@ -269,27 +344,48 @@
           <polygon points="-10,-4 -4,-9 4,-6 6,0 2,7 -6,8 -11,3" fill="var(--rose)" opacity="0.95"/>
           <polygon points="2,-6 9,-8 13,-2 11,5 5,7 2,3" fill="var(--rose)" opacity="0.7"/>
         </g>
+        <!-- Dopamine: catechol ring with two hydroxyl groups + a short amine tail -->
+        <g id="molDopamine">
+          <polygon points="-7,-4 -3,-8 4,-6 7,-1 4,5 -4,6" fill="var(--dopamine)" fill-opacity="0.22" stroke="var(--dopamine)" stroke-width="1.3" stroke-linejoin="round"/>
+          <line x1="-3" y1="-8" x2="-3.5" y2="-11.5" stroke="var(--dopamine)" stroke-width="1.2" stroke-linecap="round"/>
+          <line x1="4" y1="-6" x2="6.5" y2="-8.5" stroke="var(--dopamine)" stroke-width="1.2" stroke-linecap="round"/>
+          <line x1="7" y1="-1" x2="10.5" y2="-2.2" stroke="var(--dopamine)" stroke-width="1.4" stroke-linecap="round"/>
+          <circle cx="11.3" cy="-2.5" r="1.7" fill="var(--dopamine)"/>
+        </g>
+        <!-- Antipsychotic (D2 blocker): angular synthetic wedge, same "foreign" visual language as the SSRI molecule -->
+        <g id="molAntipsyD2">
+          <polygon points="-9,-6.5 0,-10.5 9,-6.5 9,6.5 0,10.5 -9,6.5" fill="var(--antipsy)"/>
+          <circle cx="0" cy="0" r="2.8" fill="#0B1220" opacity="0.35"/>
+        </g>
+        <!-- Antipsychotic (5-HT2A blocker), atypical only -->
+        <g id="molAntipsy5HT2A">
+          <polygon points="-8,-7 8,-7 10,0 8,7 -8,7 -10,0" fill="var(--antipsy2)" opacity="0.92"/>
+        </g>
       </defs>
 
       <!-- Presynaptic terminal -->
-      <rect x="40" y="80" width="220" height="320" rx="100" fill="#1B2740" stroke="#33456B" stroke-width="2"/>
-      <text x="150" y="435" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8FA0C2">SENDING NEURON</text>
+      <rect class="shared-synapse-shell" x="40" y="80" width="220" height="320" rx="100" fill="#1B2740" stroke="#33456B" stroke-width="2"/>
+      <text class="shared-synapse-shell" x="150" y="435" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8FA0C2">SENDING NEURON</text>
 
       <!-- static vesicles -->
-      <circle cx="215" cy="150" r="15" fill="none" stroke="#3A4C74" stroke-width="2"/>
+      <circle class="shared-synapse-shell" cx="215" cy="150" r="15" fill="none" stroke="#3A4C74" stroke-width="2"/>
       <circle cx="212" cy="146" r="3.2" class="ssri-only" fill="var(--cyan)"/>
       <circle cx="219" cy="153" r="3.2" class="ssri-only" fill="var(--cyan)"/>
       <circle cx="212" cy="146" r="3.2" class="benzo-only" fill="var(--violet)"/>
       <circle cx="219" cy="153" r="3.2" class="benzo-only" fill="var(--violet)"/>
+      <circle cx="212" cy="146" r="3.2" class="anti-only typical-diagram" fill="var(--dopamine)"/>
+      <circle cx="219" cy="153" r="3.2" class="anti-only typical-diagram" fill="var(--dopamine)"/>
 
-      <circle cx="215" cy="330" r="15" fill="none" stroke="#3A4C74" stroke-width="2"/>
+      <circle class="shared-synapse-shell" cx="215" cy="330" r="15" fill="none" stroke="#3A4C74" stroke-width="2"/>
       <circle cx="212" cy="326" r="3.2" class="ssri-only" fill="var(--cyan)"/>
       <circle cx="219" cy="333" r="3.2" class="ssri-only" fill="var(--cyan)"/>
       <circle cx="212" cy="326" r="3.2" class="benzo-only" fill="var(--violet)"/>
       <circle cx="219" cy="333" r="3.2" class="benzo-only" fill="var(--violet)"/>
+      <circle cx="212" cy="326" r="3.2" class="anti-only typical-diagram" fill="var(--dopamine)"/>
+      <circle cx="219" cy="333" r="3.2" class="anti-only typical-diagram" fill="var(--dopamine)"/>
 
       <!-- active vesicle, fusing -->
-      <circle cx="240" cy="240" r="17" fill="none" stroke="#4C6693" stroke-width="2.5"/>
+      <circle class="shared-synapse-shell" cx="240" cy="240" r="17" fill="none" stroke="#4C6693" stroke-width="2.5"/>
 
       <!-- reuptake transporter (SSRI only) -- deliberately placed away from the release site: SERT is spread across the membrane, not clustered right where vesicles dock -->
       <g class="ssri-only">
@@ -299,7 +395,7 @@
       </g>
 
       <!-- cleft label -->
-      <text x="450" y="45" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8FA0C2">SYNAPTIC CLEFT</text>
+      <text class="shared-synapse-shell" x="450" y="45" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8FA0C2">SYNAPTIC CLEFT</text>
 
       <!-- released dots: SSRI serotonin -->
       <g class="ssri-only">
@@ -320,10 +416,17 @@
         <g transform="translate(240,244)"><g class="dot-cross d3"><use href="#molGABA"/></g></g>
       </g>
 
+      <!-- released dots: dopamine crossing to D2 (typical antipsychotic view -- D2 blockade only) -->
+      <g class="anti-only typical-diagram">
+        <g transform="translate(240,236)"><g class="dot-dopamine d1"><use href="#molDopamine"/></g></g>
+        <g transform="translate(240,240)"><g class="dot-dopamine d3"><use href="#molDopamine"/></g></g>
+        <g transform="translate(240,244)"><g class="dot-dopamine d2"><use href="#molDopamine"/></g></g>
+      </g>
+
       <!-- Postsynaptic membrane -->
-      <rect x="620" y="60" width="42" height="360" rx="18" fill="#1B2740" stroke="#33456B" stroke-width="2"/>
-      <path d="M662,60 C740,60 800,140 820,240 C800,340 740,420 662,420 L640,420 C640,300 640,180 640,60 Z" fill="#161F35" stroke="#2A3752" stroke-width="1.5"/>
-      <text x="740" y="450" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8FA0C2">RECEIVING NEURON</text>
+      <rect class="shared-synapse-shell" x="620" y="60" width="42" height="360" rx="18" fill="#1B2740" stroke="#33456B" stroke-width="2"/>
+      <path class="shared-synapse-shell" d="M662,60 C740,60 800,140 820,240 C800,340 740,420 662,420 L640,420 C640,300 640,180 640,60 Z" fill="#161F35" stroke="#2A3752" stroke-width="1.5"/>
+      <text class="shared-synapse-shell" x="740" y="450" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" fill="#8FA0C2">RECEIVING NEURON</text>
 
       <!-- SSRI receptors -->
       <g class="ssri-only">
@@ -334,6 +437,58 @@
         <rect x="600" y="230" width="26" height="20" rx="5" fill="none" stroke="#4C6693" stroke-width="2"/>
         <rect class="receptor-glow" x="600" y="330" width="26" height="20" rx="5" fill="var(--cyan)"/>
         <rect x="600" y="330" width="26" height="20" rx="5" fill="none" stroke="#4C6693" stroke-width="2"/>
+      </g>
+
+      <!-- D2 receptor (typical antipsychotic view -- one neuron pair, D2 blockade only) -->
+      <g class="anti-only typical-diagram">
+        <text x="613" y="196" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8FA0C2">D2 receptor</text>
+        <rect class="anti-receptor-glow" x="600" y="216" width="26" height="26" rx="6" fill="var(--dopamine)"/>
+        <rect x="600" y="216" width="26" height="26" rx="6" fill="none" stroke="#4C6693" stroke-width="2"/>
+        <use class="antipsy-blocker" href="#molAntipsyD2" x="613" y="229"/>
+
+        <text x="820" y="200" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8FA0C2">FIRING</text>
+        <circle class="firing-dot-anti" cx="820" cy="240" r="9" fill="var(--dopamine)"/>
+      </g>
+
+      <!-- Atypical antipsychotic view: two SEPARATE neuron pairs -- a dopamine neuron/D2 receptor pair, and a distinct serotonin neuron/5-HT2A receptor pair -->
+      <g class="anti-only subtype-atypical-only">
+        <!-- Top pair: dopamine neuron -> D2 receptor -->
+        <rect x="30" y="18" width="150" height="150" rx="65" fill="#1B2740" stroke="#33456B" stroke-width="2"/>
+        <text x="105" y="184" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8FA0C2">DOPAMINE NEURON</text>
+        <circle cx="150" cy="93" r="14" fill="none" stroke="#4C6693" stroke-width="2.5"/>
+        <circle cx="146" cy="88" r="3" fill="var(--dopamine)"/>
+        <circle cx="153" cy="96" r="3" fill="var(--dopamine)"/>
+
+        <rect x="612" y="38" width="34" height="110" rx="15" fill="#1B2740" stroke="#33456B" stroke-width="2"/>
+        <path d="M646,38 C700,38 730,70 740,93 C730,116 700,148 646,148 Z" fill="#161F35" stroke="#2A3752" stroke-width="1.5"/>
+        <text x="690" y="170" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8FA0C2">RECEIVING NEURON</text>
+        <text x="605" y="70" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8FA0C2">D2 receptor</text>
+        <rect class="anti-receptor-glow" x="592" y="80" width="26" height="26" rx="6" fill="var(--dopamine)"/>
+        <rect x="592" y="80" width="26" height="26" rx="6" fill="none" stroke="#4C6693" stroke-width="2"/>
+        <use class="antipsy-blocker" href="#molAntipsyD2" x="605" y="93"/>
+        <circle class="firing-dot-anti" cx="710" cy="93" r="7" fill="var(--dopamine)"/>
+
+        <g transform="translate(150,90)"><g class="dot-compact d1"><use href="#molDopamine"/></g></g>
+        <g transform="translate(150,94)"><g class="dot-compact d3"><use href="#molDopamine"/></g></g>
+        <g transform="translate(150,97)"><g class="dot-compact d2"><use href="#molDopamine"/></g></g>
+
+        <!-- Bottom pair: serotonin neuron -> 5-HT2A receptor -->
+        <rect x="30" y="300" width="150" height="150" rx="65" fill="#1B2740" stroke="#33456B" stroke-width="2"/>
+        <text x="105" y="466" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8FA0C2">SEROTONIN NEURON</text>
+        <circle cx="150" cy="375" r="14" fill="none" stroke="#4C6693" stroke-width="2.5"/>
+        <circle cx="146" cy="370" r="3" fill="var(--cyan)"/>
+        <circle cx="153" cy="378" r="3" fill="var(--cyan)"/>
+
+        <rect x="612" y="320" width="34" height="110" rx="15" fill="#1B2740" stroke="#33456B" stroke-width="2"/>
+        <path d="M646,320 C700,320 730,352 740,375 C730,398 700,430 646,430 Z" fill="#161F35" stroke="#2A3752" stroke-width="1.5"/>
+        <text x="690" y="452" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8FA0C2">RECEIVING NEURON</text>
+        <text x="605" y="352" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#8FA0C2">5-HT2A receptor</text>
+        <rect class="anti-receptor-glow" x="592" y="362" width="26" height="26" rx="6" fill="var(--cyan)"/>
+        <rect x="592" y="362" width="26" height="26" rx="6" fill="none" stroke="#4C6693" stroke-width="2"/>
+        <use class="antipsy-blocker" href="#molAntipsy5HT2A" x="605" y="375"/>
+
+        <g transform="translate(150,372)"><g class="dot-compact i2"><use href="#molSerotonin"/></g></g>
+        <g transform="translate(150,376)"><g class="dot-compact i4"><use href="#molSerotonin"/></g></g>
       </g>
 
       <!-- GABA-A receptor with chloride channel -->
@@ -369,6 +524,10 @@
     <span class="benzo-only"><span class="swatch" style="background:var(--violet)"></span>GABA</span>
     <span class="benzo-only"><span class="swatch" style="background:var(--rose)"></span>Benzodiazepine molecule</span>
     <span class="benzo-only"><span class="swatch" style="background:var(--ion)"></span>Chloride ion (Cl⁻)</span>
+    <span class="anti-only"><span class="swatch" style="background:var(--dopamine)"></span>Dopamine</span>
+    <span class="anti-only"><span class="swatch" style="background:var(--antipsy)"></span>Antipsychotic (D2 blocker)</span>
+    <span class="anti-only subtype-atypical-only"><span class="swatch" style="background:var(--cyan)"></span>Serotonin</span>
+    <span class="anti-only subtype-atypical-only"><span class="swatch" style="background:var(--antipsy2)"></span>Antipsychotic (5-HT2A blocker)</span>
   </div>
 
   <div class="readout">
@@ -378,7 +537,7 @@
     <p class="note" id="rNote"></p>
   </div>
 
-  <div class="compare">
+  <div class="compare" id="compareSsriBenzo">
     <div class="compare-card">
       <h3><span class="swatch" style="background:var(--cyan)"></span>SSRI / SNRI</h3>
       <ul>
@@ -398,16 +557,62 @@
       </ul>
     </div>
   </div>
+
+  <div class="compare" id="compareAnti" style="display:none;">
+    <div class="compare-card">
+      <h3><span class="swatch" style="background:var(--antipsy)"></span>Typical (1st-generation)</h3>
+      <ul>
+        <li>Main action: <b>D2 receptor blockade</b></li>
+        <li>Examples: chlorpromazine, haloperidol</li>
+        <li>Effective against positive symptoms</li>
+        <li>Higher risk of movement-related (extrapyramidal) side effects</li>
+      </ul>
+    </div>
+    <div class="compare-card">
+      <h3><span class="swatch" style="background:var(--antipsy2)"></span>Atypical (2nd-generation)</h3>
+      <ul>
+        <li>Main actions: <b>D2 + 5-HT2A blockade</b></li>
+        <li>Examples: clozapine, risperidone, olanzapine</li>
+        <li>Effective against positive symptoms</li>
+        <li>Generally lower risk of movement-related side effects</li>
+      </ul>
+    </div>
+  </div>
 </div>
 
 <script>
   const svg = document.getElementById('synapse');
   const tabSsri = document.getElementById('tab-ssri');
   const tabBenzo = document.getElementById('tab-benzo');
+  const tabAnti = document.getElementById('tab-anti');
+  const subtypeTabs = document.getElementById('subtypeTabs');
+  const tabTypical = document.getElementById('tab-typical');
+  const tabAtypical = document.getElementById('tab-atypical');
   const drugToggle = document.getElementById('drugToggle');
   const drugLabel = document.getElementById('drugLabel');
+  const compareSsriBenzo = document.getElementById('compareSsriBenzo');
+  const compareAnti = document.getElementById('compareAnti');
   let mode = 'ssri';
+  let subtype = 'typical';
   let drugOn = false;
+
+  const HEADERS = {
+    ssri: {
+      eyebrow: 'Biological treatment · Social anxiety disorder',
+      title: 'Inside the synapse',
+      sub: "Two very different drugs, two very different targets. See what an SSRI and a benzodiazepine actually change at the synapse — and why one is first-line and the other isn't."
+    },
+    benzo: {
+      eyebrow: 'Biological treatment · Social anxiety disorder',
+      title: 'Inside the synapse',
+      sub: "Two very different drugs, two very different targets. See what an SSRI and a benzodiazepine actually change at the synapse — and why one is first-line and the other isn't."
+    },
+    anti: {
+      eyebrow: 'Biological treatment · Schizophrenia',
+      title: 'Inside the synapse',
+      sub: "This is a simplified educational model. Real antipsychotics affect multiple receptor systems -- this activity focuses on the two mechanisms most commonly taught: D2 blockade and 5-HT2A blockade."
+    }
+  };
 
   const READOUTS = {
     'ssri-off': {
@@ -429,25 +634,87 @@
       title: 'Benzodiazepine: the channel opens wider',
       body: "Drugs like clonazepam bind a separate site on the same receptor. This doesn't open the channel by itself — it makes GABA far more effective, so more chloride floods in, reducing firing in fear circuits such as the amygdala.",
       note: "That's why relief can start within a week — but tolerance and dependence make benzodiazepines a second-line option, used mainly when SSRIs haven't worked."
+    },
+    'anti-typical-off': {
+      title: 'The dopamine hypothesis of schizophrenia',
+      body: "Positive symptoms of schizophrenia -- hallucinations, delusions, disorganized thinking -- are associated with excessive dopamine activity in certain pathways, especially the mesolimbic pathway. Here, dopamine is binding D2 receptors freely and often.",
+      note: "This is a simplified model, not the full picture. Modern research suggests schizophrenia involves a more complex interaction across multiple neurotransmitter systems and brain circuits, not simply \"too much dopamine.\""
+    },
+    'anti-typical-on': {
+      title: 'Typical antipsychotic: D2 receptor blockade',
+      body: "Drugs like chlorpromazine and haloperidol block D2 receptors. This reduces dopamine signaling, which can reduce positive symptoms by decreasing excessive dopamine activity in pathways associated with them.",
+      note: "Typical antipsychotics block D2 receptors broadly, including in movement-related pathways -- which is why they carry a higher risk of extrapyramidal (movement-related) side effects."
+    },
+    'anti-atypical-off': {
+      title: 'The dopamine hypothesis of schizophrenia',
+      body: "Positive symptoms of schizophrenia -- hallucinations, delusions, disorganized thinking -- are associated with excessive dopamine activity in certain pathways, especially the mesolimbic pathway. Here, both dopamine and serotonin are binding their receptors freely.",
+      note: "This is a simplified model, not the full picture. Modern research suggests schizophrenia involves a more complex interaction across multiple neurotransmitter systems and brain circuits, not simply \"too much dopamine.\""
+    },
+    'anti-atypical-on': {
+      title: 'Atypical antipsychotic: D2 + 5-HT2A blockade',
+      body: "Drugs like clozapine, risperidone, and olanzapine still block D2 receptors, reducing dopamine signaling the same way typical antipsychotics do. They also block serotonin 5-HT2A receptors -- this doesn't \"increase serotonin,\" it blocks certain serotonin receptors, which alters dopamine regulation in other brain regions.",
+      note: "That 5-HT2A blockade is associated with a lower risk of movement-related side effects compared with many typical antipsychotics, while remaining effective against positive symptoms."
     }
   };
+
+  function updateLegendVisibility(){
+    document.querySelectorAll('.legend .ssri-only').forEach(el => el.style.display = mode === 'ssri' ? '' : 'none');
+    document.querySelectorAll('.legend .benzo-only').forEach(el => el.style.display = mode === 'benzo' ? '' : 'none');
+    document.querySelectorAll('.legend .anti-only').forEach(el => el.style.display = mode === 'anti' ? '' : 'none');
+    document.querySelectorAll('.legend .subtype-atypical-only').forEach(el => el.style.display = (mode === 'anti' && subtype === 'atypical') ? '' : 'none');
+  }
 
   function render(){
     svg.dataset.mode = mode;
     svg.dataset.drug = drugOn ? 'on' : 'off';
+    svg.dataset.subtype = subtype;
     tabSsri.setAttribute('aria-pressed', mode === 'ssri');
     tabBenzo.setAttribute('aria-pressed', mode === 'benzo');
+    tabAnti.setAttribute('aria-pressed', mode === 'anti');
+    subtypeTabs.style.display = mode === 'anti' ? 'flex' : 'none';
+    tabTypical.setAttribute('aria-pressed', subtype === 'typical');
+    tabAtypical.setAttribute('aria-pressed', subtype === 'atypical');
     drugToggle.setAttribute('aria-pressed', drugOn);
     drugLabel.textContent = 'Drug: ' + (drugOn ? 'on' : 'off');
+    compareSsriBenzo.style.display = mode === 'anti' ? 'none' : 'grid';
+    compareAnti.style.display = mode === 'anti' ? 'grid' : 'none';
+    updateLegendVisibility();
 
-    const r = READOUTS[mode + '-' + (drugOn ? 'on' : 'off')];
+    const h = HEADERS[mode];
+    document.getElementById('hEyebrow').textContent = h.eyebrow;
+    document.getElementById('hTitle').textContent = h.title;
+    document.getElementById('hSub').textContent = h.sub;
+
+    const key = mode === 'anti' ? ('anti-' + subtype + '-' + (drugOn ? 'on' : 'off')) : (mode + '-' + (drugOn ? 'on' : 'off'));
+    const r = READOUTS[key];
     document.getElementById('rTitle').textContent = r.title;
     document.getElementById('rBody').textContent = r.body;
     document.getElementById('rNote').textContent = r.note;
   }
 
   function setMode(m){ mode = m; render(); }
+  function setSubtype(s){ subtype = s; render(); }
   function setDrug(v){ drugOn = v; render(); }
+
+  // ---------- Embed mode ----------
+  // Used when this page is loaded inside an iframe by another activity (e.g. an
+  // antipsychotics reflection exercise). URL params lock the initial state and
+  // strip away the interactive chrome so it reads as a fixed illustration.
+  //   ?embed=1              hide header, tab controls, and compare cards
+  //   &subtype=typical|atypical
+  //   &drug=on|off
+  //   &readout=0            also hide the text readout (so it doesn't give away the answer)
+  const params = new URLSearchParams(location.search);
+  if(params.get('embed') === '1'){
+    document.body.classList.add('embed-mode');
+    mode = 'anti';
+    if(params.get('subtype') === 'atypical') subtype = 'atypical';
+    if(params.get('drug') === 'on') drugOn = true;
+    if(params.get('readout') === '0'){
+      document.querySelector('.readout').style.display = 'none';
+      document.querySelector('.legend').style.display = 'none';
+    }
+  }
 
   render();
 </script>

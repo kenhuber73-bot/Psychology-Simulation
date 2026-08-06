@@ -115,12 +115,13 @@
       jordan_gad_mdd_v1: 'Anxiety vs. Depression — Jordan R.',
       alex_adhd_gad_v1: 'ADHD vs. Anxiety — Alex M.',
       maya_dysthymia_v1: 'Dysthymia vs. MDD vs. Bipolar — Maya S.',
-      conditioning_social_anxiety_v1: 'Social Anxiety — Conditioning Reflection'
+      conditioning_social_anxiety_v1: 'Social Anxiety — Conditioning Reflection',
+      antipsychotics_reflection_v1: 'Antipsychotics — Mechanism Reflection'
     };
 
     // Activities that are a written reflection, not a graded diagnosis —
     // rendered differently in the results table (no Correct/Incorrect tag).
-    const reflectionActivities = new Set(['conditioning_social_anxiety_v1']);
+    const reflectionActivities = new Set(['conditioning_social_anxiety_v1', 'antipsychotics_reflection_v1']);
 
     async function init(){
       const { data: { session } } = await sb.auth.getSession();
