@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evolving Ecosystem — Artificial Life Lab</title>
+<style>
+  :root{
+    --bg-deep:#0d1714;
+    --bg-panel:#132420;
+    --bg-panel-alt:#182f28;
+    --line:#28453a;
+    --line-soft:#1e352c;
+    --ink:#e9f2ec;
+    --muted:#8fac9e;
+    --sage:#8fbf96;
+    --amber:#e0a458;
+    --coral:#dd8272;
+    --sky:#7fb9cc;
+    --violet:#b192c9;
+    --danger:#d9695f;
+    --font-display: "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --font-mono: ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --font-body: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;height:100%;background:var(--bg-deep);color:var(--ink);
+    font-family:var(--font-body);overflow:hidden;
+  }
+  #app{display:flex;flex-direction:column;height:100vh;}
+
+  /* ---------- Top bar ---------- */
+  #topbar{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    padding:8px 14px;background:var(--bg-panel);border-bottom:1px solid var(--line);
+    z-index:5;
+  }
+  #brand{
+    font-family:var(--font-display);font-size:19px;letter-spacing:.3px;color:var(--sage);
+    margin-right:10px;white-space:nowrap;font-style:italic;
+  }
+  #brand small{display:block;font-family:var(--font-mono);font-style:normal;color:var(--muted);font-size:10px;letter-spacing:1px;text-transform:uppercase;}
+  .ctrl-group{display:flex;gap:4px;align-items:center;background:var(--bg-panel-alt);border:1px solid var(--line-soft);border-radius:7px;padding:4px;}
+  .ctrl-label{font-family:var(--font-mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:0 6px 0 4px;white-space:nowrap;}
+  button{
+    font-family:var(--font-mono);font-size:11.5px;color:var(--ink);background:transparent;
+    border:1px solid var(--line);border-radius:5px;padding:6px 9px;cursor:pointer;
+    transition:background .12s,border-color .12s,color .12s;white-space:nowrap;
+  }
+  button:hover{background:#20382f;border-color:var(--sage);}
+  button:active{transform:translateY(1px);}
+  button.active{background:var(--sage);color:#0d1714;border-color:var(--sage);font-weight:600;}
+  button.warn:hover{border-color:var(--coral);}
+  button.danger:hover{border-color:var(--danger);color:var(--danger);}
+  #eventBanner{
+    margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--amber);
+    padding:6px 12px;border:1px dashed var(--amber);border-radius:6px;background:#1c1810;
+    opacity:0;transition:opacity .4s;max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  #eventBanner.show{opacity:1;}
+
+  /* ---------- Main layout ---------- */
+  #main{display:flex;flex:1;min-height:0;}
+  aside{background:var(--bg-panel);border-color:var(--line);flex-shrink:0;overflow-y:auto;}
+  #leftPanel{width:225px;border-right:1px solid var(--line);padding:12px;}
+  #rightPanel{width:270px;border-left:1px solid var(--line);padding:12px;}
+  .panel-title{
+    font-family:var(--font-display);font-style:italic;font-size:15px;color:var(--sage);
+    margin:0 0 10px 0;padding-bottom:6px;border-bottom:1px solid var(--line-soft);
+  }
+  .stat-row{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;font-family:var(--font-mono);font-size:12px;border-bottom:1px dotted var(--line-soft);}
+  .stat-row .k{color:var(--muted);}
+  .stat-row .k.learn{border-bottom:1px dotted var(--sky);cursor:help;}
+  .stat-row .v{color:var(--ink);font-weight:600;}
+  #canvasWrap{flex:1;position:relative;background:var(--bg-deep);overflow:hidden;cursor:grab;}
+  #canvasWrap.dragging{cursor:grabbing;}
+  canvas#world{display:block;}
+  #hint{
+    position:absolute;bottom:8px;left:8px;font-family:var(--font-mono);font-size:10px;color:var(--muted);
+    background:rgba(13,23,20,.7);padding:5px 8px;border-radius:5px;pointer-events:none;
+  }
+  #zoomLabel{position:absolute;top:8px;left:8px;font-family:var(--font-mono);font-size:10px;color:var(--muted);
+    background:rgba(13,23,20,.7);padding:4px 7px;border-radius:5px;pointer-events:none;}
+
+  /* Right panel - specimen card */
+  .specimen-card{border:1px dashed var(--line);border-radius:8px;padding:10px;background:var(--bg-panel-alt);}
+  .specimen-empty{color:var(--muted);font-size:12px;font-style:italic;padding:20px 4px;text-align:center;line-height:1.5;}
+  .swatch{width:14px;height:14px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:6px;border:1px solid rgba(255,255,255,.3);}
+  .gene-bar-wrap{margin:5px 0;}
+  .gene-bar-label{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-bottom:2px;}
+  .gene-bar-track{height:5px;border-radius:3px;background:var(--line-soft);overflow:hidden;}
+  .gene-bar-fill{height:100%;background:var(--sky);}
+  #glossary{margin-top:14px;}
+  .gterm{margin-bottom:9px;padding:7px 8px;border-left:2px solid var(--sage);background:var(--bg-panel-alt);border-radius:0 5px 5px 0;}
+  .gterm b{font-size:11.5px;color:var(--sage);font-family:var(--font-mono);}
+  .gterm p{margin:3px 0 0 0;font-size:11px;color:var(--muted);line-height:1.4;}
+
+  /* ---------- Graph footer ---------- */
+  #graphsPanel{
+    height:150px;flex-shrink:0;display:flex;gap:1px;background:var(--line);
+    border-top:1px solid var(--line);overflow-x:auto;
+  }
+  .graph-cell{background:var(--bg-panel);min-width:170px;flex:1;padding:6px 8px;position:relative;}
+  .graph-cell .gtitle{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
+  .graph-cell .gval{font-family:var(--font-mono);font-size:10px;color:var(--ink);float:right;}
+  canvas.graphcanvas{width:100%;height:104px;display:block;}
+
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+  ::-webkit-scrollbar-track{background:var(--bg-panel);}
+
+  /* ---------- Field report overlay ---------- */
+  #reportOverlay{
+    position:fixed;inset:0;background:rgba(8,14,12,0.72);
+    display:none;align-items:center;justify-content:center;z-index:50;padding:24px;
+  }
+  #reportOverlay.show{display:flex;}
+  #reportCard{
+    position:relative;width:min(680px,92vw);max-height:84vh;overflow-y:auto;
+    background:var(--bg-panel);border:1px dashed var(--sage);border-radius:10px;
+    padding:26px 28px;box-shadow:0 18px 50px rgba(0,0,0,0.5);
+  }
+  #reportClose{
+    position:absolute;top:14px;right:14px;border:none;background:transparent;
+    color:var(--muted);font-size:22px;line-height:1;padding:2px 8px;cursor:pointer;
+  }
+  #reportClose:hover{color:var(--coral);background:transparent;border:none;}
+  .report-title{font-family:var(--font-display);font-style:italic;font-size:22px;color:var(--sage);margin:0 0 2px 0;}
+  .report-sub{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin:0 0 16px 0;letter-spacing:.4px;}
+  .report-narrative{
+    font-size:13.5px;line-height:1.6;color:var(--ink);margin-bottom:18px;
+    padding:12px 14px;background:var(--bg-panel-alt);border-left:2px solid var(--amber);border-radius:0 6px 6px 0;
+  }
+  .report-section-title{font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:18px 0 8px 0;}
+  .report-gene-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-family:var(--font-mono);font-size:12px;border-bottom:1px dotted var(--line-soft);}
+  .report-gene-row .rk{color:var(--muted);}
+  .report-gene-row .rv{color:var(--ink);}
+  .report-gene-row .rv.up{color:var(--coral);}
+  .report-gene-row .rv.down{color:var(--sky);}
+  .report-log-item{font-family:var(--font-mono);font-size:11px;color:var(--muted);padding:3px 0;}
+  .report-log-item b{color:var(--amber);font-weight:600;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="topbar">
+    <div id="brand">Evolving Ecosystem<small>artificial life lab</small></div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Run</span>
+      <button id="btnPause">Pause</button>
+      <button id="btnRestart" class="warn">Restart</button>
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Speed</span>
+      <button class="speedBtn active" data-speed="1">×1</button>
+      <button class="speedBtn" data-speed="5">×5</button>
+      <button class="speedBtn" data-speed="20">×20</button>
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Food</span>
+      <button id="btnAddFood">Add Food</button>
+      <button id="btnRemoveFood">Remove Food</button>
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Events</span>
+      <button id="evDrought">Drought</button>
+      <button id="evBoom">Food Boom</button>
+      <button id="evWinter">Cold Winter</button>
+      <button id="evPredator">Predator Invasion</button>
+      <button id="evDisease">Disease</button>
+      <button id="evRandom" class="danger">Random Catastrophe</button>
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Learn</span>
+      <button id="btnOverlay">Concept Labels</button>
+    </div>
+
+    <div id="eventBanner"></div>
+  </div>
+
+  <div id="main">
+    <aside id="leftPanel">
+      <p class="panel-title">Population Log</p>
+      <div class="stat-row"><span class="k">Generation</span><span class="v" id="statGen">0</span></div>
+      <div class="stat-row"><span class="k">Season</span><span class="v" id="statSeason">Spring</span></div>
+      <div class="stat-row"><span class="k learn" data-term="population">Population</span><span class="v" id="statPop">0</span></div>
+      <div class="stat-row"><span class="k">Predators</span><span class="v" id="statPredators">0</span></div>
+      <div class="stat-row"><span class="k">Food count</span><span class="v" id="statFood">0</span></div>
+      <div class="stat-row"><span class="k">Avg lifespan (gene)</span><span class="v" id="statAvgLife">0</span></div>
+      <div class="stat-row"><span class="k">Avg speed (gene)</span><span class="v" id="statAvgSpeed">0</span></div>
+      <div class="stat-row"><span class="k">Avg vision (gene)</span><span class="v" id="statAvgVision">0</span></div>
+      <div class="stat-row"><span class="k">Oldest organism</span><span class="v" id="statOldest">0</span></div>
+      <div class="stat-row"><span class="k">Births (total)</span><span class="v" id="statBirths">0</span></div>
+      <div class="stat-row"><span class="k">Deaths (total)</span><span class="v" id="statDeaths">0</span></div>
+
+      <p class="panel-title" style="margin-top:16px;">Field Notes</p>
+      <div style="font-family:var(--font-mono);font-size:10.5px;color:var(--muted);line-height:1.6;">
+        Click any organism in the world to inspect its genome. Drag to pan, scroll to zoom.
+        Reproduction is sexual — a soft pink glow marks an organism ready to mate.
+        No creature here was designed — every trait you see was inherited, mutated, and tested by survival.
+      </div>
+    </aside>
+
+    <div id="canvasWrap">
+      <canvas id="world"></canvas>
+      <div id="zoomLabel">zoom 100%</div>
+      <div id="hint">drag to pan · scroll to zoom · click an organism to inspect</div>
+    </div>
+
+    <aside id="rightPanel">
+      <p class="panel-title">Specimen</p>
+      <div id="specimenBox">
+        <div class="specimen-empty">No organism selected.<br>Click one in the world to see its genome and life history.</div>
+      </div>
+      <div id="glossary"></div>
+    </aside>
+  </div>
+
+  <div id="graphsPanel"></div>
+
+  <div id="reportOverlay">
+    <div id="reportCard">
+      <button id="reportClose" title="Close">&times;</button>
+      <div id="reportBody"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* =========================================================================
+   CONFIG
+   ========================================================================= */
+const WORLD_W = 4200, WORLD_H = 2600;
+const CELL_SIZE = 90;
+const INITIAL_ORGANISMS = 40;
+const INITIAL_FOOD = 220;
+const FOOD_CAP = 750;
+const ORGANISM_CAP = 750;
+const FOOD_ENERGY = 30;             // common food
+const RICH_FOOD_ENERGY = 60;        // rarer, richer food — the second niche
+const RICH_FOOD_SPAWN_SHARE = 0.16; // fraction of new food spawns that are "rich"
+const START_ENERGY = 105;
+const MAX_ENERGY = 260;
+const REPRO_COST = 6;
+const ROCK_COUNT = 14;
+const AVOID_RADIUS = 34;
+const MAX_EFFECTS = 40;          // hard cap on simultaneous floating text/particles
+const MUTATION_LABEL_COOLDOWN = 10; // min frames between mutation callouts, even at high pop
+
+// --- Predation tuning ---
+const CARNIVORE_THRESHOLD = 0.15;   // carnivory below this = pure herbivore, ignores hunting entirely
+const FLEE_WEIGHT = 2.6;            // fleeing a detected threat outweighs normal food-seeking
+const PREY_ATTRACTION_MULT = 1.3;
+const CATCH_RADIUS_MULT = 1.5;
+const ATTACK_COOLDOWN_SUCCESS = 65; // frames of "digesting" before hunting again
+const ATTACK_COOLDOWN_FAIL = 24;    // frames before a failed lunge can be retried
+const KILL_ENERGY_BASE = 10;
+const KILL_ENERGY_FRACTION = 0.42;  // fraction of prey's remaining energy gained on a kill
+
+// --- Sexual reproduction tuning ---
+const MATE_ATTRACTION_MULT = 2.2;
+const MATE_RADIUS_MULT = 1.6;
+const MATE_COOLDOWN = 25;
+const MATE_SIGNAL_RADIUS = 900; // courtship calls/scent/display carry farther than eyesight
+const REPRO_GIVE_FRACTION_EACH = 0.24; // each parent contributes this fraction of its own energy
+
+// --- Camouflage & schooling tuning ---
+const CAMO_MAX_REDUCTION = 0.6;   // best-case detection-range cut from perfect camouflage
+const SCHOOL_RADIUS = 80;
+const SCHOOL_HUE_TOLERANCE = 40;  // how close in hue counts as "same school"
+const SCHOOL_COHESION_WEIGHT = 0.9;
+const SCHOOL_CONFUSION_PER_MATE = 0.06; // catch-chance reduction per nearby schoolmate of the prey
+const SCHOOL_CONFUSION_CAP = 0.35;
+
+// --- Diet specialization tuning ---
+const DIET_EFFICIENCY_SWING = 0.4; // how much specialization shifts extraction efficiency
+
+// --- Seasons ---
+const SEASON_LENGTH = 900; // frames per season
+const SEASONS = [
+  {name:"Spring", foodMult:1.3, metabMult:0.95},
+  {name:"Summer", foodMult:1.0, metabMult:1.0},
+  {name:"Autumn", foodMult:0.7, metabMult:1.05},
+  {name:"Winter", foodMult:0.35, metabMult:1.3}
+];
+
+const GENES = {
+  speed:               {min:0.6,  max:3.2,  label:"Speed"},
+  turnRate:             {min:0.03, max:0.26,  label:"Turn Rate"},
+  visionRadius:         {min:40,   max:190,   label:"Vision Radius"},
+  bodySize:             {min:3,    max:14,    label:"Body Size"},
+  metabolism:           {min:0.4,  max:2.2,   label:"Metabolism"},
+  reproductionThreshold:{min:50,   max:140,   label:"Repro. Threshold"},
+  mutationRate:         {min:0.03, max:0.35,  label:"Mutation Rate"},
+  lifespan:             {min:800,  max:3000,  label:"Lifespan"},
+  colorHue:             {min:0,    max:360,   label:"Color Hue"},
+  wanderStrength:       {min:0.1,  max:1.0,   label:"Wander Strength"},
+  foodAttraction:       {min:0.2,  max:1.0,   label:"Food Attraction"},
+  avoidanceStrength:    {min:0.0,  max:1.0,   label:"Avoidance"},
+  carnivory:            {min:0,    max:1.0,   label:"Carnivory"},
+  ornamentSize:         {min:0,    max:1.0,   label:"Ornament Size"},
+  matePreference:       {min:0,    max:1.0,   label:"Mate Preference"},
+  camouflage:           {min:0,    max:1.0,   label:"Camouflage"},
+  schoolingDrive:       {min:0,    max:1.0,   label:"Schooling Drive"},
+  dietSpecialization:   {min:0,    max:1.0,   label:"Diet Specialization"}
+};
+const GENE_KEYS = Object.keys(GENES);
+
+function rand(min,max){ return min + Math.random()*(max-min); }
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+function normAngle(a){ while(a>Math.PI)a-=2*Math.PI; while(a<-Math.PI)a+=2*Math.PI; return a; }
+function dist2(x1,y1,x2,y2){ const dx=x1-x2, dy=y1-y2; return dx*dx+dy*dy; }
+function hueDist(a,b){ const d = Math.abs(a-b)%360; return d>180 ? 360-d : d; }
+function computeGeneAverages(organisms){
+  const n = organisms.length || 1;
+  const sums = {};
+  for(const k of GENE_KEYS) sums[k]=0;
+  for(const o of organisms){ for(const k of GENE_KEYS) sums[k] += o.genome.values[k]; }
+  const avgs = {};
+  for(const k of GENE_KEYS) avgs[k] = sums[k]/n;
+  return avgs;
+}
+// How much a target's detection range should shrink because it blends into the
+// local terrain color. A showy ornament works against this — it's hard to hide
+// a display trait that evolved specifically to be seen.
+function organismStealth(world, target){
+  const hueD = hueDist(target.genome.values.colorHue, world.terrainHueAt(target.x, target.y));
+  const match = clamp(1 - hueD/180, 0, 1);
+  const ornamentPenalty = target.genome.values.ornamentSize * 0.4;
+  return clamp(target.genome.values.camouflage*match - ornamentPenalty, 0, CAMO_MAX_REDUCTION);
+}
+
+/* =========================================================================
+   GENOME
+   ========================================================================= */
+class Genome {
+  constructor(values){
+    this.values = values || {};
+    if(!values){
+      for(const k of GENE_KEYS){
+        // The founding population starts almost entirely herbivorous — carnivory
+        // has to evolve in via mutation, same as every other trait, rather than
+        // being present at full strength from generation zero.
+        if(k === "carnivory"){
+          this.values[k] = rand(0, 0.1);
+        } else {
+          this.values[k] = rand(GENES[k].min, GENES[k].max);
+        }
+      }
+    }
+  }
+  get(key){ return this.values[key]; }
+
+  // Combine two parent genomes (uniform crossover: each gene comes from one
+  // parent or the other), then apply mutation using the pair's average rate.
+  // Returns {genome, mutations:[{key,before,after}]}
+  static crossover(genomeA, genomeB){
+    const childValues = {};
+    const mutations = [];
+    const mRate = (genomeA.values.mutationRate + genomeB.values.mutationRate) / 2;
+    for(const k of GENE_KEYS){
+      const inherited = Math.random()<0.5 ? genomeA.values[k] : genomeB.values[k];
+      let after = inherited;
+      if(Math.random() < mRate){
+        const range = GENES[k];
+        const magnitude = (range.max - range.min) * 0.07;
+        const delta = (Math.random()+Math.random()-1) * magnitude; // triangular-ish, small
+        after = inherited + delta;
+        if(k === "colorHue"){
+          after = ((after % 360) + 360) % 360;
+        } else {
+          after = clamp(after, range.min, range.max);
+        }
+        if(Math.abs(after-inherited) > (range.max-range.min)*0.01){
+          mutations.push({key:k, before:inherited, after});
+        }
+      }
+      childValues[k] = after;
+    }
+    return {genome:new Genome(childValues), mutations};
+  }
+}
+
+/* =========================================================================
+   FOOD
+   ========================================================================= */
+class Food {
+  constructor(x,y,type){
+    this.x=x; this.y=y;
+    this.type = type || "common"; // "common" (plentiful, modest) or "rich" (rare, high-value)
+    this.value = this.type==="rich" ? RICH_FOOD_ENERGY : FOOD_ENERGY;
+    this.spawnPulse = 1; // for a subtle grow-in animation
+  }
+}
+
+/* =========================================================================
+   ORGANISM
+   ========================================================================= */
+let ORG_ID = 1;
+class Organism {
+  constructor(x,y,genome,generation,parent){
+    this.id = ORG_ID++;
+    this.x=x; this.y=y;
+    this.angle = rand(0, Math.PI*2);
+    this.genome = genome;
+    this.generation = generation;
+    this.energy = START_ENERGY;
+    this.age = 0;
+    this.alive = true;
+    this.childrenCount = 0;
+    this.distanceTraveled = 0;
+    this.foodEaten = 0;
+    this.parentId = parent ? parent.id : null;
+    this.wanderAngle = rand(0,Math.PI*2);
+    this.pathPoints = []; // only accumulated while selected
+    this.deathCause = null;
+    this.attackCooldown = 0;
+    this.preyEaten = 0;
+    this.matingCooldown = 0;
+    this.wantsToMate = false; // hysteresis flag — see update()
+  }
+
+  metabolicCost(moving){
+    const g = this.genome.values;
+    const base = 0.028 + g.bodySize*0.014 + g.metabolism*0.040;
+    const moveCost = moving ? g.speed*0.0225 : g.speed*0.005;
+    // Predatory anatomy and senses cost something to maintain even between kills.
+    // Crossing into "hunter" isn't free-and-gradual — there's a real anatomical
+    // cost the moment carnivory crosses the threshold, so evolution can't just
+    // dabble in hunting for a trivial fee; it has to actually commit.
+    const huntingUpkeep = g.carnivory > CARNIVORE_THRESHOLD
+      ? 0.03 + g.carnivory*0.11
+      : g.carnivory*0.02;
+    // A showy ornament costs something to grow and carry, same logic as a peacock's tail.
+    const ornamentUpkeep = g.ornamentSize * 0.02;
+    return base + moveCost + huntingUpkeep + ornamentUpkeep;
+  }
+
+  update(world){
+    if(!this.alive) return;
+    const g = this.genome.values;
+    const isHunter = g.carnivory > CARNIVORE_THRESHOLD;
+    // Hysteresis: once an organism commits to seeking a mate, it keeps pursuing
+    // through minor energy dips while traveling, rather than flickering the
+    // behavior on and off every frame around the exact threshold value.
+    if(this.energy >= g.reproductionThreshold) this.wantsToMate = true;
+    else if(this.energy < g.reproductionThreshold*0.5) this.wantsToMate = false;
+    const readyToMate = this.wantsToMate;
+
+    // --- Sense: nearest food of each niche within vision ---
+    let nearestCommon = null, nearestCommonD2 = g.visionRadius*g.visionRadius;
+    let nearestRich = null, nearestRichD2 = g.visionRadius*g.visionRadius;
+    const foodNearby = world.queryNearby(this.x,this.y,g.visionRadius,"food");
+    for(const f of foodNearby){
+      const d2 = dist2(this.x,this.y,f.x,f.y);
+      if(f.type==="rich"){ if(d2 < nearestRichD2){ nearestRichD2=d2; nearestRich=f; } }
+      else { if(d2 < nearestCommonD2){ nearestCommonD2=d2; nearestCommon=f; } }
+    }
+
+    // --- Sense: other organisms within vision (threats, prey, schoolmates) ---
+    const visionOrganisms = world.queryNearby(this.x,this.y,g.visionRadius,"organism");
+    let nearestThreat = null, nearestThreatD2 = g.visionRadius*g.visionRadius;
+    let nearestPrey = null, nearestPreyD2 = g.visionRadius*g.visionRadius;
+    let schoolSumX = 0, schoolSumY = 0, schoolCount = 0;
+    for(const o of visionOrganisms){
+      if(o===this || !o.alive) continue;
+      const d2 = dist2(this.x,this.y,o.x,o.y);
+
+      // Camouflage shrinks how far away a well-blended organism can be spotted —
+      // it only affects predator/prey detection, not mate-finding (display is
+      // meant to be seen).
+      const stealth = organismStealth(world, o);
+      const detectR = g.visionRadius * (1-stealth);
+      const detectD2 = detectR*detectR;
+
+      // Only a predator big enough to plausibly catch you is worth fleeing —
+      // this mirrors the size limit hunters themselves are bound by below.
+      if(o.genome.values.carnivory > CARNIVORE_THRESHOLD && o.genome.values.bodySize >= g.bodySize/1.15
+         && d2 < detectD2 && d2 < nearestThreatD2){
+        nearestThreatD2 = d2; nearestThreat = o;
+      }
+      // Hunters aren't limited to herbivores — a big enough predator will eat a
+      // smaller predator too. This keeps carnivory from being a free lunch: going
+      // all-in on hunting just means the next thing up the size ladder eats you.
+      if(isHunter && o.genome.values.bodySize < g.bodySize*1.15
+         && d2 < detectD2 && d2 < nearestPreyD2){
+        nearestPreyD2 = d2; nearestPrey = o;
+      }
+      // Schooling: track nearby similar-hued neighbors for flocking cohesion.
+      if(d2 < SCHOOL_RADIUS*SCHOOL_RADIUS && hueDist(g.colorHue,o.genome.values.colorHue) < SCHOOL_HUE_TOLERANCE){
+        schoolSumX += o.x; schoolSumY += o.y; schoolCount++;
+      }
+    }
+
+    // --- Sense: mates — a longer-range signal (calls, scent, display) than
+    // ordinary eyesight, since real animals don't rely on vision alone to find
+    // a partner across a sparse population.
+    let nearestMate = null, bestMateScore = -Infinity;
+    if(readyToMate && this.matingCooldown<=0){
+      const mateCandidates = world.mateCandidatesFor(this.x,this.y);
+      for(const o of mateCandidates){
+        if(o===this || !o.alive || o.matingCooldown>0) continue;
+        if(!o.wantsToMate) continue;
+        const d2 = dist2(this.x,this.y,o.x,o.y);
+        const d = Math.sqrt(d2)||0.01;
+        const score = o.genome.values.ornamentSize*g.matePreference - (d/MATE_SIGNAL_RADIUS)*0.4;
+        if(score > bestMateScore){ bestMateScore = score; nearestMate = o; }
+      }
+    }
+
+    // --- Steering vector composition ---
+    let vx=0, vy=0;
+    // Food: attraction split across the two niches by diet specialization —
+    // generalists (mid-range) get modest pull toward both; specialists favor one.
+    if(nearestCommon){
+      const a = Math.atan2(nearestCommon.y-this.y, nearestCommon.x-this.x);
+      const w = g.foodAttraction * (1-g.carnivory) * (1 - g.dietSpecialization*0.5) * 1.4;
+      vx += Math.cos(a) * w; vy += Math.sin(a) * w;
+    }
+    if(nearestRich){
+      const a = Math.atan2(nearestRich.y-this.y, nearestRich.x-this.x);
+      const w = g.foodAttraction * (1-g.carnivory) * (0.5 + g.dietSpecialization*0.9) * 1.4;
+      vx += Math.cos(a) * w; vy += Math.sin(a) * w;
+    }
+    // Hunting: chase the nearest valid prey.
+    if(nearestPrey){
+      const a = Math.atan2(nearestPrey.y-this.y, nearestPrey.x-this.x);
+      const w = g.carnivory * PREY_ATTRACTION_MULT;
+      vx += Math.cos(a) * w; vy += Math.sin(a) * w;
+    }
+    // Fleeing: spotting a predator early (good vision) and outrunning it (good speed)
+    // matters more than anything else on the board.
+    if(nearestThreat){
+      const d = Math.sqrt(nearestThreatD2)||1;
+      const proximity = 1 - d/g.visionRadius;
+      const a = Math.atan2(this.y-nearestThreat.y, this.x-nearestThreat.x);
+      const w = FLEE_WEIGHT * proximity;
+      vx += Math.cos(a) * w; vy += Math.sin(a) * w;
+    }
+    // Mate-seeking: once ready to reproduce, finding a partner matters a lot.
+    if(nearestMate){
+      const a = Math.atan2(nearestMate.y-this.y, nearestMate.x-this.x);
+      vx += Math.cos(a) * MATE_ATTRACTION_MULT; vy += Math.sin(a) * MATE_ATTRACTION_MULT;
+    }
+    // Schooling cohesion: drift toward the center of nearby similar-hued neighbors.
+    if(schoolCount>0 && g.schoolingDrive>0.05){
+      const cx = schoolSumX/schoolCount, cy = schoolSumY/schoolCount;
+      const a = Math.atan2(cy-this.y, cx-this.x);
+      const w = g.schoolingDrive * SCHOOL_COHESION_WEIGHT;
+      vx += Math.cos(a) * w; vy += Math.sin(a) * w;
+    }
+    // wander: slowly drifting random heading
+    this.wanderAngle += (Math.random()-0.5) * 0.5;
+    vx += Math.cos(this.wanderAngle) * g.wanderStrength * 0.5;
+    vy += Math.sin(this.wanderAngle) * g.wanderStrength * 0.5;
+
+    // avoidance: nearby organisms + rocks (personal space, not predator-related).
+    // A mate currently being pursued is exempt — otherwise avoidance repels
+    // organisms before they can ever get close enough to physically mate.
+    const neighbors = world.queryNearby(this.x,this.y,AVOID_RADIUS,"organism");
+    for(const o of neighbors){
+      if(o===this || !o.alive || o===nearestMate) continue;
+      const d2 = dist2(this.x,this.y,o.x,o.y);
+      if(d2 < AVOID_RADIUS*AVOID_RADIUS && d2 > 0.001){
+        const d = Math.sqrt(d2);
+        const push = (AVOID_RADIUS-d)/AVOID_RADIUS * g.avoidanceStrength;
+        vx += (this.x-o.x)/d * push;
+        vy += (this.y-o.y)/d * push;
+      }
+    }
+    for(const r of world.rocks){
+      const d2 = dist2(this.x,this.y,r.x,r.y);
+      const rr = r.radius + 40;
+      if(d2 < rr*rr && d2 > 0.001){
+        const d = Math.sqrt(d2);
+        const push = (rr-d)/rr * 1.2;
+        vx += (this.x-r.x)/d * push;
+        vy += (this.y-r.y)/d * push;
+      }
+    }
+
+    // --- Turn toward desired heading, limited by turnRate ---
+    if(vx!==0 || vy!==0){
+      const desired = Math.atan2(vy,vx);
+      const diff = normAngle(desired - this.angle);
+      const maxTurn = g.turnRate;
+      this.angle += clamp(diff, -maxTurn, maxTurn);
+    }
+
+    // --- Move ---
+    const moveX = Math.cos(this.angle) * g.speed;
+    const moveY = Math.sin(this.angle) * g.speed;
+    this.x += moveX; this.y += moveY;
+    this.distanceTraveled += Math.hypot(moveX,moveY);
+
+    // bounce off world bounds
+    const margin = g.bodySize+4;
+    if(this.x < margin){ this.x = margin; this.angle = Math.PI - this.angle; }
+    if(this.x > WORLD_W-margin){ this.x = WORLD_W-margin; this.angle = Math.PI - this.angle; }
+    if(this.y < margin){ this.y = margin; this.angle = -this.angle; }
+    if(this.y > WORLD_H-margin){ this.y = WORLD_H-margin; this.angle = -this.angle; }
+
+    // --- Energy ---
+    this.energy -= this.metabolicCost(true) * world.metabolismMultiplier;
+    this.age++;
+    if(this.attackCooldown>0) this.attackCooldown--;
+    if(this.matingCooldown>0) this.matingCooldown--;
+
+    // --- Eat (either niche, whichever is physically reached) ---
+    if(nearestCommon && dist2(this.x,this.y,nearestCommon.x,nearestCommon.y) < (g.bodySize+6)*(g.bodySize+6)){
+      world.consumeFood(nearestCommon);
+      const gain = nearestCommon.value * (1 - g.dietSpecialization*DIET_EFFICIENCY_SWING);
+      this.energy = Math.min(MAX_ENERGY, this.energy + gain);
+      this.foodEaten++;
+      world.spawnEatEffect(nearestCommon.x, nearestCommon.y);
+    }
+    if(nearestRich && dist2(this.x,this.y,nearestRich.x,nearestRich.y) < (g.bodySize+6)*(g.bodySize+6)){
+      world.consumeFood(nearestRich);
+      const gain = nearestRich.value * (0.6 + g.dietSpecialization*DIET_EFFICIENCY_SWING);
+      this.energy = Math.min(MAX_ENERGY, this.energy + gain);
+      this.foodEaten++;
+      world.spawnEatEffect(nearestRich.x, nearestRich.y);
+    }
+
+    // --- Attack: a hunter that has caught up to prey attempts a kill ---
+    if(isHunter && nearestPrey && nearestPrey.alive && this.attackCooldown<=0){
+      const catchRadius = (g.bodySize+nearestPrey.genome.values.bodySize) * CATCH_RADIUS_MULT;
+      if(dist2(this.x,this.y,nearestPrey.x,nearestPrey.y) < catchRadius*catchRadius){
+        const preyG = nearestPrey.genome.values;
+        const wariness = clamp(world.hunterFraction * 0.75, 0, 0.6); // prey get collectively harder to catch as predators dominate
+        const skill = (g.carnivory - 0.5) * 0.18; // half-committed hunters are mediocre; specialists are better
+        // Predator confusion: a prey surrounded by similar-looking schoolmates is
+        // genuinely harder to lock onto — safety in numbers, made mechanical.
+        const preyNeighbors = world.queryNearby(nearestPrey.x, nearestPrey.y, SCHOOL_RADIUS, "organism");
+        let schoolmates = 0;
+        for(const p of preyNeighbors){
+          if(p===nearestPrey || !p.alive) continue;
+          if(hueDist(preyG.colorHue, p.genome.values.colorHue) < SCHOOL_HUE_TOLERANCE) schoolmates++;
+        }
+        const confusion = clamp(schoolmates*SCHOOL_CONFUSION_PER_MATE, 0, SCHOOL_CONFUSION_CAP);
+        const successChance = clamp(
+          0.45 + (g.speed-preyG.speed)*0.35 + (g.bodySize-preyG.bodySize)*0.03 - wariness + skill - confusion,
+          0.03, 0.92
+        );
+        if(Math.random() < successChance){
+          const gain = Math.min(MAX_ENERGY-this.energy, nearestPrey.energy*KILL_ENERGY_FRACTION + KILL_ENERGY_BASE);
+          this.energy += gain;
+          this.preyEaten++;
+          this.attackCooldown = ATTACK_COOLDOWN_SUCCESS;
+          nearestPrey.die(world,"predation");
+        } else {
+          this.attackCooldown = ATTACK_COOLDOWN_FAIL;
+        }
+      }
+    }
+
+    // path trail (only tracked when selected, managed externally)
+    if(world.selected === this){
+      this.pathPoints.push({x:this.x,y:this.y});
+      if(this.pathPoints.length>180) this.pathPoints.shift();
+    }
+
+    // --- Mating: sexual selection (ornament + preference) shapes who an organism
+    // travels toward, but actual pairing accepts any eligible partner it ends up
+    // next to — otherwise everyone chases the single "most attractive" target and
+    // nobody reciprocates, and almost no one ever successfully mates.
+    if(readyToMate && this.matingCooldown<=0 && world.organisms.length < ORGANISM_CAP){
+      const closeCandidates = world.queryNearby(this.x, this.y, 60, "organism");
+      let bestPartner = null, bestPartnerScore = -Infinity;
+      for(const o of closeCandidates){
+        if(o===this || !o.alive || o.matingCooldown>0) continue;
+        if(!o.wantsToMate) continue;
+        const mateRadius = (g.bodySize+o.genome.values.bodySize) * MATE_RADIUS_MULT;
+        if(dist2(this.x,this.y,o.x,o.y) >= mateRadius*mateRadius) continue;
+        const score = o.genome.values.ornamentSize*g.matePreference;
+        if(score > bestPartnerScore){ bestPartnerScore = score; bestPartner = o; }
+      }
+      if(bestPartner){ this.mate(world, bestPartner); }
+    }
+
+    // --- Death checks ---
+    if(!this.alive) return; // may have just been killed by a predator above
+    if(this.energy <= 0){ this.die(world,"starvation"); }
+    else if(this.age >= g.lifespan){ this.die(world,"old age"); }
+  }
+
+  // Sexual reproduction: genes come from either parent (uniform crossover),
+  // then mutate. Both parents pay energy and a cooldown; the offspring spawns
+  // between them.
+  mate(world, partner){
+    const {genome:childGenome, mutations} = Genome.crossover(this.genome, partner.genome);
+    const giveA = this.energy * REPRO_GIVE_FRACTION_EACH;
+    const giveB = partner.energy * REPRO_GIVE_FRACTION_EACH;
+    this.energy -= (giveA + REPRO_COST);
+    partner.energy -= (giveB + REPRO_COST);
+    const ox = (this.x+partner.x)/2 + rand(-14,14);
+    const oy = (this.y+partner.y)/2 + rand(-14,14);
+    const child = new Organism(ox,oy,childGenome, Math.max(this.generation,partner.generation)+1, this);
+    child.energy = giveA+giveB;
+    child.parent2Id = partner.id;
+    this.childrenCount++;
+    partner.childrenCount++;
+    this.matingCooldown = MATE_COOLDOWN;
+    partner.matingCooldown = MATE_COOLDOWN;
+    world.addOrganism(child);
+    world.spawnBirthEffect(this, partner, child, mutations);
+  }
+
+  die(world,cause){
+    if(!this.alive) return;
+    this.alive = false;
+    this.deathCause = cause;
+    world.spawnDeathEffect(this);
+    world.recordDeath();
+  }
+}
+
+/* =========================================================================
+   VISUAL EFFECTS (floating text, particles, lineage lines)
+   ========================================================================= */
+class Effect {
+  constructor(type, data, life){
+    this.type=type; this.data=data; this.life=life; this.maxLife=life;
+  }
+}
+
+/* =========================================================================
+   WORLD
+   ========================================================================= */
+class World {
+  constructor(){
+    this.organisms = [];
+    this.food = [];
+    this.rocks = [];
+    this.effects = [];
+    this.selected = null;
+    this.eventFoodMult = 1;
+    this.eventMetabMult = 1;
+    this.foodMultiplier = 1;      // combined (event × season), recomputed each step
+    this.metabolismMultiplier = 1;
+    this.foodMultTimer = 0;
+    this.metabMultTimer = 0;
+    this.seasonIndex = 0;
+    this.seasonTimer = SEASON_LENGTH;
+    this.births = 0;
+    this.deaths = 0;
+    this.hunterFraction = 0;
+    this.eventLog = [];
+    this.lowPopTimer = 0;
+    this.grid = new Map();
+    this.frame = 0;
+    this.showMutationLabels = false; // gated behind the "Concept Labels" toggle
+    this.lastMutationFrame = -999;
+    this._initBiomes();
+    this._initRocks();
+    this._initFood();
+    this._initOrganisms();
+    this.lastEventMessage = "";
+    // Snapshot of the founding population's trait averages, for the field report.
+    this.baseline = { population: this.organisms.length, averages: computeGeneAverages(this.organisms) };
+  }
+
+  // A coarse grid of terrain "zones," each with its own hue. Organisms whose
+  // colorHue matches their local zone (and who carry the camouflage gene) are
+  // harder to detect there — see organismStealth().
+  _initBiomes(){
+    this.biomeCols = 4; this.biomeRows = 3;
+    this.biomeGrid = [];
+    for(let r=0;r<this.biomeRows;r++){
+      const row = [];
+      for(let c=0;c<this.biomeCols;c++){ row.push({hue: rand(0,360)}); }
+      this.biomeGrid.push(row);
+    }
+  }
+  terrainHueAt(x,y){
+    const col = clamp(Math.floor(x/(WORLD_W/this.biomeCols)), 0, this.biomeCols-1);
+    const row = clamp(Math.floor(y/(WORLD_H/this.biomeRows)), 0, this.biomeRows-1);
+    return this.biomeGrid[row][col].hue;
+  }
+  // At low population, average spacing between organisms can exceed even a
+  // generous fixed mate-signal range, causing an Allee-effect death spiral
+  // (too sparse to find mates -> population drops further -> even sparser).
+  // A grid query at world-spanning radius is pathologically slow (it iterates
+  // the full cell rectangle, not just occupied cells), so fall back to a
+  // direct linear scan instead — cheap at the population sizes where this
+  // matters (well under 100 organisms).
+  mateCandidatesFor(x,y){
+    if(this.organisms.length < 100) return this.organisms;
+    return this.queryNearby(x,y,MATE_SIGNAL_RADIUS,"organism");
+  }
+
+  _initRocks(){
+    for(let i=0;i<ROCK_COUNT;i++){
+      this.rocks.push({x:rand(150,WORLD_W-150), y:rand(150,WORLD_H-150), radius:rand(24,52)});
+    }
+  }
+  _initFood(){
+    this.food = [];
+    for(let i=0;i<INITIAL_FOOD;i++){
+      const type = Math.random()<RICH_FOOD_SPAWN_SHARE ? "rich" : "common";
+      this.food.push(new Food(rand(20,WORLD_W-20), rand(20,WORLD_H-20), type));
+    }
+  }
+  _initOrganisms(){
+    this.organisms = [];
+    for(let i=0;i<INITIAL_ORGANISMS;i++){
+      const o = new Organism(rand(200,WORLD_W-200), rand(200,WORLD_H-200), new Genome(), 0, null);
+      this.organisms.push(o);
+    }
+  }
+
+  addOrganism(o){ this.organisms.push(o); this.births++; }
+  recordDeath(){ this.deaths++; }
+
+  consumeFood(f){
+    const idx = this.food.indexOf(f);
+    if(idx>=0) this.food.splice(idx,1);
+  }
+
+  spawnEatEffect(x,y){
+    this.effects.push(new Effect("eat",{x,y},18));
+  }
+  spawnDeathEffect(o){
+    this.effects.push(new Effect("death",{x:o.x,y:o.y,hue:o.genome.values.colorHue,cause:o.deathCause},34));
+  }
+  // Two parents now, since reproduction is sexual: a birth pulse plus one
+  // lineage line back to each parent.
+  spawnBirthEffect(parentA, parentB, child, mutations){
+    this.effects.push(new Effect("birth",{x:child.x,y:child.y,hue:child.genome.values.colorHue},26));
+    this.effects.push(new Effect("lineage",{x1:parentA.x,y1:parentA.y,x2:child.x,y2:child.y},50));
+    this.effects.push(new Effect("lineage",{x1:parentB.x,y1:parentB.y,x2:child.x,y2:child.y},50));
+    // Mutation callouts are the biggest source of visual clutter at real population
+    // sizes, so they're rate-limited and only shown when "Concept Labels" is on.
+    if(this.showMutationLabels && mutations.length>0 && (this.frame - this.lastMutationFrame) >= MUTATION_LABEL_COOLDOWN){
+      this.lastMutationFrame = this.frame;
+      const m = mutations[0]; // just the single most illustrative one
+      this.effects.push(new Effect("mutation",{
+        x:child.x, y:child.y - 10,
+        key:m.key, before:m.before, after:m.after
+      }, 90));
+    }
+  }
+
+  triggerEvent(name){
+    let msg = "";
+    switch(name){
+      case "drought":
+        this.eventFoodMult = 0.2; this.foodMultTimer = 1200;
+        msg = "Drought — food generation down 80%";
+        break;
+      case "boom":
+        { const toAdd = Math.min(this.food.length, FOOD_CAP-this.food.length);
+          this.addFoodBatch(toAdd); }
+        msg = "Food Boom — food supply doubled";
+        break;
+      case "winter":
+        this.eventMetabMult = 1.7; this.metabMultTimer = 1200;
+        msg = "Cold Winter — metabolism costs rising";
+        break;
+      case "predator":
+        { let killed=0;
+          for(const o of this.organisms){
+            if(o.alive && Math.random()<0.16){ o.die(this,"predator"); killed++; }
+          }
+          msg = `Predator Invasion — ${killed} organisms lost`; }
+        break;
+      case "disease":
+        { const sizes = this.organisms.filter(o=>o.alive).map(o=>o.genome.values.bodySize);
+          const minS = Math.min(...sizes,3), maxS = Math.max(...sizes,14);
+          let killed=0;
+          for(const o of this.organisms){
+            if(!o.alive) continue;
+            const t = (o.genome.values.bodySize-minS)/Math.max(0.001,(maxS-minS));
+            if(Math.random() < t*0.5){ o.die(this,"disease"); killed++; }
+          }
+          msg = `Disease outbreak — larger organisms hit hardest (${killed} lost)`; }
+        break;
+    }
+    this.lastEventMessage = msg;
+    if(msg){
+      this.eventLog.push({frame:this.frame, generation:this.stats().generation, msg});
+      if(this.eventLog.length>12) this.eventLog.shift();
+    }
+    return msg;
+  }
+  triggerRandomCatastrophe(){
+    const options = ["drought","boom","winter","predator","disease"];
+    const pick = options[Math.floor(Math.random()*options.length)];
+    return this.triggerEvent(pick);
+  }
+
+  addFoodBatch(n){
+    for(let i=0;i<n && this.food.length<FOOD_CAP;i++){
+      const type = Math.random()<RICH_FOOD_SPAWN_SHARE ? "rich" : "common";
+      this.food.push(new Food(rand(20,WORLD_W-20), rand(20,WORLD_H-20), type));
+    }
+  }
+  removeFoodBatch(n){
+    for(let i=0;i<n && this.food.length>0;i++){
+      this.food.splice(Math.floor(Math.random()*this.food.length),1);
+    }
+  }
+
+  _cellKey(cx,cy){ return cx+","+cy; }
+  _buildGrid(){
+    this.grid.clear();
+    const put = (obj,type)=>{
+      const cx = Math.floor(obj.x/CELL_SIZE), cy = Math.floor(obj.y/CELL_SIZE);
+      const key = this._cellKey(cx,cy);
+      let cell = this.grid.get(key);
+      if(!cell){ cell = {food:[], organism:[]}; this.grid.set(key,cell); }
+      cell[type].push(obj);
+    };
+    for(const f of this.food) put(f,"food");
+    for(const o of this.organisms) if(o.alive) put(o,"organism");
+  }
+  queryNearby(x,y,radius,type){
+    const results = [];
+    const minCx = Math.floor((x-radius)/CELL_SIZE), maxCx = Math.floor((x+radius)/CELL_SIZE);
+    const minCy = Math.floor((y-radius)/CELL_SIZE), maxCy = Math.floor((y+radius)/CELL_SIZE);
+    for(let cx=minCx;cx<=maxCx;cx++){
+      for(let cy=minCy;cy<=maxCy;cy++){
+        const cell = this.grid.get(this._cellKey(cx,cy));
+        if(cell) for(const item of cell[type]) results.push(item);
+      }
+    }
+    return results;
+  }
+
+  step(){
+    this.frame++;
+    this._buildGrid();
+
+    // Cyclical seasons — a predictable, recurring swing in food and metabolism,
+    // distinct from the one-off manual events. Multiplies together with them.
+    this.seasonTimer--;
+    if(this.seasonTimer<=0){
+      this.seasonIndex = (this.seasonIndex+1) % SEASONS.length;
+      this.seasonTimer = SEASON_LENGTH;
+      const s = SEASONS[this.seasonIndex];
+      this.lastEventMessage = `Season changed to ${s.name}`;
+      this.eventLog.push({frame:this.frame, generation:this.stats().generation, msg:this.lastEventMessage});
+      if(this.eventLog.length>12) this.eventLog.shift();
+    }
+    const seasonDef = SEASONS[this.seasonIndex];
+    this.foodMultiplier = this.eventFoodMult * seasonDef.foodMult;
+    this.metabolismMultiplier = this.eventMetabMult * seasonDef.metabMult;
+
+    // Negative frequency-dependence: when predators are common, easy prey gets
+    // scarcer and wary — hunting success (see Organism attack logic) drops as
+    // this fraction rises, which keeps carnivory from running away to 100%.
+    let hunterCount = 0;
+    for(const o of this.organisms){ if(o.alive && o.genome.values.carnivory > CARNIVORE_THRESHOLD) hunterCount++; }
+    this.hunterFraction = this.organisms.length ? hunterCount/this.organisms.length : 0;
+
+    // food regeneration
+    const spawnChance = 2.3 * this.foodMultiplier;
+    let toSpawn = Math.floor(spawnChance);
+    if(Math.random() < spawnChance-toSpawn) toSpawn++;
+    this.addFoodBatch(toSpawn);
+
+    // event-layer timers (season layer above is independent of these)
+    if(this.foodMultTimer>0){ this.foodMultTimer--; if(this.foodMultTimer<=0) this.eventFoodMult=1; }
+    if(this.metabMultTimer>0){ this.metabMultTimer--; if(this.metabMultTimer<=0) this.eventMetabMult=1; }
+
+    // update organisms (copy array since reproduction mutates it)
+    const snapshot = this.organisms;
+    for(let i=0;i<snapshot.length;i++){ snapshot[i].update(this); }
+
+    // cull dead
+    this.organisms = this.organisms.filter(o=>o.alive);
+    if(this.organisms.length===0){
+      // repopulate a small seed so the classroom demo doesn't hard-stop
+      for(let i=0;i<20;i++){
+        this.organisms.push(new Organism(rand(200,WORLD_W-200), rand(200,WORLD_H-200), new Genome(), 0, null));
+      }
+      this.lastEventMessage = "Population collapsed — reseeding a founder group";
+      this.lowPopTimer = 0;
+    } else if(this.organisms.length <= 2){
+      // Sexual reproduction needs two — a population of 1-2 survivors sitting in
+      // a huge sparse world isn't really "recovering," it's a dead end waiting
+      // to happen. Give it a grace period to find each other, then reseed.
+      this.lowPopTimer = (this.lowPopTimer||0) + 1;
+      if(this.lowPopTimer > 400){
+        for(let i=0;i<18;i++){
+          this.organisms.push(new Organism(rand(200,WORLD_W-200), rand(200,WORLD_H-200), new Genome(), 0, null));
+        }
+        this.lastEventMessage = "Population too sparse to find mates — introducing new founders";
+        this.lowPopTimer = 0;
+      }
+    } else {
+      this.lowPopTimer = 0;
+    }
+    if(this.organisms.length>ORGANISM_CAP){
+      this.organisms.sort((a,b)=>a.energy-b.energy);
+      this.organisms.splice(0, this.organisms.length-ORGANISM_CAP);
+    }
+
+    // effects lifecycle
+    this.effects = this.effects.filter(e=>{ e.life--; return e.life>0; });
+    if(this.effects.length > MAX_EFFECTS){
+      this.effects.splice(0, this.effects.length - MAX_EFFECTS); // drop the oldest first
+    }
+  }
+
+  stats(){
+    const alive = this.organisms;
+    const n = alive.length || 1;
+    let sumLife=0,sumSpeed=0,sumVision=0,sumSize=0,sumMetab=0,sumCarnivory=0,sumOrnament=0,oldest=0,maxGen=0,hunters=0;
+    for(const o of alive){
+      sumLife += o.genome.values.lifespan;
+      sumSpeed += o.genome.values.speed;
+      sumVision += o.genome.values.visionRadius;
+      sumSize += o.genome.values.bodySize;
+      sumMetab += o.genome.values.metabolism;
+      sumCarnivory += o.genome.values.carnivory;
+      sumOrnament += o.genome.values.ornamentSize;
+      if(o.genome.values.carnivory > CARNIVORE_THRESHOLD) hunters++;
+      if(o.age>oldest) oldest=o.age;
+      if(o.generation>maxGen) maxGen=o.generation;
+    }
+    return {
+      population: alive.length,
+      food: this.food.length,
+      avgLifespan: sumLife/n,
+      avgSpeed: sumSpeed/n,
+      avgVision: sumVision/n,
+      avgBodySize: sumSize/n,
+      avgMetabolism: sumMetab/n,
+      avgCarnivory: sumCarnivory/n,
+      avgOrnament: sumOrnament/n,
+      hunters,
+      season: SEASONS[this.seasonIndex].name,
+      seasonStepsLeft: this.seasonTimer,
+      oldest, generation: maxGen,
+      births: this.births, deaths: this.deaths
+    };
+  }
+}
+
+/* =========================================================================
+   GRAPH
+   ========================================================================= */
+class Graph {
+  constructor(canvas, color, label, getter, unit){
+    this.canvas = canvas; this.ctx = canvas.getContext("2d");
+    this.color = color; this.label = label; this.getter = getter; this.unit = unit||"";
+    this.data = [];
+    this.maxPoints = 240;
+  }
+  push(sample){
+    this.data.push(this.getter(sample));
+    if(this.data.length>this.maxPoints) this.data.shift();
+  }
+  resize(){
+    const c = this.canvas;
+    const rect = c.getBoundingClientRect();
+    const dpr = window.devicePixelRatio||1;
+    c.width = Math.max(50,rect.width)*dpr;
+    c.height = Math.max(50,rect.height)*dpr;
+    this.ctx.setTransform(dpr,0,0,dpr,0,0);
+    this._w = rect.width; this._h = rect.height;
+  }
+  draw(){
+    const ctx=this.ctx, w=this._w||this.canvas.clientWidth, h=this._h||this.canvas.clientHeight;
+    ctx.clearRect(0,0,w,h);
+    if(this.data.length<2) return;
+    let min=Infinity,max=-Infinity;
+    for(const v of this.data){ if(v<min)min=v; if(v>max)max=v; }
+    if(min===max){ min-=1; max+=1; }
+    const pad = (max-min)*0.12;
+    min-=pad; max+=pad;
+    ctx.beginPath();
+    ctx.strokeStyle = this.color;
+    ctx.lineWidth = 1.6;
+    for(let i=0;i<this.data.length;i++){
+      const x = (i/(this.maxPoints-1))*w;
+      const y = h - ((this.data[i]-min)/(max-min))*h;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    // soft fill
+    ctx.lineTo(((this.data.length-1)/(this.maxPoints-1))*w, h);
+    ctx.lineTo(0,h);
+    ctx.closePath();
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}
+
+/* =========================================================================
+   SIMULATION + RENDER + UI
+   ========================================================================= */
+const world = new World();
+
+const canvas = document.getElementById("world");
+const ctx = canvas.getContext("2d");
+const canvasWrap = document.getElementById("canvasWrap");
+
+let camera = { x: WORLD_W/2, y: WORLD_H/2, scale: 1 };
+function fitCamera(){
+  const rect = canvasWrap.getBoundingClientRect();
+  camera.scale = Math.min(rect.width/WORLD_W, rect.height/WORLD_H) * 0.95;
+  camera.x = WORLD_W/2; camera.y = WORLD_H/2;
+}
+
+function resizeCanvas(){
+  const rect = canvasWrap.getBoundingClientRect();
+  const dpr = window.devicePixelRatio||1;
+  canvas.width = rect.width*dpr; canvas.height = rect.height*dpr;
+  canvas.style.width = rect.width+"px"; canvas.style.height = rect.height+"px";
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  canvas._cw = rect.width; canvas._ch = rect.height;
+}
+
+function worldToScreen(x,y){
+  return {
+    sx: (x-camera.x)*camera.scale + canvas._cw/2,
+    sy: (y-camera.y)*camera.scale + canvas._ch/2
+  };
+}
+function screenToWorld(sx,sy){
+  return {
+    x: (sx-canvas._cw/2)/camera.scale + camera.x,
+    y: (sy-canvas._ch/2)/camera.scale + camera.y
+  };
+}
+
+/* ---- Pan & Zoom ---- */
+let dragging=false, dragStart=null, camStart=null;
+canvasWrap.addEventListener("mousedown", e=>{
+  dragging=true; dragStart={x:e.clientX,y:e.clientY}; camStart={x:camera.x,y:camera.y};
+  canvasWrap.classList.add("dragging");
+});
+window.addEventListener("mouseup", ()=>{ dragging=false; canvasWrap.classList.remove("dragging"); });
+window.addEventListener("mousemove", e=>{
+  if(!dragging) return;
+  const dx=(e.clientX-dragStart.x)/camera.scale, dy=(e.clientY-dragStart.y)/camera.scale;
+  camera.x = clamp(camStart.x-dx, 0, WORLD_W);
+  camera.y = clamp(camStart.y-dy, 0, WORLD_H);
+});
+canvasWrap.addEventListener("wheel", e=>{
+  e.preventDefault();
+  const factor = e.deltaY<0 ? 1.1 : 0.9;
+  camera.scale = clamp(camera.scale*factor, 0.15, 3.5);
+  document.getElementById("zoomLabel").textContent = "zoom " + Math.round(camera.scale*100/ (Math.min(canvasWrap.clientWidth/WORLD_W, canvasWrap.clientHeight/WORLD_H)*0.95*100/100)) + "%";
+  document.getElementById("zoomLabel").textContent = "zoom " + Math.round(camera.scale*100)/100 + "×";
+},{passive:false});
+
+let clickMoved=false;
+canvasWrap.addEventListener("mousedown", ()=>{ clickMoved=false; });
+canvasWrap.addEventListener("mousemove", e=>{ if(dragging) clickMoved=true; });
+canvasWrap.addEventListener("click", e=>{
+  if(clickMoved) return;
+  const rect = canvas.getBoundingClientRect();
+  const {x,y} = screenToWorld(e.clientX-rect.left, e.clientY-rect.top);
+  let best=null, bestD2=Infinity;
+  for(const o of world.organisms){
+    const d2 = dist2(x,y,o.x,o.y);
+    const pickR = Math.max(14, o.genome.values.bodySize+10)/camera.scale;
+    if(d2 < pickR*pickR && d2<bestD2){ bestD2=d2; best=o; }
+  }
+  world.selected = best;
+  if(best) best.pathPoints = [];
+});
+
+/* ---- Drawing ---- */
+function drawBackground(){
+  ctx.fillStyle = "#0d1714";
+  ctx.fillRect(0,0,canvas._cw,canvas._ch);
+
+  // Terrain zones — soft color regions organisms can camouflage against.
+  // Drawn faint enough to read as "background," not decoration.
+  const cellW = WORLD_W/world.biomeCols, cellH = WORLD_H/world.biomeRows;
+  for(let r=0;r<world.biomeRows;r++){
+    for(let c=0;c<world.biomeCols;c++){
+      const wx = c*cellW, wy = r*cellH;
+      const tl = worldToScreen(wx,wy), br = worldToScreen(wx+cellW,wy+cellH);
+      if(br.sx<0||tl.sx>canvas._cw||br.sy<0||tl.sy>canvas._ch) continue;
+      ctx.fillStyle = `hsla(${world.biomeGrid[r][c].hue},45%,32%,0.16)`;
+      ctx.fillRect(tl.sx,tl.sy,br.sx-tl.sx,br.sy-tl.sy);
+    }
+  }
+
+  // subtle dot grid across visible world
+  const topLeft = screenToWorld(0,0), botRight = screenToWorld(canvas._cw,canvas._ch);
+  const spacing = 160;
+  const startX = Math.floor(topLeft.x/spacing)*spacing;
+  const startY = Math.floor(topLeft.y/spacing)*spacing;
+  ctx.fillStyle = "rgba(143,185,150,0.10)";
+  for(let wx=startX; wx<botRight.x; wx+=spacing){
+    for(let wy=startY; wy<botRight.y; wy+=spacing){
+      const {sx,sy} = worldToScreen(wx,wy);
+      ctx.beginPath(); ctx.arc(sx,sy,1.4,0,Math.PI*2); ctx.fill();
+    }
+  }
+  // world boundary
+  const tl = worldToScreen(0,0), br = worldToScreen(WORLD_W,WORLD_H);
+  ctx.strokeStyle = "rgba(143,185,150,0.35)";
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(tl.sx,tl.sy,br.sx-tl.sx,br.sy-tl.sy);
+}
+
+function drawRocks(){
+  for(const r of world.rocks){
+    const {sx,sy} = worldToScreen(r.x,r.y);
+    const rad = r.radius*camera.scale;
+    if(sx<-rad||sx>canvas._cw+rad||sy<-rad||sy>canvas._ch+rad) continue;
+    ctx.beginPath();
+    ctx.arc(sx,sy,rad,0,Math.PI*2);
+    ctx.fillStyle = "#243b34";
+    ctx.fill();
+    ctx.strokeStyle = "#345248";
+    ctx.lineWidth=1.5;
+    ctx.stroke();
+  }
+}
+
+function drawFood(){
+  for(const f of world.food){
+    const {sx,sy} = worldToScreen(f.x,f.y);
+    if(sx<-8||sx>canvas._cw+8||sy<-8||sy>canvas._ch+8) continue;
+    if(f.type==="rich"){
+      const r = 5*Math.max(0.5,camera.scale);
+      ctx.beginPath();
+      ctx.arc(sx,sy,r,0,Math.PI*2);
+      ctx.fillStyle = "#e0a458";
+      ctx.globalAlpha = 0.95;
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,220,160,0.6)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    } else {
+      const r = 3.4*Math.max(0.5,camera.scale);
+      ctx.beginPath();
+      ctx.arc(sx,sy,r,0,Math.PI*2);
+      ctx.fillStyle = "#a9d6a0";
+      ctx.globalAlpha = 0.9;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+}
+
+function drawOrganism(o){
+  const {sx,sy} = worldToScreen(o.x,o.y);
+  const g = o.genome.values;
+  const size = Math.max(2.2, g.bodySize*0.9) * camera.scale;
+  if(sx<-30||sx>canvas._cw+30||sy<-30||sy>canvas._ch+30) return;
+
+  const hue = g.colorHue;
+  const isSel = world.selected===o;
+  const isHunter = g.carnivory > CARNIVORE_THRESHOLD;
+
+  if(isSel){
+    // vision radius
+    const visR = g.visionRadius*camera.scale;
+    ctx.beginPath();
+    ctx.setLineDash([4,5]);
+    ctx.arc(sx,sy,visR,0,Math.PI*2);
+    ctx.strokeStyle = "rgba(127,185,204,0.55)";
+    ctx.lineWidth=1;
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // path trail
+    if(o.pathPoints.length>1){
+      ctx.beginPath();
+      for(let i=0;i<o.pathPoints.length;i++){
+        const p = worldToScreen(o.pathPoints[i].x,o.pathPoints[i].y);
+        if(i===0) ctx.moveTo(p.sx,p.sy); else ctx.lineTo(p.sx,p.sy);
+      }
+      ctx.strokeStyle = `hsla(${hue},70%,70%,0.5)`;
+      ctx.lineWidth=1.4;
+      ctx.stroke();
+    }
+    // highlight ring
+    ctx.beginPath();
+    ctx.arc(sx,sy,size+5,0,Math.PI*2);
+    ctx.strokeStyle = "#e0a458";
+    ctx.lineWidth=1.6;
+    ctx.stroke();
+  }
+
+  // Ready-to-mate glow: a soft pulsing ring, drawn before the body so it sits
+  // behind it — a quiet visual cue independent of the louder selection ring.
+  if(o.wantsToMate){
+    const pulse = 0.55 + 0.25*Math.sin(world.frame*0.15 + o.id);
+    ctx.beginPath();
+    ctx.arc(sx,sy,size+3,0,Math.PI*2);
+    ctx.strokeStyle = `rgba(217,140,190,${pulse*0.5})`;
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+  }
+
+  ctx.save();
+  ctx.translate(sx,sy);
+  ctx.rotate(o.angle);
+
+  // Ornament: a trailing display plume behind the body, length scaled by the
+  // ornamentSize gene — costly, purely decorative, and exactly the kind of
+  // trait sexual selection can run away with.
+  if(g.ornamentSize > 0.05){
+    const plumeLen = size * (1.2 + g.ornamentSize*2.2);
+    const plumeSpread = size * (0.4 + g.ornamentSize*0.5);
+    ctx.beginPath();
+    ctx.moveTo(-size*0.6, 0);
+    ctx.quadraticCurveTo(-size*1.4, plumeSpread, -plumeLen, plumeSpread*0.4);
+    ctx.quadraticCurveTo(-size*1.4, -plumeSpread, -size*0.6, 0);
+    ctx.closePath();
+    ctx.fillStyle = `hsla(${hue}, 90%, 75%, ${0.35+g.ornamentSize*0.35})`;
+    ctx.fill();
+  }
+
+  // Body: elongation scales with the speed gene — a streamlined silhouette for
+  // fast organisms, a stubbier one for slow ones. Hunters additionally get a
+  // sharper, spiked shape so they read as predators independent of hue.
+  const speedFrac = clamp((g.speed-0.6)/(3.2-0.6), 0, 1);
+  const nose = size * (1.2 + speedFrac*1.1);
+  ctx.beginPath();
+  if(isHunter){
+    ctx.moveTo(nose*1.4,0);
+    ctx.lineTo(-size*0.7, size*0.7);
+    ctx.lineTo(-size*0.3, 0);
+    ctx.lineTo(-size*0.7, -size*0.7);
+  } else {
+    ctx.moveTo(nose,0);
+    ctx.lineTo(-size*0.9, size*0.9);
+    ctx.lineTo(-size*0.9, -size*0.9);
+  }
+  ctx.closePath();
+  const energyFrac = clamp(o.energy/MAX_ENERGY,0,1);
+  ctx.fillStyle = `hsl(${hue}, 88%, ${52+energyFrac*24}%)`;
+  ctx.fill();
+  ctx.strokeStyle = isHunter ? "#e5453a" : `hsl(${hue}, 70%, 22%)`;
+  ctx.lineWidth = isHunter ? 1.6 : 1.2;
+  ctx.stroke();
+
+  // Eye: size scales with the visionRadius gene — a small, legible way to see
+  // "this one can see far" without opening the specimen panel.
+  const eyeR = clamp(size*0.12 + (g.visionRadius/GENES.visionRadius.max)*size*0.22, 0.6, size*0.4);
+  ctx.beginPath();
+  ctx.arc(nose*0.35, 0, eyeR, 0, Math.PI*2);
+  ctx.fillStyle = "rgba(15,25,22,0.85)";
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawEffects(){
+  for(const e of world.effects){
+    const t = e.life/e.maxLife;
+    if(e.type==="eat"){
+      const {sx,sy} = worldToScreen(e.data.x,e.data.y);
+      ctx.beginPath();
+      ctx.arc(sx,sy,(1-t)*10*camera.scale+2,0,Math.PI*2);
+      ctx.strokeStyle = `rgba(169,214,160,${t})`;
+      ctx.lineWidth=1.5; ctx.stroke();
+    } else if(e.type==="death"){
+      const {sx,sy} = worldToScreen(e.data.x,e.data.y);
+      const r = (1-t)*16*camera.scale+2;
+      if(e.data.cause==="predator" || e.data.cause==="predation"){
+        // sharp red impact flash — makes predator strikes obvious even in a crowd
+        ctx.beginPath();
+        ctx.arc(sx,sy,r*0.7,0,Math.PI*2);
+        ctx.fillStyle = `rgba(217,60,50,${t*0.55})`;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(sx,sy,r*1.3,0,Math.PI*2);
+        ctx.strokeStyle = `rgba(217,60,50,${t})`;
+        ctx.lineWidth=2; ctx.stroke();
+      } else if(e.data.cause==="disease"){
+        ctx.beginPath();
+        ctx.arc(sx,sy,r,0,Math.PI*2);
+        ctx.strokeStyle = `rgba(196,199,64,${t*0.9})`;
+        ctx.lineWidth=2; ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.arc(sx,sy,r,0,Math.PI*2);
+        ctx.strokeStyle = `rgba(200,200,200,${t*0.7})`;
+        ctx.lineWidth=1.5; ctx.stroke();
+      }
+    } else if(e.type==="birth"){
+      const {sx,sy} = worldToScreen(e.data.x,e.data.y);
+      ctx.beginPath();
+      ctx.arc(sx,sy,(1-t)*14*camera.scale+2,0,Math.PI*2);
+      ctx.strokeStyle = `hsla(${e.data.hue},70%,70%,${t})`;
+      ctx.lineWidth=1.5; ctx.stroke();
+    } else if(e.type==="lineage"){
+      const p1 = worldToScreen(e.data.x1,e.data.y1);
+      const p2 = worldToScreen(e.data.x2,e.data.y2);
+      ctx.beginPath();
+      ctx.moveTo(p1.sx,p1.sy); ctx.lineTo(p2.sx,p2.sy);
+      ctx.strokeStyle = `rgba(224,164,88,${t*0.7})`;
+      ctx.lineWidth=1;
+      ctx.stroke();
+    } else if(e.type==="mutation"){
+      const {sx,sy} = worldToScreen(e.data.x,e.data.y);
+      const riseOffset = (1-t)*22;
+      ctx.globalAlpha = clamp(t*1.4,0,1);
+      ctx.font = "10px " + getComputedStyle(document.body).fontFamily;
+      ctx.fillStyle = "#e0a458";
+      ctx.textAlign = "center";
+      const label = GENES[e.data.key] ? GENES[e.data.key].label : e.data.key;
+      ctx.fillText("Mutation! " + label, sx, sy-riseOffset-14);
+      ctx.fillStyle = "#cfe6d6";
+      ctx.font = "9px " + getComputedStyle(document.body).fontFamily;
+      const b = e.data.before.toFixed(2), a = e.data.after.toFixed(2);
+      ctx.fillText(b + "  →  " + a, sx, sy-riseOffset-3);
+      ctx.globalAlpha = 1;
+      ctx.textAlign = "start";
+    }
+  }
+}
+
+function render(){
+  drawBackground();
+  drawRocks();
+  drawFood();
+  for(const o of world.organisms) drawOrganism(o);
+  drawEffects();
+}
+
+/* ---- Right panel: specimen inspector ---- */
+function updateSpecimenPanel(){
+  const box = document.getElementById("specimenBox");
+  const o = world.selected;
+  if(!o || !o.alive){
+    if(o && !o.alive){
+      const causeText = o.deathCause==="predation" ? "killed by a predator" : (o.deathCause||"unknown cause");
+      box.innerHTML = `<div class="specimen-empty">This organism has died (${causeText}).<br>Click another to inspect.</div>`;
+      world.selected = null;
+    } else {
+      box.innerHTML = `<div class="specimen-empty">No organism selected.<br>Click one in the world to see its genome and life history.</div>`;
+    }
+    return;
+  }
+  const g = o.genome.values;
+  const role = g.carnivory > CARNIVORE_THRESHOLD ? "Predator" : "Herbivore";
+  let genesHtml = "";
+  for(const k of GENE_KEYS){
+    if(k==="colorHue") continue;
+    const r = GENES[k];
+    const pct = clamp((g[k]-r.min)/(r.max-r.min),0,1)*100;
+    genesHtml += `<div class="gene-bar-wrap">
+      <div class="gene-bar-label"><span>${r.label}</span><span>${g[k].toFixed(2)}</span></div>
+      <div class="gene-bar-track"><div class="gene-bar-fill" style="width:${pct}%;background:hsl(${g.colorHue},60%,60%)"></div></div>
+    </div>`;
+  }
+  box.innerHTML = `
+    <div class="specimen-card">
+      <div style="margin-bottom:8px;font-family:var(--font-mono);font-size:12px;">
+        <span class="swatch" style="background:hsl(${g.colorHue},62%,55%)"></span>
+        Organism #${o.id} <span style="color:var(--muted)">· gen ${o.generation} · ${role}</span>
+      </div>
+      <div class="stat-row"><span class="k">Age</span><span class="v">${o.age} steps</span></div>
+      <div class="stat-row"><span class="k">Energy</span><span class="v">${o.energy.toFixed(1)} / ${MAX_ENERGY}</span></div>
+      <div class="stat-row"><span class="k">Children</span><span class="v">${o.childrenCount}</span></div>
+      <div class="stat-row"><span class="k">Distance traveled</span><span class="v">${o.distanceTraveled.toFixed(0)}</span></div>
+      <div class="stat-row"><span class="k">Food eaten</span><span class="v">${o.foodEaten}</span></div>
+      <div class="stat-row"><span class="k">Prey eaten</span><span class="v">${o.preyEaten}</span></div>
+      <div style="margin-top:10px;">${genesHtml}</div>
+    </div>
+  `;
+}
+
+/* ---- Left panel stats ---- */
+function updateStatsPanel(){
+  const s = world.stats();
+  document.getElementById("statGen").textContent = s.generation;
+  document.getElementById("statSeason").textContent = `${s.season} (${Math.ceil(s.seasonStepsLeft/60)}s left @1×)`;
+  document.getElementById("statPop").textContent = s.population;
+  document.getElementById("statPredators").textContent = `${s.hunters} (${((s.hunters/Math.max(1,s.population))*100).toFixed(0)}%)`;
+  document.getElementById("statFood").textContent = s.food;
+  document.getElementById("statAvgLife").textContent = s.avgLifespan.toFixed(0);
+  document.getElementById("statAvgSpeed").textContent = s.avgSpeed.toFixed(2);
+  document.getElementById("statAvgVision").textContent = s.avgVision.toFixed(0);
+  document.getElementById("statOldest").textContent = s.oldest;
+  document.getElementById("statBirths").textContent = s.births;
+  document.getElementById("statDeaths").textContent = s.deaths;
+  return s;
+}
+
+/* ---- Event banner ---- */
+let bannerTimeout=null;
+function showBanner(msg){
+  if(!msg) return;
+  const el = document.getElementById("eventBanner");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(bannerTimeout);
+  bannerTimeout = setTimeout(()=>el.classList.remove("show"), 4200);
+}
+
+/* ---- Glossary ---- */
+const GLOSSARY = [
+  {term:"Mutation", def:"A small, random change to an inherited trait when an offspring is created. Most mutations are minor; they are never a full reshuffle of the genome."},
+  {term:"Inheritance", def:"Reproduction is sexual: each offspring gets every trait from one parent or the other, then mutation can nudge it further. No creature is a clone of a single parent."},
+  {term:"Natural Selection", def:"There is no fitness score anywhere in this code. Organisms that survive longer simply get more chances to reproduce — fitness emerges from outcomes, not design."},
+  {term:"Sexual Selection", def:"Organisms with a bigger ornament are more likely to be chosen as mates by partners with a strong mate preference — even though the ornament itself costs energy and offers no survival benefit."},
+  {term:"Competition", def:"Food is limited and organisms crowd around it. Traits that find food faster or waste less energy searching are more likely to leave offspring."},
+  {term:"Predation", def:"Some organisms evolve carnivory and hunt others instead of eating plants. This creates an arms race: prey with better vision spot threats sooner, and prey with more speed outrun them."},
+  {term:"Camouflage", def:"An organism whose color matches its local terrain zone is harder to spot — its effective detection range shrinks for anyone hunting or fleeing it."},
+  {term:"Schooling", def:"Organisms with a strong schooling drive cluster with similarly colored neighbors. A prey animal surrounded by a group is genuinely harder for a predator to lock onto."},
+  {term:"Adaptation", def:"Over many generations, average trait values drift toward whatever works in the current environment — watch the graphs below shift after an event."},
+  {term:"Population", def:"The number of living organisms right now. Watch it rise and crash as food, weather events, and reproduction interact."},
+  {term:"Genetic Variation", def:"No two organisms have identical genomes. This variety is the raw material selection acts on — without it, nothing could adapt."}
+];
+function buildGlossary(){
+  const el = document.getElementById("glossary");
+  el.innerHTML = "";
+  const header = document.createElement("p");
+  header.className="panel-title";
+  header.textContent="Concept Glossary";
+  el.appendChild(header);
+  for(const g of GLOSSARY){
+    const div = document.createElement("div");
+    div.className="gterm";
+    div.innerHTML = `<b>${g.term}</b><p>${g.def}</p>`;
+    el.appendChild(div);
+  }
+}
+let overlayOn = false;
+function setOverlay(on){
+  overlayOn = on;
+  world.showMutationLabels = on;
+  document.getElementById("btnOverlay").classList.toggle("active", on);
+  document.getElementById("glossary").style.display = on ? "block":"none";
+  document.querySelectorAll(".stat-row .learn").forEach(elm=>{
+    const term = GLOSSARY.find(g=>g.term.toLowerCase().startsWith(elm.dataset.term));
+    elm.title = on && term ? term.def : "";
+  });
+}
+
+/* ---- Graphs ---- */
+const graphDefs = [
+  {key:"population", label:"Population", color:"#8fbf96", getter:s=>s.population},
+  {key:"avgLifespan", label:"Avg Lifespan", color:"#e0a458", getter:s=>s.avgLifespan},
+  {key:"avgSpeed", label:"Avg Speed", color:"#7fb9cc", getter:s=>s.avgSpeed},
+  {key:"avgBodySize", label:"Avg Body Size", color:"#dd8272", getter:s=>s.avgBodySize},
+  {key:"avgVision", label:"Avg Vision Radius", color:"#b192c9", getter:s=>s.avgVision},
+  {key:"avgMetabolism", label:"Avg Metabolism", color:"#e9d17f", getter:s=>s.avgMetabolism},
+  {key:"avgCarnivory", label:"Avg Carnivory", color:"#e5453a", getter:s=>s.avgCarnivory}
+];
+const graphs = [];
+function buildGraphPanel(){
+  const panel = document.getElementById("graphsPanel");
+  panel.innerHTML = "";
+  for(const gd of graphDefs){
+    const cell = document.createElement("div");
+    cell.className = "graph-cell";
+    cell.innerHTML = `<span class="gtitle">${gd.label}</span><span class="gval" id="gval-${gd.key}">0</span>
+      <canvas class="graphcanvas" id="graph-${gd.key}"></canvas>`;
+    panel.appendChild(cell);
+    const canvasEl = cell.querySelector("canvas");
+    const g = new Graph(canvasEl, gd.color, gd.label, gd.getter);
+    g.resize();
+    graphs.push({def:gd, graph:g, valEl:cell.querySelector(".gval")});
+  }
+}
+let sampleTimer = 0;
+function maybeSampleGraphs(s){
+  sampleTimer++;
+  if(sampleTimer % 12 !== 0) return;
+  for(const g of graphs){
+    g.graph.push(s);
+    g.valEl.textContent = g.def.getter(s).toFixed(1);
+    g.graph.draw();
+  }
+}
+
+/* ---- Field report: what changed since the founding population ---- */
+function pctChange(before,after){
+  const denom = Math.abs(before) < 0.001 ? 0.001 : Math.abs(before);
+  return ((after-before)/denom)*100;
+}
+function buildReportHTML(){
+  const base = world.baseline.averages;
+  const cur = computeGeneAverages(world.organisms);
+  const s = world.stats();
+
+  // find the trait that shifted the most, for the narrative lead
+  let biggestKey=null, biggestPct=-1;
+  for(const k of GENE_KEYS){
+    if(k==="colorHue") continue;
+    const p = Math.abs(pctChange(base[k],cur[k]));
+    if(p>biggestPct){ biggestPct=p; biggestKey=k; }
+  }
+  const biggestLabel = biggestKey ? GENES[biggestKey].label : "—";
+  const biggestDir = biggestKey && cur[biggestKey]>base[biggestKey] ? "risen" : "fallen";
+
+  const popChangeTxt = s.population>world.baseline.population ? "grown" : (s.population<world.baseline.population ? "shrunk" : "held steady");
+  const predatorTxt = s.hunters>0
+    ? `${s.hunters} of ${s.population} living organisms (${((s.hunters/Math.max(1,s.population))*100).toFixed(0)}%) now carry enough carnivory to hunt.`
+    : `No organism currently carries enough carnivory to hunt — the population is entirely plant-eating.`;
+
+  const narrative = `Since the founding population of ${world.baseline.population}, the ecosystem has run for
+    ${s.generation} generations and the population has ${popChangeTxt} to ${s.population}.
+    The trait that shifted the most is <b>${biggestLabel}</b>, which has ${biggestDir}
+    ${Math.abs(biggestPct).toFixed(0)}% from its starting average. ${predatorTxt}`;
+
+  let geneRows = "";
+  for(const k of GENE_KEYS){
+    if(k==="colorHue") continue;
+    const b=base[k], c=cur[k];
+    const pct = pctChange(b,c);
+    const cls = pct>4 ? "up" : (pct< -4 ? "down" : "");
+    const arrow = pct>4 ? "▲" : (pct< -4 ? "▼" : "≈");
+    geneRows += `<div class="report-gene-row">
+      <span class="rk">${GENES[k].label}</span>
+      <span class="rv ${cls}">${b.toFixed(2)} → ${c.toFixed(2)} ${arrow} ${pct>=0?"+":""}${pct.toFixed(0)}%</span>
+    </div>`;
+  }
+
+  let logHtml = "";
+  if(world.eventLog.length===0){
+    logHtml = `<div class="report-log-item">No environmental events were triggered this run.</div>`;
+  } else {
+    for(const e of world.eventLog.slice(-8)){
+      logHtml += `<div class="report-log-item"><b>Gen ${e.generation}</b> — ${e.msg}</div>`;
+    }
+  }
+
+  return `
+    <p class="report-title">Field Report</p>
+    <p class="report-sub">Generation ${s.generation} · ${s.births} births · ${s.deaths} deaths · oldest living organism: ${s.oldest} steps</p>
+    <div class="report-narrative">${narrative}</div>
+    <p class="report-section-title">Trait Drift (founding average → now)</p>
+    ${geneRows}
+    <p class="report-section-title">Events During This Run</p>
+    ${logHtml}
+  `;
+}
+function showReport(){
+  document.getElementById("reportBody").innerHTML = buildReportHTML();
+  document.getElementById("reportOverlay").classList.add("show");
+}
+function hideReport(){
+  document.getElementById("reportOverlay").classList.remove("show");
+}
+document.getElementById("reportClose").addEventListener("click", hideReport);
+
+/* ---- Controls wiring ---- */
+let paused = false;
+let simSpeed = 1;
+
+document.getElementById("btnPause").addEventListener("click", (e)=>{
+  paused = !paused;
+  e.target.textContent = paused ? "Resume" : "Pause";
+  e.target.classList.toggle("active", paused);
+  if(paused){ showReport(); } else { hideReport(); }
+});
+document.getElementById("btnRestart").addEventListener("click", ()=>{
+  const fresh = new World();
+  Object.assign(world, fresh);
+  world.selected = null;
+  fitCamera();
+  hideReport();
+});
+document.querySelectorAll(".speedBtn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".speedBtn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    simSpeed = parseInt(btn.dataset.speed,10);
+  });
+});
+document.getElementById("btnAddFood").addEventListener("click", ()=>world.addFoodBatch(50));
+document.getElementById("btnRemoveFood").addEventListener("click", ()=>world.removeFoodBatch(50));
+document.getElementById("evDrought").addEventListener("click", ()=>showBanner(world.triggerEvent("drought")));
+document.getElementById("evBoom").addEventListener("click", ()=>showBanner(world.triggerEvent("boom")));
+document.getElementById("evWinter").addEventListener("click", ()=>showBanner(world.triggerEvent("winter")));
+document.getElementById("evPredator").addEventListener("click", ()=>showBanner(world.triggerEvent("predator")));
+document.getElementById("evDisease").addEventListener("click", ()=>showBanner(world.triggerEvent("disease")));
+document.getElementById("evRandom").addEventListener("click", ()=>showBanner(world.triggerRandomCatastrophe()));
+document.getElementById("btnOverlay").addEventListener("click", ()=>setOverlay(!overlayOn));
+
+/* ---- Main loop ---- */
+function loop(){
+  if(!paused){
+    for(let i=0;i<simSpeed;i++) world.step();
+  }
+  render();
+  const s = updateStatsPanel();
+  updateSpecimenPanel();
+  maybeSampleGraphs(s);
+  if(world.lastEventMessage && world.lastEventMessage !== window._lastShown){
+    window._lastShown = world.lastEventMessage;
+    showBanner(world.lastEventMessage);
+  }
+  requestAnimationFrame(loop);
+}
+
+/* ---- Init ---- */
+function init(){
+  buildGlossary();
+  setOverlay(false);
+  buildGraphPanel();
+  resizeCanvas();
+  fitCamera();
+  window.addEventListener("resize", ()=>{ resizeCanvas(); graphs.forEach(g=>g.graph.resize()); });
+  requestAnimationFrame(loop);
+}
+init();
+
+})();
+</script>
+</body>
+</html>
