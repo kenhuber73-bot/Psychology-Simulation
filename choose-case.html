@@ -33,15 +33,61 @@
     border-bottom:1px dashed #C7B78E;
   }
   .section-header:first-of-type{margin-top:22px;}
+  .cat-nav{
+    position:sticky; top:12px; z-index:20;
+    background:#FBF7EC; border:1px solid #2B2A25; border-radius:8px;
+    padding:10px 14px; margin-bottom:18px;
+    box-shadow:3px 3px 0 rgba(43,42,37,0.1);
+    display:flex; align-items:center; gap:10px;
+  }
+  .cat-nav-label{font-family:'Courier New', monospace; font-size:0.78rem; color:#5C5648; white-space:nowrap;}
+  .cat-nav-select-wrap{position:relative; flex:1;}
+  .cat-nav-btn{
+    width:100%; text-align:left; font-family:system-ui, sans-serif; font-size:0.9rem;
+    background:#F1E9D2; border:1px solid #2B2A25; border-radius:6px;
+    padding:8px 30px 8px 10px; cursor:pointer; color:#2B2A25;
+  }
+  .cat-nav-btn::after{
+    content:"▾"; position:absolute; right:12px; top:50%; transform:translateY(-50%);
+    pointer-events:none; color:#5C5648;
+  }
+  .cat-nav-menu{
+    display:none; position:absolute; top:calc(100% + 4px); left:0; right:0;
+    background:#FBF7EC; border:1px solid #2B2A25; border-radius:6px;
+    box-shadow:3px 3px 0 rgba(43,42,37,0.1); overflow:hidden;
+  }
+  .cat-nav-menu button{
+    display:block; width:100%; text-align:left; font-family:system-ui, sans-serif;
+    font-size:0.88rem; background:none; border:none; padding:9px 12px; cursor:pointer;
+    color:#2B2A25; border-bottom:1px dashed #C7B78E;
+  }
+  .cat-nav-menu button:last-child{border-bottom:none;}
+  .cat-nav-menu button:hover{background:#F1E9D2;}
 </style>
 </head>
 <body>
-  <div class="wrap">
+  <div class="wrap" id="top">
     <div class="banner" id="session-banner">Loading...</div>
     <h1>Choose an Activity</h1>
     <p>Pick a diagnostic interview to work through, or a live experiment to try.</p>
 
-    <div class="section-header">Case Studies</div>
+    <div class="cat-nav">
+      <span class="cat-nav-label">Jump to</span>
+      <div class="cat-nav-select-wrap">
+        <button class="cat-nav-btn" id="catNavBtn" type="button">All activities</button>
+        <div class="cat-nav-menu" id="catNavMenu">
+          <button data-target="top" type="button">All activities</button>
+          <button data-target="cat-case-studies" type="button">Case Studies</button>
+          <button data-target="cat-experiments" type="button">Experiments</button>
+          <button data-target="cat-neuroscience" type="button">Neuroscience</button>
+          <button data-target="cat-biology" type="button">Biology</button>
+          <button data-target="cat-psych-tests" type="button">Psychological Tests</button>
+          <button data-target="cat-research" type="button">Research Studies</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header" id="cat-case-studies">Case Studies</div>
 
     <div class="case-card" data-case="jordan_gad_mdd_v1">
       <div class="case-title">Jordan R. — Anxiety vs. Depression</div>
@@ -58,7 +104,7 @@
       <div class="case-desc">A 17-year-old referred for persistent low mood. Interview to distinguish Persistent Depressive Disorder from Major Depressive Disorder and Bipolar Disorder.</div>
     </div>
 
-    <div class="section-header">Experiments</div>
+    <div class="section-header" id="cat-experiments">Experiments</div>
 
     <div class="case-card" id="stroop-card" style="border-style:dashed;">
       <div class="case-title">Stroop Task — Live Experiment</div>
@@ -85,7 +131,7 @@
       <div class="case-desc">Learn UCS, UCR, CS, and CR, apply them to your own dog experiment, then explain how someone might develop social anxiety this way.</div>
     </div>
 
-    <div class="section-header">Neuroscience</div>
+    <div class="section-header" id="cat-neuroscience">Neuroscience</div>
 
     <div class="case-card" id="neurotransmitters-card" style="border-style:dashed;">
       <div class="case-title">Inside the Synapse — SSRI vs. Benzodiazepine</div>
@@ -97,14 +143,14 @@
       <div class="case-desc">Watch how typical and atypical antipsychotics act differently at the synapse, test yourself on telling them apart, read about each, then explain the difference.</div>
     </div>
 
-    <div class="section-header">Biology</div>
+    <div class="section-header" id="cat-biology">Biology</div>
 
     <div class="case-card" id="evolution-sim-card" style="border-style:dashed;">
       <div class="case-title">Evolving Ecosystem — Natural Selection Simulator</div>
       <div class="case-desc">Watch a population of digital organisms evolve over generations — no fitness score, no designed creatures. Just inherited genes, mutation, mate choice, and survival deciding who reproduces.</div>
     </div>
 
-    <div class="section-header">Psychological Tests</div>
+    <div class="section-header" id="cat-psych-tests">Psychological Tests</div>
 
     <div class="case-card" id="social-reflection-card" style="border-style:dashed;">
       <div class="case-title">Social Situations Reflection</div>
@@ -116,7 +162,7 @@
       <div class="case-desc">The actual, published SIAS used in research. Not a diagnostic tool, and nothing is saved.</div>
     </div>
 
-    <div class="section-header">Research Studies</div>
+    <div class="section-header" id="cat-research">Research Studies</div>
 
     <div class="case-card" id="thompson-card" style="border-style:dashed;">
       <div class="case-title">Thompson et al. (2011) — Gene x Environment</div>
@@ -203,6 +249,31 @@
 
     document.getElementById('evolution-sim-card').addEventListener('click', () => {
       window.location.href = 'evolving-ecosystem.html';
+    });
+
+    const catNavBtn = document.getElementById('catNavBtn');
+    const catNavMenu = document.getElementById('catNavMenu');
+
+    catNavBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      catNavMenu.style.display = catNavMenu.style.display === 'block' ? 'none' : 'block';
+    });
+
+    document.addEventListener('click', () => {
+      catNavMenu.style.display = 'none';
+    });
+
+    catNavMenu.querySelectorAll('button[data-target]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const targetEl = document.getElementById(btn.dataset.target);
+        catNavBtn.textContent = btn.textContent;
+        catNavMenu.style.display = 'none';
+        if(targetEl){
+          const offset = targetEl.getBoundingClientRect().top + window.scrollY - 70;
+          window.scrollTo({top: offset, behavior: 'smooth'});
+        }
+      });
     });
   </script>
 </body>
