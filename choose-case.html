@@ -77,17 +77,17 @@
         <button class="cat-nav-btn" id="catNavBtn" type="button">All activities</button>
         <div class="cat-nav-menu" id="catNavMenu">
           <button data-target="top" type="button">All activities</button>
-          <button data-target="cat-case-studies" type="button">Diagnostic Interviews</button>
+          <button data-target="cat-case-studies" type="button">Case Studies</button>
           <button data-target="cat-experiments" type="button">Experiments</button>
           <button data-target="cat-neuroscience" type="button">Neuroscience</button>
-          <button data-target="cat-biology" type="button">Evolutionary Psychology</button>
+          <button data-target="cat-biology" type="button">Biology</button>
           <button data-target="cat-psych-tests" type="button">Psychological Tests</button>
           <button data-target="cat-research" type="button">Research Studies</button>
         </div>
       </div>
     </div>
 
-    <div class="section-header" id="cat-case-studies">Diagnostic Interviews</div>
+    <div class="section-header" id="cat-case-studies">Case Studies</div>
 
     <div class="case-card" data-case="jordan_gad_mdd_v1">
       <div class="case-title">Jordan R. — Anxiety vs. Depression</div>
@@ -131,14 +131,9 @@
       <div class="case-desc">Learn UCS, UCR, CS, and CR, apply them to your own dog experiment, then explain how someone might develop social anxiety this way.</div>
     </div>
 
-    <div class="case-card" id="sst-card" style="border-style:dashed;">
-      <div class="case-title">Scrambled Sentences — Interpretation Bias</div>
-      <div class="case-desc">Unscramble a series of sentences as quickly as you can, using 5 of the 6 words shown each time.</div>
-    </div>
-
-    <div class="case-card" id="bandit-card" style="border-style:dashed;">
-      <div class="case-title">The Two-Armed Bandit — Decision-Making Under Uncertainty</div>
-      <div class="case-desc">Play two slot machines with hidden, shifting odds, then reflect on how you figured out the rules had changed.</div>
+    <div class="case-card" id="jung-word-association-card" style="border-style:dashed;">
+      <div class="case-title">Word Association — A Case File</div>
+      <div class="case-desc">Respond to a series of words with the first thing that comes to mind — a recreation of a technique from the early 1900s. Full explanation comes after you finish.</div>
     </div>
 
     <div class="section-header" id="cat-neuroscience">Neuroscience</div>
@@ -153,7 +148,7 @@
       <div class="case-desc">Watch how typical and atypical antipsychotics act differently at the synapse, test yourself on telling them apart, read about each, then explain the difference.</div>
     </div>
 
-    <div class="section-header" id="cat-biology">Evolutionary Psychology</div>
+    <div class="section-header" id="cat-biology">Biology</div>
 
     <div class="case-card" id="evolution-sim-card" style="border-style:dashed;">
       <div class="case-title">Evolving Ecosystem — Natural Selection Simulator</div>
@@ -184,6 +179,10 @@
       <div class="case-desc">Watch an animated car crash, then answer a few quick questions about what you saw.</div>
     </div>
 
+    <div class="case-card" id="sst-card" style="border-style:dashed;">
+      <div class="case-title">Scrambled Sentences — Interpretation Bias</div>
+      <div class="case-desc">Unscramble a series of sentences as quickly as you can, using 5 of the 6 words shown each time.</div>
+    </div>
   </div>
 
   <script>
@@ -225,6 +224,10 @@
       window.location.href = 'conditioning-key-concepts.html';
     });
 
+    document.getElementById('jung-word-association-card').addEventListener('click', () => {
+      window.location.href = 'jung-word-association.html';
+    });
+
     document.getElementById('neurotransmitters-card').addEventListener('click', () => {
       window.location.href = 'neurotransmitter-mechanisms.html';
     });
@@ -251,10 +254,6 @@
 
     document.getElementById('sst-card').addEventListener('click', () => {
       window.location.href = 'scrambled-sentences-task.html';
-    });
-
-    document.getElementById('bandit-card').addEventListener('click', () => {
-      window.location.href = 'two-armed-bandit.html';
     });
 
     document.getElementById('evolution-sim-card').addEventListener('click', () => {
