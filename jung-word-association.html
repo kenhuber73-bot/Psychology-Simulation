@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Association — A Case File</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #ECDFC1;
+    --paper-dark: #DFCE9F;
+    --paper-line: rgba(36,49,74,0.14);
+    --ink: #23304A;
+    --ink-soft: #52607C;
+    --brass: #A2823E;
+    --brass-dark: #7C6329;
+    --flag: #7A2E2E;
+    --flag-bg: #F1DCD4;
+    --card-shadow: 0 10px 26px rgba(35,48,74,0.18), 0 2px 6px rgba(35,48,74,0.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at top left, rgba(255,255,255,0.25), transparent 60%),
+      var(--paper);
+    background-attachment:fixed;
+    color:var(--ink);
+    font-family:'Source Serif 4', serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:28px 16px 60px 16px;
+  }
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 38px, rgba(35,48,74,0.028) 39px),
+      repeating-linear-gradient(90deg, transparent, transparent 38px, rgba(35,48,74,0.02) 39px);
+    pointer-events:none;
+    z-index:0;
+  }
+  .stage{position:relative; z-index:1; width:100%; max-width:620px;}
+
+  .masthead{text-align:center; margin-bottom:22px;}
+  .masthead .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:2.5px;
+    text-transform:uppercase; color:var(--brass-dark); margin-bottom:6px;
+  }
+  .masthead h1{
+    font-family:'Special Elite', cursive; font-weight:400; font-size:30px;
+    margin:0 0 4px 0; letter-spacing:0.5px; color:var(--ink);
+  }
+  .masthead .sub{font-size:14px; color:var(--ink-soft); font-style:italic;}
+
+  .card{
+    background:linear-gradient(180deg, #FBF6E9, #F5EDD6);
+    border:1px solid var(--paper-line);
+    border-radius:3px;
+    box-shadow:var(--card-shadow);
+    padding:34px 32px;
+    position:relative;
+  }
+  .card::before{
+    content:"";
+    position:absolute; left:0; top:22px; bottom:22px; width:3px;
+    background:repeating-linear-gradient(180deg, var(--flag) 0 6px, transparent 6px 12px);
+    opacity:0.45;
+  }
+
+  .btn{
+    font-family:'IBM Plex Mono', monospace; font-size:12.5px; font-weight:600;
+    letter-spacing:1px; text-transform:uppercase;
+    border:1.5px solid var(--ink); background:transparent; color:var(--ink);
+    padding:11px 20px; border-radius:2px; cursor:pointer;
+    transition:background 0.15s, color 0.15s;
+  }
+  .btn:hover{background:var(--ink); color:var(--paper);}
+  .btn:disabled{opacity:0.35; cursor:not-allowed;}
+  .btn.primary{background:var(--ink); color:var(--paper);}
+  .btn.primary:hover{background:var(--brass-dark); border-color:var(--brass-dark);}
+
+  /* ---- Intro ---- */
+  .intro p{line-height:1.65; font-size:15.5px; margin:0 0 14px 0;}
+  .intro label{
+    display:block; font-family:'IBM Plex Mono', monospace; font-size:11px;
+    letter-spacing:1px; text-transform:uppercase; color:var(--ink-soft); margin-bottom:6px;
+  }
+  .intro input[type=text]{
+    width:100%; font-family:'Source Serif 4', serif; font-size:15px;
+    padding:9px 10px; border:1px solid var(--paper-line); border-radius:2px;
+    background:#fff; color:var(--ink); margin-bottom:20px;
+  }
+  .intro-actions{text-align:center; margin-top:8px;}
+
+  /* ---- Trial screen ---- */
+  .trial-wrap{text-align:center;}
+  .stopwatch{width:70px; height:70px; margin:0 auto 22px auto; position:relative;}
+  .stopwatch svg{width:100%; height:100%; display:block;}
+  .sw-hand{transform-origin:35px 38px; animation:none;}
+  .stopwatch.ticking .sw-hand{animation:tick 1.8s linear infinite;}
+  @keyframes tick{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+
+  .word-index{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--ink-soft);
+    letter-spacing:1.5px; margin-bottom:14px;
+  }
+  .stim-word{
+    font-family:'Special Elite', cursive; font-size:46px; color:var(--ink);
+    margin:0 0 26px 0; letter-spacing:1px; min-height:56px;
+  }
+  .resp-row{display:flex; gap:10px; justify-content:center; align-items:center;}
+  .resp-row input{
+    font-family:'Source Serif 4', serif; font-size:18px; text-align:center;
+    padding:11px 14px; border:none; border-bottom:2px solid var(--ink);
+    background:transparent; color:var(--ink); width:230px; outline:none;
+  }
+  .resp-row input:focus{border-bottom-color:var(--brass-dark);}
+  .stamp{
+    font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:1.5px;
+    color:var(--flag); text-transform:uppercase; margin-top:16px; opacity:0;
+    transition:opacity 0.2s;
+  }
+  .stamp.show{opacity:0.8;}
+
+  .progress-bar{
+    height:3px; background:var(--paper-line); border-radius:2px; margin-top:30px; overflow:hidden;
+  }
+  .progress-fill{height:100%; background:var(--brass); transition:width 0.25s ease;}
+
+  /* ---- Recall screen ---- */
+  .recall-note{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--ink-soft);
+    text-align:center; letter-spacing:1px; margin-bottom:20px; text-transform:uppercase;
+  }
+
+  /* ---- Results ---- */
+  .results h2{
+    font-family:'Special Elite', cursive; font-weight:400; font-size:22px; margin:0 0 10px 0;
+  }
+  .results p{line-height:1.65; font-size:14.5px; color:var(--ink-soft); margin:0 0 12px 0;}
+  .callout{
+    background:var(--flag-bg); border-left:3px solid var(--flag); padding:12px 16px;
+    font-size:13.5px; line-height:1.6; margin:16px 0; color:#5A2323;
+  }
+  .fieldnotes{
+    background:#F7EFDA; border:1px dashed var(--brass); border-radius:2px;
+    padding:16px 18px; margin:18px 0;
+  }
+  .fieldnotes .fn-title{
+    font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:1.5px;
+    text-transform:uppercase; color:var(--brass-dark); margin-bottom:8px; font-weight:600;
+  }
+  .fieldnotes p{font-size:14px; line-height:1.7; color:var(--ink); margin:0 0 10px 0;}
+  .fieldnotes p:last-child{margin-bottom:0;}
+  .fieldnotes strong{color:var(--brass-dark);}
+  table.report{width:100%; border-collapse:collapse; font-size:13px; margin:18px 0;}
+  table.report th{
+    font-family:'IBM Plex Mono', monospace; font-size:10px; text-transform:uppercase;
+    letter-spacing:0.8px; text-align:left; padding:6px 8px; color:var(--ink-soft);
+    border-bottom:1.5px solid var(--ink);
+  }
+  table.report td{padding:7px 8px; border-bottom:1px solid var(--paper-line); vertical-align:top;}
+  table.report tr.flagged td{background:rgba(122,46,46,0.07);}
+  .flag-icons{font-size:12px; white-space:nowrap;}
+  .type-badge{
+    font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:0.5px;
+    padding:1px 5px; border-radius:2px; text-transform:uppercase;
+  }
+  .type-badge.loaded{background:#E9D6C9; color:#7A4A2E;}
+  .type-badge.neutral{background:#DCE3E9; color:#3E5468;}
+
+  .stat-strip{
+    display:flex; gap:18px; flex-wrap:wrap; margin:16px 0 20px 0;
+    font-family:'IBM Plex Mono', monospace; font-size:12px;
+  }
+  .stat-strip div{color:var(--ink-soft);}
+  .stat-strip b{color:var(--ink); display:block; font-size:18px; margin-bottom:2px;}
+
+  textarea.reflect{
+    width:100%; min-height:110px; font-family:'Source Serif 4', serif; font-size:14.5px;
+    padding:12px; border:1px solid var(--paper-line); border-radius:2px; background:#fff;
+    color:var(--ink); resize:vertical; margin-bottom:14px;
+  }
+  .results-actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:6px;}
+
+  .hidden{display:none !important;}
+  .center{text-align:center;}
+  .footer-note{
+    text-align:center; font-family:'IBM Plex Mono', monospace; font-size:10.5px;
+    color:var(--ink-soft); opacity:0.7; margin-top:26px; letter-spacing:0.5px;
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="masthead">
+    <div class="eyebrow">Historical Method · Recreated for the Classroom</div>
+    <h1>Word Association</h1>
+    <div class="sub">A case file, in the style of the early psychoanalysts</div>
+  </div>
+
+  <!-- ================= INTRO ================= -->
+  <div class="card intro" id="screenIntro">
+    <p>You'll see a series of single words appear one at a time, about thirty in total.</p>
+    <p>For each one, type <strong>the first word that comes to mind</strong> — don't overthink it, don't self-censor, just respond as quickly as you naturally can. Press <strong>Enter</strong> to move to the next word.</p>
+    <p>There's a short second part afterward. Full explanation comes at the end.</p>
+    <label for="nameInput">Name (optional — only used to label your own downloaded file; nothing is saved or sent anywhere)</label>
+    <input type="text" id="nameInput" placeholder="e.g. J. Smith">
+    <div class="intro-actions">
+      <button class="btn primary" id="startBtn">Begin</button>
+    </div>
+  </div>
+
+  <!-- ================= TRIAL ================= -->
+  <div class="card trial-wrap hidden" id="screenTrial">
+    <div class="stopwatch" id="stopwatch">
+      <svg viewBox="0 0 70 70">
+        <circle cx="35" cy="38" r="26" fill="none" stroke="#23304A" stroke-width="2" opacity="0.55"/>
+        <rect x="31" y="6" width="8" height="8" rx="1" fill="#23304A" opacity="0.55"/>
+        <line class="sw-hand" x1="35" y1="38" x2="35" y2="18" stroke="#7A2E2E" stroke-width="2.4" stroke-linecap="round"/>
+        <circle cx="35" cy="38" r="2.2" fill="#23304A"/>
+      </svg>
+    </div>
+    <div class="word-index" id="wordIndex">WORD 1 OF 32</div>
+    <div class="stim-word" id="stimWord">—</div>
+    <div class="resp-row">
+      <input type="text" id="respInput" autocomplete="off" placeholder="type the first word…">
+    </div>
+    <div class="stamp" id="stamp">recorded</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <!-- ================= RECALL ================= -->
+  <div class="card trial-wrap hidden" id="screenRecall">
+    <div class="recall-note">Second part — a few words from before</div>
+    <div class="word-index" id="recallIndex">WORD 1 OF 6</div>
+    <div class="stim-word" id="recallWord">—</div>
+    <p style="font-size:14px; color:var(--ink-soft); margin-bottom:18px;">What did <em>you</em> respond with, the first time you saw this word?</p>
+    <div class="resp-row">
+      <input type="text" id="recallInput" autocomplete="off" placeholder="your original response…">
+    </div>
+    <div class="stamp" id="recallStamp">recorded</div>
+    <div class="progress-bar"><div class="progress-fill" id="recallProgressFill" style="width:0%"></div></div>
+  </div>
+
+  <!-- ================= RESULTS ================= -->
+  <div class="card results hidden" id="screenResults">
+    <h2>The Case File</h2>
+    <p>In the early 1900s, Carl Jung gave patients a list of words and asked them to respond with the first word that came to mind, timing each response with a stopwatch. He believed a slow response, an unusual response, repeating the stimulus word back, giving the same "safe" response to several different words, or later forgetting what you'd said, could all signal that a word had touched an unconscious emotional cluster he called a <strong>complex</strong>.</p>
+    <p>Here's your run. Rows with more than one flag are marked as a possible complex indicator — worth your own scrutiny, not a diagnosis.</p>
+
+    <div class="fieldnotes">
+      <div class="fn-title">Field Notes</div>
+      <div id="fieldNotesBody"></div>
+    </div>
+
+    <div class="stat-strip" id="statStrip"></div>
+
+    <table class="report">
+      <thead><tr><th>#</th><th>Word</th><th>Your response</th><th>Time</th><th>Flags</th></tr></thead>
+      <tbody id="reportBody"></tbody>
+    </table>
+
+    <div class="callout">
+      <strong>A worthwhile critique:</strong> a slower response to "death" or "shame" doesn't necessarily reveal <em>your</em> personal unconscious conflict — it might simply be a less common, more emotionally loaded word <em>in general</em>, which modern cognitive psychology (semantic priming, word frequency effects) can also explain without invoking anything unconscious. Which explanation do you think better fits your own results?
+    </div>
+
+    <p style="font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-soft); margin-top:22px;">Your reflection</p>
+    <textarea class="reflect" id="reflection" placeholder="Which word(s) stood out to you, and why do you think that might be? Do you think Jung's explanation or the modern critique fits your data better — or something else entirely?"></textarea>
+
+    <div class="results-actions">
+      <button class="btn" id="downloadBtn">Download case file (.txt)</button>
+      <button class="btn" id="restartBtn">Run again</button>
+    </div>
+  </div>
+
+  <div class="footer-note">Nothing on this page is saved, transmitted, or diagnostic. It's a classroom recreation of a historical method, not a clinical instrument.</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const LOADED = ["mother","father","death","money","kiss","quarrel","secret","shame","guilt","jealous","failure","alone","punish","betray","hurt","love"];
+  const NEUTRAL = ["table","window","bread","cloud","pencil","river","lamp","garden","chair","paper","glass","road","bottle","clock","floor","book"];
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+
+  const trials = shuffle(
+    LOADED.map(w=>({word:w,type:"loaded"})).concat(NEUTRAL.map(w=>({word:w,type:"neutral"})))
+  );
+
+  let idx = 0;
+  let results = []; // {word, type, response, rtMs}
+  let trialStart = 0;
+  let recallList = [];
+  let recallIdx = 0;
+  let recallResults = []; // {word, recalled, correct}
+  let participantName = "";
+
+  const screenIntro = document.getElementById("screenIntro");
+  const screenTrial = document.getElementById("screenTrial");
+  const screenRecall = document.getElementById("screenRecall");
+  const screenResults = document.getElementById("screenResults");
+
+  const wordIndexEl = document.getElementById("wordIndex");
+  const stimWordEl = document.getElementById("stimWord");
+  const respInput = document.getElementById("respInput");
+  const stampEl = document.getElementById("stamp");
+  const progressFill = document.getElementById("progressFill");
+  const stopwatchEl = document.getElementById("stopwatch");
+
+  const recallIndexEl = document.getElementById("recallIndex");
+  const recallWordEl = document.getElementById("recallWord");
+  const recallInput = document.getElementById("recallInput");
+  const recallStampEl = document.getElementById("recallStamp");
+  const recallProgressFill = document.getElementById("recallProgressFill");
+
+  document.getElementById("startBtn").addEventListener("click", function(){
+    participantName = document.getElementById("nameInput").value.trim();
+    screenIntro.classList.add("hidden");
+    screenTrial.classList.remove("hidden");
+    showTrial();
+  });
+
+  function showTrial(){
+    if(idx >= trials.length){ return startRecallPhase(); }
+    const t = trials[idx];
+    wordIndexEl.textContent = "WORD " + (idx+1) + " OF " + trials.length;
+    stimWordEl.textContent = "";
+    respInput.value = "";
+    stampEl.classList.remove("show");
+    progressFill.style.width = ((idx)/trials.length*100) + "%";
+    stopwatchEl.classList.remove("ticking");
+    respInput.disabled = true;
+
+    // brief blank pause before the word appears, so RT reflects response to
+    // the word itself rather than page-transition lag
+    setTimeout(function(){
+      stimWordEl.textContent = t.word;
+      stopwatchEl.classList.add("ticking");
+      respInput.disabled = false;
+      respInput.focus();
+      trialStart = performance.now();
+    }, 380);
+  }
+
+  respInput.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){
+      const val = respInput.value.trim();
+      if(!val) return;
+      const rt = performance.now() - trialStart;
+      results.push({word: trials[idx].word, type: trials[idx].type, response: val, rtMs: Math.round(rt)});
+      stopwatchEl.classList.remove("ticking");
+      stampEl.classList.add("show");
+      respInput.disabled = true;
+      idx++;
+      setTimeout(showTrial, 260);
+    }
+  });
+
+  function startRecallPhase(){
+    // pick the 3 slowest trials + 3 others as controls, then shuffle order
+    const sorted = results.slice().sort((a,b)=>b.rtMs - a.rtMs);
+    const slow3 = sorted.slice(0,3);
+    const remaining = shuffle(results.filter(r => !slow3.includes(r)));
+    const controls3 = remaining.slice(0,3);
+    recallList = shuffle(slow3.concat(controls3));
+
+    screenTrial.classList.add("hidden");
+    screenRecall.classList.remove("hidden");
+    recallIdx = 0;
+    showRecall();
+  }
+
+  function showRecall(){
+    if(recallIdx >= recallList.length){ return buildResults(); }
+    const t = recallList[recallIdx];
+    recallIndexEl.textContent = "WORD " + (recallIdx+1) + " OF " + recallList.length;
+    recallWordEl.textContent = t.word;
+    recallInput.value = "";
+    recallStampEl.classList.remove("show");
+    recallProgressFill.style.width = ((recallIdx)/recallList.length*100) + "%";
+    recallInput.disabled = false;
+    recallInput.focus();
+  }
+
+  recallInput.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){
+      const val = recallInput.value.trim();
+      if(!val) return;
+      const original = recallList[recallIdx];
+      const correct = val.toLowerCase() === original.response.toLowerCase();
+      recallResults.push({word: original.word, recalledAs: val, correct: correct});
+      recallStampEl.classList.add("show");
+      recallInput.disabled = true;
+      recallIdx++;
+      setTimeout(showRecall, 260);
+    }
+  });
+
+  function buildFieldNotes(median, freq, recallResults, recallMap){
+    const threshold = Math.round(median * 1.6);
+    const paras = [];
+
+    // --- Reuse clusters: which response(s) came up for more than one word ---
+    const clusterEntries = Object.entries(freq).filter(([resp,count]) => count >= 2)
+      .sort((a,b) => b[1]-a[1]);
+    if(clusterEntries.length > 0){
+      const [topResp, topCount] = clusterEntries[0];
+      const sourceWords = results.filter(r => r.response.toLowerCase() === topResp)
+        .map(r => '"' + r.word + '"');
+      paras.push(
+        '<p>Your strongest pattern: you answered <strong>"' + topResp + '"</strong> to ' + topCount +
+        ' different words — ' + sourceWords.join(", ") + '. When several unrelated stimulus words all ' +
+        'funnel into the same response, that\'s often a more meaningful signal than any single slow ' +
+        'reaction time — it suggests one theme sitting close to the surface no matter which word knocked ' +
+        'on the door. Worth asking yourself: is that theme meaningful right now, or is "' + topResp +
+        '" just the word your mind reaches for fastest in general?</p>'
+      );
+    } else {
+      paras.push('<p>No response repeated across multiple words this run — every word pulled something ' +
+        'distinct from you, so there\'s no obvious recurring theme to point to here.</p>');
+    }
+
+    // --- Reaction time story: slowest word, and whether it was a near-miss ---
+    const slowest = results.slice().sort((a,b) => b.rtMs - a.rtMs)[0];
+    const ratio = slowest.rtMs / median;
+    if(ratio >= 1.6){
+      paras.push('<p>Your slowest response, <strong>"' + slowest.word + '"</strong> → "' + slowest.response +
+        '" at ' + slowest.rtMs + 'ms, cleared the flag threshold (' + threshold + 'ms) — over half again as ' +
+        'long as your typical response. That kind of hesitation is the classic Jungian indicator: something ' +
+        'about that word slowed down an otherwise fast, automatic process.</p>');
+    } else if(ratio >= 1.25){
+      paras.push('<p>Your slowest response, <strong>"' + slowest.word + '"</strong> → "' + slowest.response +
+        '" at ' + slowest.rtMs + 'ms, came in just under the flag threshold (' + threshold + 'ms). It\'s a good ' +
+        'reminder that a cutoff like this is a somewhat arbitrary line, not a hard boundary — a near-miss can ' +
+        'still be worth a second look.</p>');
+    } else {
+      paras.push('<p>Nothing in your run took dramatically longer than the rest — your response times stayed ' +
+        'fairly even throughout, which is itself a data point: an evenly-paced run like this gives Jung\'s ' +
+        'theory less to point to.</p>');
+    }
+
+    // --- Echoing the stimulus word back ---
+    const echoed = results.filter(r => r.response.toLowerCase() === r.word.toLowerCase());
+    if(echoed.length > 0){
+      paras.push('<p>You repeated the stimulus word itself for ' +
+        echoed.map(r => '"' + r.word + '"').join(", ") +
+        ' — echoing the prompt back, rather than producing a new word, is one of Jung\'s own indicators, ' +
+        'since it can signal you were stalling rather than responding spontaneously.</p>');
+    }
+
+    // --- Recall outcome ---
+    const forgotten = recallResults.filter(r => !r.correct);
+    if(forgotten.length > 0){
+      paras.push('<p>On the recall phase, you couldn\'t reproduce your original response to ' +
+        forgotten.map(r => '"' + r.word + '"').join(", ") +
+        '. Forgetting your own recent answer is a separate indicator from reaction time — Jung treated a ' +
+        'lapse like this as just as meaningful as a slow response in the moment.</p>');
+    } else if(recallResults.length > 0){
+      paras.push('<p>You recalled all ' + recallResults.length + ' of your original responses correctly on ' +
+        'the second pass. That doesn\'t rule out a complex on its own — Jung noted some patients recalled ' +
+        'perfectly while still showing other indicators — but it\'s a point in favor of an evenly-processed run.</p>');
+    }
+
+    return paras.join("");
+  }
+
+  function buildResults(){
+    screenRecall.classList.add("hidden");
+    screenResults.classList.remove("hidden");
+
+    const rts = results.map(r=>r.rtMs).sort((a,b)=>a-b);
+    const median = rts[Math.floor(rts.length/2)];
+
+    const freq = {};
+    results.forEach(r=>{
+      const key = r.response.toLowerCase();
+      freq[key] = (freq[key]||0) + 1;
+    });
+
+    const recallMap = {};
+    recallResults.forEach(rr=>{ recallMap[rr.word] = rr; });
+
+    document.getElementById("fieldNotesBody").innerHTML = buildFieldNotes(median, freq, recallResults, recallMap);
+
+    let flaggedCount = 0;
+    const rows = results.map((r, i) => {
+      const flags = [];
+      if(r.rtMs > median * 1.6) flags.push({icon:"⏱", label:"slow"});
+      if(r.response.toLowerCase() === r.word.toLowerCase()) flags.push({icon:"↩", label:"repeated stimulus word"});
+      if(freq[r.response.toLowerCase()] >= 3) flags.push({icon:"⟳", label:"stereotyped response (reused 3+ times)"});
+      if(recallMap[r.word] && !recallMap[r.word].correct) flags.push({icon:"✗", label:"failed recall"});
+      if(flags.length >= 2) flaggedCount++;
+      return {r, i, flags};
+    });
+
+    const statStrip = document.getElementById("statStrip");
+    statStrip.innerHTML =
+      '<div><b>' + median + ' ms</b>your median response time</div>' +
+      '<div><b>' + flaggedCount + '</b>possible complex indicator' + (flaggedCount===1?'':'s') + '</div>' +
+      '<div><b>' + recallResults.filter(r=>!r.correct).length + ' / ' + recallResults.length + '</b>forgotten on recall</div>';
+
+    const tbody = document.getElementById("reportBody");
+    tbody.innerHTML = rows.map(({r,i,flags}) => {
+      const flagIcons = flags.map(f => '<span title="'+f.label+'">'+f.icon+'</span>').join(" ");
+      return '<tr class="'+(flags.length>=2?'flagged':'')+'">' +
+        '<td>'+(i+1)+'</td>' +
+        '<td>'+escapeHtml(r.word)+' <span class="type-badge '+r.type+'">'+r.type+'</span></td>' +
+        '<td>'+escapeHtml(r.response)+'</td>' +
+        '<td>'+r.rtMs+' ms</td>' +
+        '<td class="flag-icons">'+(flagIcons || '—')+'</td>' +
+      '</tr>';
+    }).join("");
+  }
+
+  function escapeHtml(s){
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  document.getElementById("restartBtn").addEventListener("click", function(){
+    window.location.reload();
+  });
+
+  document.getElementById("downloadBtn").addEventListener("click", function(){
+    const lines = [];
+    lines.push("WORD ASSOCIATION — CASE FILE");
+    if(participantName) lines.push("Name: " + participantName);
+    lines.push("Date: " + new Date().toLocaleDateString());
+    lines.push("");
+    lines.push("# | Word | Type | Response | Time (ms)");
+    results.forEach((r,i)=>{
+      lines.push((i+1) + " | " + r.word + " | " + r.type + " | " + r.response + " | " + r.rtMs);
+    });
+    lines.push("");
+    lines.push("RECALL PHASE");
+    recallResults.forEach(rr=>{
+      lines.push(rr.word + " — recalled as: " + rr.recalledAs + " (" + (rr.correct ? "correct" : "did not match") + ")");
+    });
+    lines.push("");
+    lines.push("REFLECTION");
+    lines.push(document.getElementById("reflection").value || "(not written)");
+
+    const blob = new Blob([lines.join("\n")], {type:"text/plain"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = (participantName ? participantName.replace(/[^a-z0-9]/gi,"_") + "_" : "") + "word_association_case_file.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+})();
+</script>
+</body>
+</html>
