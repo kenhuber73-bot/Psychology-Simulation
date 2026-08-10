@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Two-Armed Bandit — Psych Simulations</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12172B;
+    --panel:#1B2244;
+    --panel-light:#252C52;
+    --gold:#C9A227;
+    --gold-bright:#E8C74A;
+    --teal:#4FD1C5;
+    --red:#E1533D;
+    --text:#EDEFF7;
+    --dim:#8A90B3;
+    --line:#323A66;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(ellipse at top, #1a2147 0%, var(--ink) 60%);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .stage{
+    width:100%;
+    max-width:640px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-size:12px;
+    color:var(--gold);
+    margin-bottom:8px;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:clamp(28px,5vw,40px);
+    margin:0 0 12px;
+    line-height:1.1;
+  }
+  p{ color:var(--dim); line-height:1.6; font-size:15px; }
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:32px;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);
+  }
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    border:none;
+    border-radius:9px;
+    padding:14px 22px;
+    cursor:pointer;
+    transition:transform .12s ease, filter .12s ease;
+  }
+  .btn:hover{ filter:brightness(1.08); }
+  .btn:active{ transform:scale(.97); }
+  .btn-primary{
+    background:linear-gradient(135deg, var(--gold-bright), var(--gold));
+    color:#1a1200;
+  }
+  .btn-ghost{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--text);
+  }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+
+  /* --- HUD --- */
+  .hud{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:22px;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .hud .balance{
+    font-size:26px;
+    font-weight:600;
+    color:var(--gold-bright);
+  }
+  .hud .balance-label{
+    font-size:11px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--dim);
+    display:block;
+    margin-bottom:2px;
+  }
+  .hud .trial-count{
+    font-size:13px;
+    color:var(--dim);
+  }
+  .progress-track{
+    height:4px;
+    background:var(--line);
+    border-radius:2px;
+    overflow:hidden;
+    margin-bottom:28px;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--teal);
+    width:0%;
+    transition:width .25s ease;
+  }
+
+  /* --- Bet chips --- */
+  .bet-row{
+    display:flex;
+    gap:8px;
+    justify-content:center;
+    margin-bottom:26px;
+    flex-wrap:wrap;
+  }
+  .chip{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    font-weight:600;
+    padding:8px 16px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:var(--panel-light);
+    color:var(--dim);
+    cursor:pointer;
+  }
+  .chip.active{
+    border-color:var(--gold);
+    color:var(--gold-bright);
+    background:rgba(201,162,39,.12);
+  }
+
+  /* --- Machines --- */
+  .machines{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+    margin-bottom:8px;
+  }
+  .machine{
+    position:relative;
+    background:var(--panel-light);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:36px 12px;
+    text-align:center;
+    cursor:pointer;
+    transition:transform .15s ease, border-color .15s ease;
+    overflow:hidden;
+  }
+  .machine:hover{ transform:translateY(-2px); border-color:var(--gold); }
+  .machine:active{ transform:translateY(0); }
+  .machine .glyph{
+    font-size:40px;
+    display:block;
+    margin-bottom:10px;
+  }
+  .machine .name{
+    font-family:'Fraunces',serif;
+    font-size:18px;
+    font-weight:600;
+  }
+  .machine.disabled{ pointer-events:none; opacity:.5; }
+  .machine.flash-win{ animation:flashWin .7s ease; }
+  .machine.flash-lose{ animation:flashLose .7s ease; }
+  @keyframes flashWin{
+    0%{ box-shadow:0 0 0 0 rgba(79,209,197,0); }
+    30%{ box-shadow:0 0 0 6px rgba(79,209,197,.35); border-color:var(--teal);}
+    100%{ box-shadow:0 0 0 0 rgba(79,209,197,0); }
+  }
+  @keyframes flashLose{
+    0%{ box-shadow:0 0 0 0 rgba(225,83,61,0); }
+    30%{ box-shadow:0 0 0 6px rgba(225,83,61,.35); border-color:var(--red);}
+    100%{ box-shadow:0 0 0 0 rgba(225,83,61,0); }
+  }
+
+  .feedback{
+    text-align:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:15px;
+    font-weight:600;
+    height:22px;
+    margin-bottom:6px;
+  }
+  .feedback.win{ color:var(--teal); }
+  .feedback.lose{ color:var(--red); }
+
+  .note{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--dim);
+    text-align:center;
+    margin-top:18px;
+    border-top:1px dashed var(--line);
+    padding-top:14px;
+  }
+
+  /* --- results --- */
+  .stat-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    margin:22px 0;
+  }
+  .stat{
+    background:var(--panel-light);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px;
+  }
+  .stat .label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--dim);
+    margin-bottom:6px;
+  }
+  .stat .value{
+    font-family:'Fraunces',serif;
+    font-size:24px;
+    font-weight:600;
+    color:var(--gold-bright);
+  }
+  canvas{
+    width:100%;
+    background:var(--panel-light);
+    border:1px solid var(--line);
+    border-radius:10px;
+    margin:18px 0;
+  }
+  .legend{
+    display:flex;
+    gap:18px;
+    justify-content:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--dim);
+    margin-bottom:4px;
+  }
+  .legend span{ display:flex; align-items:center; gap:6px; }
+  .swatch{ width:14px; height:3px; border-radius:2px; display:inline-block; }
+
+  textarea{
+    width:100%;
+    background:var(--panel-light);
+    border:1px solid var(--line);
+    border-radius:8px;
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    padding:12px;
+    resize:vertical;
+    min-height:90px;
+  }
+  .message{
+    margin-top:10px;
+    font-size:0.85rem;
+    padding:10px;
+    border-radius:5px;
+  }
+  .message.error{ background:rgba(225,83,61,.15); color:#F3B4A8; }
+  .save-status{
+    margin-top:12px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.8rem;
+    color:var(--dim);
+    text-align:center;
+  }
+  .save-status.error{ color:var(--red); }
+  .save-status.success{ color:var(--teal); font-weight:700; }
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <!-- ============ INTRO ============ -->
+  <div id="screen-intro" class="card">
+    <div class="eyebrow">Research Studies · Decision-Making Under Uncertainty</div>
+    <h1>The Two-Armed Bandit</h1>
+    <p>You're a small-time gambler on the casino floor with <strong style="color:var(--gold-bright)">$500</strong> in chips. Two slot machines sit in front of you. One pays out more often than the other &mdash; but you don't know which, and you won't be told.</p>
+    <p>Pick a machine, place a bet, and pull the lever. Try to walk away with more than you started with. Nothing here is announced to you in advance &mdash; you'll have to learn as you go.</p>
+    <p style="margin-top:20px;"><button class="btn btn-primary" id="btn-start" style="width:100%;">Step Up to the Machines</button></p>
+  </div>
+
+  <!-- ============ GAME ============ -->
+  <div id="screen-game" class="card hidden">
+    <div class="hud">
+      <div>
+        <span class="balance-label">Chips</span>
+        <span class="balance" id="hud-balance">$500</span>
+      </div>
+      <div class="trial-count" id="hud-trial">Round 1 / 90</div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+
+    <div class="bet-row" id="bet-row"></div>
+
+    <div class="machines" id="machines">
+      <div class="machine" data-side="A">
+        <span class="glyph">🎰</span>
+        <span class="name">Machine A</span>
+      </div>
+      <div class="machine" data-side="B">
+        <span class="glyph">🎰</span>
+        <span class="name">Machine B</span>
+      </div>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <div class="note">The odds on these machines are not fixed. They can &mdash; and will &mdash; change without warning.</div>
+  </div>
+
+  <!-- ============ RESULTS ============ -->
+  <div id="screen-results" class="card hidden">
+    <div class="eyebrow">Debrief</div>
+    <h1 id="result-headline">Cashing Out</h1>
+    <p id="result-summary"></p>
+
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="label">Final Chips</div>
+        <div class="value" id="stat-balance">$0</div>
+      </div>
+      <div class="stat">
+        <div class="label">Your Learning Rate (α)</div>
+        <div class="value" id="stat-alpha">0.00</div>
+      </div>
+    </div>
+
+    <p><strong style="color:var(--text)">What "learning rate" means here:</strong> after every round, a model was fit to your choices &mdash; the same kind of model (a Rescorla&ndash;Wagner rule) researchers use to study how people learn from outcomes. Your α tells us how much you updated your belief about which machine was better after each single result. A high α means you swung your beliefs quickly based on recent outcomes. A low α means you leaned more on your longer-run impression and were slower to shift.</p>
+
+    <div class="legend">
+      <span><span class="swatch" style="background:var(--gold);"></span> True odds (hidden from you during play)</span>
+      <span><span class="swatch" style="background:var(--teal);"></span> Your estimated belief</span>
+    </div>
+    <canvas id="chart" width="600" height="220"></canvas>
+
+    <p><strong style="color:var(--text)">Why this matters:</strong> this task is a simplified version of a real study (Browning et al., 2015, <em>Nature Neuroscience</em>). In the original, participants learned which of two shapes predicted a mild shock, and researchers found that people with higher anxiety tended to have learning rates that changed less between predictable and unpredictable environments &mdash; they were slower to notice when the "rules" had shifted. One idea researchers have proposed is that this isn't about learning fear more strongly, but about how well the brain tracks how <em>uncertain</em> the world currently is.</p>
+    <p>Your single α from one short game isn't a diagnosis of anything &mdash; it's just one number, from one sitting, with a lot of noise in it. Real research studies compare group averages across many people and conditions before drawing conclusions.</p>
+
+    <p style="margin-top:20px; color:var(--text); font-weight:600;">In 2&ndash;3 sentences: at what point in the game (if any) did you first suspect the odds had flipped? What made you suspect it?</p>
+    <textarea id="reflection" placeholder="Type your answer here..."></textarea>
+    <div class="message error hidden" id="reflection-warning">Please write a fuller answer &mdash; a couple of real sentences about what you noticed.</div>
+    <p style="margin-top:14px;"><button class="btn btn-primary" id="btn-submit-reflection" style="width:100%;">Submit Reflection</button></p>
+    <div class="save-status" id="save-status"></div>
+  </div>
+
+  <!-- ============ DONE ============ -->
+  <div id="screen-done" class="card hidden">
+    <div class="eyebrow">Debrief</div>
+    <h1>🎉 Nice work</h1>
+    <p>Your reflection has been submitted. Real research on uncertainty and anxiety works the same way &mdash; not from one person's single session, but from noticing patterns in how people track a changing, unpredictable world.</p>
+    <p style="margin-top:20px;"><button class="btn btn-ghost" id="btn-restart" style="width:100%;">↺ Play Again</button></p>
+  </div>
+
+</div>
+
+<script src="js/supabase-config.js"></script>
+<script>
+(function(){
+  // ---------- Session gate ----------
+  const rawSession = localStorage.getItem('studentSession');
+  if(!rawSession){
+    window.location.href = 'join.html';
+    return;
+  }
+  const studentSession = JSON.parse(rawSession);
+
+  const TOTAL_TRIALS = 90;
+  const START_BALANCE = 500;
+  const BET_OPTIONS = [10,25,50,100];
+
+  let state = {
+    balance: START_BALANCE,
+    trial: 0,
+    currentBet: 25,
+    schedule: [],
+    log: [], // {side, win, bet, probTrue}
+    locked: false
+  };
+
+  // ---------- schedule generation ----------
+  function generateSchedule(total){
+    const probPattern = [0.8,0.2,0.75,0.3,0.8];
+    let schedule = [];
+    let remaining = total;
+    let i = 0;
+    while(remaining > 0){
+      let len = Math.min(remaining, 15 + Math.floor(Math.random()*11)); // 15-25
+      let prob = probPattern[i % probPattern.length];
+      if(i >= probPattern.length - 1) len = remaining; // last block absorbs remainder
+      for(let j=0;j<len;j++) schedule.push(prob);
+      remaining -= len;
+      i++;
+    }
+    return schedule.slice(0, total);
+  }
+
+  // ---------- DOM refs ----------
+  const screenIntro = document.getElementById('screen-intro');
+  const screenGame = document.getElementById('screen-game');
+  const screenResults = document.getElementById('screen-results');
+  const screenDone = document.getElementById('screen-done');
+  const hudBalance = document.getElementById('hud-balance');
+  const hudTrial = document.getElementById('hud-trial');
+  const progressFill = document.getElementById('progress-fill');
+  const betRow = document.getElementById('bet-row');
+  const machines = document.querySelectorAll('.machine');
+  const feedback = document.getElementById('feedback');
+
+  function renderBetRow(){
+    betRow.innerHTML = '';
+    BET_OPTIONS.forEach(amt=>{
+      const chip = document.createElement('button');
+      chip.className = 'chip' + (amt === state.currentBet ? ' active' : '');
+      chip.textContent = '$' + amt;
+      chip.disabled = amt > state.balance;
+      chip.addEventListener('click', ()=>{
+        if(state.locked) return;
+        state.currentBet = amt;
+        renderBetRow();
+      });
+      betRow.appendChild(chip);
+    });
+    const allIn = document.createElement('button');
+    allIn.className = 'chip' + (state.currentBet === state.balance ? ' active' : '');
+    allIn.textContent = 'All In';
+    allIn.addEventListener('click', ()=>{
+      if(state.locked) return;
+      state.currentBet = state.balance;
+      renderBetRow();
+    });
+    betRow.appendChild(allIn);
+    if(!BET_OPTIONS.includes(state.currentBet) && state.currentBet !== state.balance){
+      state.currentBet = Math.min(state.currentBet, state.balance);
+    }
+    if(state.currentBet > state.balance) state.currentBet = state.balance;
+  }
+
+  function updateHud(){
+    hudBalance.textContent = '$' + state.balance;
+    hudTrial.textContent = 'Round ' + (state.trial + 1) + ' / ' + TOTAL_TRIALS;
+    progressFill.style.width = (100 * state.trial / TOTAL_TRIALS) + '%';
+  }
+
+  function playTrial(side){
+    if(state.locked || state.trial >= TOTAL_TRIALS) return;
+    state.locked = true;
+
+    const probA = state.schedule[state.trial];
+    const winProb = (side === 'A') ? probA : (1 - probA);
+    const win = Math.random() < winProb;
+    let bet = Math.min(state.currentBet, state.balance);
+    if(bet <= 0) bet = 0;
+
+    state.balance += win ? bet : -bet;
+    state.log.push({ side, win, bet, probA });
+
+    const machineEl = document.querySelector('.machine[data-side="'+side+'"]');
+    machineEl.classList.add(win ? 'flash-win' : 'flash-lose');
+    feedback.textContent = win ? ('+ $' + bet + ' — jackpot!') : ('− $' + bet + ' — the reels come up empty');
+    feedback.className = 'feedback ' + (win ? 'win' : 'lose');
+
+    // bailout if broke
+    if(state.balance <= 0){
+      state.balance = 100;
+      setTimeout(()=>{
+        feedback.textContent = "You're tapped out — the house spots you $100 to keep playing.";
+        feedback.className = 'feedback';
+      }, 750);
+    }
+
+    updateHud();
+
+    setTimeout(()=>{
+      machineEl.classList.remove('flash-win','flash-lose');
+      state.trial++;
+      state.locked = false;
+      if(state.trial >= TOTAL_TRIALS){
+        showResults();
+      } else {
+        renderBetRow();
+        updateHud();
+        if(state.balance > 0) feedback.textContent = '';
+      }
+    }, 900);
+  }
+
+  machines.forEach(m=>{
+    m.addEventListener('click', ()=> playTrial(m.getAttribute('data-side')));
+  });
+
+  document.getElementById('btn-start').addEventListener('click', ()=>{
+    screenIntro.classList.add('hidden');
+    screenGame.classList.remove('hidden');
+    startGame();
+  });
+
+  function startGame(){
+    state.balance = START_BALANCE;
+    state.trial = 0;
+    state.currentBet = 25;
+    state.schedule = generateSchedule(TOTAL_TRIALS);
+    state.log = [];
+    state.locked = false;
+    feedback.textContent = '';
+    renderBetRow();
+    updateHud();
+  }
+
+  // ---------- Rescorla-Wagner + softmax model fit ----------
+  function logLikelihood(log, alpha, beta){
+    let VA = 0.5, VB = 0.5;
+    let ll = 0;
+    for(const t of log){
+      const pA = 1 / (1 + Math.exp(-beta * (VA - VB)));
+      const pChosen = (t.side === 'A') ? pA : (1 - pA);
+      ll += Math.log(Math.max(pChosen, 1e-6));
+      const r = t.win ? 1 : 0;
+      if(t.side === 'A'){ VA += alpha * (r - VA); }
+      else { VB += alpha * (r - VB); }
+    }
+    return ll;
+  }
+
+  function fitModel(log){
+    let best = { alpha:0.1, beta:1, ll:-Infinity };
+    const betas = [0.5,1,2,3,4,5,6,8,10,15,20];
+    for(let alpha=0.02; alpha<=1.0001; alpha+=0.02){
+      for(const beta of betas){
+        const ll = logLikelihood(log, alpha, beta);
+        if(ll > best.ll){ best = { alpha, beta, ll }; }
+      }
+    }
+    return best;
+  }
+
+  function simulateBelief(log, alpha){
+    let VA = 0.5;
+    let VB = 0.5;
+    const trace = [];
+    for(const t of log){
+      trace.push(VA); // belief that A is the good machine
+      const r = t.win ? 1 : 0;
+      if(t.side === 'A'){ VA += alpha * (r - VA); }
+      else { VB += alpha * (r - VB); }
+    }
+    return trace;
+  }
+
+  function drawChart(log, alpha){
+    const canvas = document.getElementById('chart');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const padL = 30, padR = 10, padT = 14, padB = 22;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+
+    ctx.clearRect(0,0,W,H);
+
+    // gridlines
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    [0,0.25,0.5,0.75,1].forEach(v=>{
+      const y = padT + plotH * (1-v);
+      ctx.beginPath();
+      ctx.moveTo(padL, y);
+      ctx.lineTo(W-padR, y);
+      ctx.stroke();
+      ctx.fillStyle = '#8A90B3';
+      ctx.font = '10px monospace';
+      ctx.fillText(v.toFixed(2), 2, y+3);
+    });
+
+    const n = log.length;
+    const x = i => padL + plotW * (i/(n-1));
+
+    // true prob (probA)
+    ctx.strokeStyle = '#C9A227';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    log.forEach((t,i)=>{
+      const y = padT + plotH * (1 - t.probA);
+      if(i===0) ctx.moveTo(x(i), y); else ctx.lineTo(x(i), y);
+    });
+    ctx.stroke();
+
+    // belief trace
+    const belief = simulateBelief(log, alpha);
+    ctx.strokeStyle = '#4FD1C5';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    belief.forEach((v,i)=>{
+      const y = padT + plotH * (1-v);
+      if(i===0) ctx.moveTo(x(i), y); else ctx.lineTo(x(i), y);
+    });
+    ctx.stroke();
+  }
+
+  let lastFit = { alpha: 0.1 };
+
+  function showResults(){
+    screenGame.classList.add('hidden');
+    screenResults.classList.remove('hidden');
+
+    const profit = state.balance - START_BALANCE;
+    document.getElementById('result-headline').textContent = profit >= 0 ? 'You Walked Away Ahead' : 'The House Edge Caught Up';
+    document.getElementById('result-summary').textContent = profit >= 0
+      ? ('You finished up $' + profit + ' from where you started. Now let\'s look at how you actually made your decisions.')
+      : ('You finished down $' + Math.abs(profit) + ' from where you started. Now let\'s look at how you actually made your decisions.');
+
+    document.getElementById('stat-balance').textContent = '$' + state.balance;
+
+    const fit = fitModel(state.log);
+    lastFit = fit;
+    document.getElementById('stat-alpha').textContent = fit.alpha.toFixed(2);
+
+    drawChart(state.log, fit.alpha);
+  }
+
+  // ---------- Reflection + save ----------
+  document.getElementById('btn-submit-reflection').addEventListener('click', async () => {
+    const paragraph = document.getElementById('reflection').value.trim();
+    const warningEl = document.getElementById('reflection-warning');
+    const statusEl = document.getElementById('save-status');
+    const btn = document.getElementById('btn-submit-reflection');
+
+    if(paragraph.length < 20){
+      warningEl.classList.remove('hidden');
+      return;
+    }
+    warningEl.classList.add('hidden');
+    btn.disabled = true;
+    statusEl.textContent = 'Saving...';
+    statusEl.className = 'save-status';
+
+    const notes = 'Final chips: $' + state.balance + ' | Estimated learning rate (α): ' + lastFit.alpha.toFixed(2);
+
+    const { error } = await sb.from('case_attempts').insert({
+      student_session_id: studentSession.sessionId,
+      case_id: 'bandit_task_reflection_v1',
+      notes: notes,
+      checklist_selections: [],
+      reasoning_selections: [],
+      reasoning_paragraph: paragraph,
+      diagnosis: 'Two-Armed Bandit — Reflection',
+      was_correct: true
+    });
+
+    if(error){
+      statusEl.textContent = 'Something went wrong saving: ' + error.message;
+      statusEl.className = 'save-status error';
+      btn.disabled = false;
+      return;
+    }
+
+    screenResults.classList.add('hidden');
+    screenDone.classList.remove('hidden');
+  });
+
+  document.getElementById('btn-restart').addEventListener('click', ()=>{
+    screenDone.classList.add('hidden');
+    screenGame.classList.remove('hidden');
+    document.getElementById('reflection').value = '';
+    document.getElementById('reflection-warning').classList.add('hidden');
+    document.getElementById('save-status').textContent = '';
+    document.getElementById('btn-submit-reflection').disabled = false;
+    startGame();
+  });
+
+})();
+</script>
+
+</body>
+</html>
