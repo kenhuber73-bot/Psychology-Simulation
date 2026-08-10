@@ -286,6 +286,53 @@
   .save-status.error{ color:var(--red); }
   .save-status.success{ color:var(--teal); font-weight:700; }
   .hidden{ display:none !important; }
+
+  /* --- GAD-7 --- */
+  .gad-note{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    color:var(--dim);
+    background:var(--panel-light);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:12px 14px;
+    margin-bottom:20px;
+    line-height:1.6;
+  }
+  .gad-item{
+    border-bottom:1px dashed var(--line);
+    padding:16px 0;
+  }
+  .gad-item:first-of-type{ padding-top:0; }
+  .gad-item:last-of-type{ border-bottom:none; }
+  .gad-q{
+    font-size:14.5px;
+    color:var(--text);
+    margin-bottom:10px;
+  }
+  .gad-opts{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  @media(min-width:520px){ .gad-opts{ grid-template-columns:repeat(4,1fr); } }
+  .gad-opt{
+    font-family:'Inter',sans-serif;
+    font-size:12.5px;
+    text-align:center;
+    padding:10px 6px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--panel-light);
+    color:var(--dim);
+    cursor:pointer;
+  }
+  .gad-opt.active{
+    border-color:var(--gold);
+    color:var(--gold-bright);
+    background:rgba(201,162,39,.12);
+    font-weight:600;
+  }
 </style>
 </head>
 <body>
@@ -298,11 +345,24 @@
     <h1>The Two-Armed Bandit</h1>
     <p>You're a small-time gambler on the casino floor with <strong style="color:var(--gold-bright)">$500</strong> in chips. Two slot machines sit in front of you. One pays out more often than the other &mdash; but you don't know which, and you won't be told.</p>
     <p>Pick a machine, place a bet, and pull the lever. Try to walk away with more than you started with. Nothing here is announced to you in advance &mdash; you'll have to learn as you go.</p>
-    <p style="margin-top:20px;"><button class="btn btn-primary" id="btn-start" style="width:100%;">Step Up to the Machines</button></p>
+    <p>Before you play, you'll fill out a short, real anxiety questionnaire. After you play, you'll write a short reflection. At the end, you'll see your results side by side with your questionnaire score.</p>
+    <p style="margin-top:20px;"><button class="btn btn-primary" id="btn-start" style="width:100%;">Begin</button></p>
+  </div>
+
+  <!-- ============ GAD-7 ============ -->
+  <div id="screen-gad7" class="card hidden">
+    <div class="eyebrow">Step 1 of 3 · Questionnaire</div>
+    <h1>Before You Play</h1>
+    <p>This is the real GAD-7, a screening questionnaire used in actual clinical and research settings. Answer honestly &mdash; there's no wrong answer, and this isn't a diagnosis of anything.</p>
+    <div class="gad-note">Your responses here will be saved along with your results from this activity, under your class nickname &mdash; not fully anonymous, the way some of the other tests on this site are. If you'd rather not answer honestly, that's okay &mdash; just play the game as normal and skip ahead.</div>
+    <p style="color:var(--text); font-weight:600; margin-bottom:0;">Over the last 2 weeks, how often have you been bothered by the following problems?</p>
+    <div id="gad-list"></div>
+    <p style="margin-top:16px;"><button class="btn btn-primary" id="btn-gad-continue" style="width:100%;" disabled>Continue →</button></p>
   </div>
 
   <!-- ============ GAME ============ -->
   <div id="screen-game" class="card hidden">
+    <div class="eyebrow">Step 2 of 3 · Activity</div>
     <div class="hud">
       <div>
         <span class="balance-label">Chips</span>
@@ -328,10 +388,22 @@
     <div class="note">The odds on these machines are not fixed. They can &mdash; and will &mdash; change without warning.</div>
   </div>
 
+  <!-- ============ REFLECTION ============ -->
+  <div id="screen-reflection" class="card hidden">
+    <div class="eyebrow">Step 3 of 3 · Reflection</div>
+    <h1>Cashing Out</h1>
+    <p id="reflection-summary"></p>
+    <p style="margin-top:20px; color:var(--text); font-weight:600;">In 2&ndash;3 sentences: at what point in the game (if any) did you first suspect the odds had flipped? What made you suspect it?</p>
+    <textarea id="reflection" placeholder="Type your answer here..."></textarea>
+    <div class="message error hidden" id="reflection-warning">Please write a fuller answer &mdash; a couple of real sentences about what you noticed.</div>
+    <p style="margin-top:14px;"><button class="btn btn-primary" id="btn-submit-reflection" style="width:100%;">Submit Reflection</button></p>
+    <div class="save-status" id="save-status"></div>
+  </div>
+
   <!-- ============ RESULTS ============ -->
   <div id="screen-results" class="card hidden">
     <div class="eyebrow">Debrief</div>
-    <h1 id="result-headline">Cashing Out</h1>
+    <h1 id="result-headline">Your Results</h1>
     <p id="result-summary"></p>
 
     <div class="stat-grid">
@@ -353,21 +425,21 @@
     </div>
     <canvas id="chart" width="600" height="220"></canvas>
 
-    <p><strong style="color:var(--text)">Why this matters:</strong> this task is a simplified version of a real study (Browning et al., 2015, <em>Nature Neuroscience</em>). In the original, participants learned which of two shapes predicted a mild shock, and researchers found that people with higher anxiety tended to have learning rates that changed less between predictable and unpredictable environments &mdash; they were slower to notice when the "rules" had shifted. One idea researchers have proposed is that this isn't about learning fear more strongly, but about how well the brain tracks how <em>uncertain</em> the world currently is.</p>
-    <p>Your single α from one short game isn't a diagnosis of anything &mdash; it's just one number, from one sitting, with a lot of noise in it. Real research studies compare group averages across many people and conditions before drawing conclusions.</p>
+    <div class="stat-grid" style="margin-top:22px;">
+      <div class="stat">
+        <div class="label">GAD-7 Score</div>
+        <div class="value" id="stat-gad-score">0 / 21</div>
+      </div>
+      <div class="stat">
+        <div class="label">Anxiety Level (Self-Reported)</div>
+        <div class="value" id="stat-gad-band" style="font-size:17px;">&mdash;</div>
+      </div>
+    </div>
 
-    <p style="margin-top:20px; color:var(--text); font-weight:600;">In 2&ndash;3 sentences: at what point in the game (if any) did you first suspect the odds had flipped? What made you suspect it?</p>
-    <textarea id="reflection" placeholder="Type your answer here..."></textarea>
-    <div class="message error hidden" id="reflection-warning">Please write a fuller answer &mdash; a couple of real sentences about what you noticed.</div>
-    <p style="margin-top:14px;"><button class="btn btn-primary" id="btn-submit-reflection" style="width:100%;">Submit Reflection</button></p>
-    <div class="save-status" id="save-status"></div>
-  </div>
+    <p><strong style="color:var(--text)">Anxiety and learning rate, side by side:</strong> this task is a simplified version of a real study (Browning et al., 2015, <em>Nature Neuroscience</em>). In the original, participants learned which of two shapes predicted a mild shock, and researchers found that people with higher anxiety tended to have learning rates that changed less between predictable and unpredictable environments &mdash; they were slower to notice when the "rules" had shifted. One idea researchers have proposed is that this isn't about learning fear more strongly, but about how well the brain tracks how <em>uncertain</em> the world currently is.</p>
+    <p id="gad-alpha-callout"></p>
+    <p>Your own pair of numbers above isn't a diagnosis, and it isn't evidence of anything by itself &mdash; it's two numbers, from one sitting, with a lot of noise in both. Real research studies compare group averages across dozens or hundreds of people before drawing conclusions like the one above. If your class pools its results anonymously, though, you might actually see the same pattern start to emerge.</p>
 
-  <!-- ============ DONE ============ -->
-  <div id="screen-done" class="card hidden">
-    <div class="eyebrow">Debrief</div>
-    <h1>🎉 Nice work</h1>
-    <p>Your reflection has been submitted. Real research on uncertainty and anxiety works the same way &mdash; not from one person's single session, but from noticing patterns in how people track a changing, unpredictable world.</p>
     <p style="margin-top:20px;"><button class="btn btn-ghost" id="btn-restart" style="width:100%;">↺ Play Again</button></p>
   </div>
 
@@ -383,6 +455,61 @@
     return;
   }
   const studentSession = JSON.parse(rawSession);
+
+  // ---------- GAD-7 ----------
+  const GAD7_ITEMS = [
+    'Feeling nervous, anxious, or on edge',
+    'Not being able to stop or control worrying',
+    'Worrying too much about different things',
+    'Trouble relaxing',
+    'Being so restless that it is hard to sit still',
+    'Becoming easily annoyed or irritable',
+    'Feeling afraid as if something awful might happen'
+  ];
+  const GAD7_OPTIONS = ['Not at all', 'Several days', 'More than half the days', 'Nearly every day'];
+  let gadAnswers = new Array(GAD7_ITEMS.length).fill(null);
+  let gadScore = null;
+  let gadBand = null;
+
+  function gadSeverityBand(score){
+    if(score <= 4) return 'Minimal';
+    if(score <= 9) return 'Mild';
+    if(score <= 14) return 'Moderate';
+    return 'Severe';
+  }
+
+  function renderGad7(){
+    const list = document.getElementById('gad-list');
+    list.innerHTML = '';
+    GAD7_ITEMS.forEach((q, idx) => {
+      const item = document.createElement('div');
+      item.className = 'gad-item';
+      item.innerHTML = `<div class="gad-q">${idx + 1}. ${q}</div><div class="gad-opts" id="gad-opts-${idx}"></div>`;
+      list.appendChild(item);
+      const optsEl = item.querySelector('.gad-opts');
+      GAD7_OPTIONS.forEach((label, val) => {
+        const btn = document.createElement('button');
+        btn.className = 'gad-opt';
+        btn.textContent = label;
+        btn.addEventListener('click', () => {
+          gadAnswers[idx] = val;
+          optsEl.querySelectorAll('.gad-opt').forEach(o => o.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById('btn-gad-continue').disabled = gadAnswers.includes(null);
+        });
+        optsEl.appendChild(btn);
+      });
+    });
+  }
+  renderGad7();
+
+  document.getElementById('btn-gad-continue').addEventListener('click', () => {
+    gadScore = gadAnswers.reduce((a,b) => a + b, 0);
+    gadBand = gadSeverityBand(gadScore);
+    document.getElementById('screen-gad7').classList.add('hidden');
+    document.getElementById('screen-game').classList.remove('hidden');
+    startGame();
+  });
 
   const TOTAL_TRIALS = 90;
   const START_BALANCE = 500;
@@ -416,9 +543,10 @@
 
   // ---------- DOM refs ----------
   const screenIntro = document.getElementById('screen-intro');
+  const screenGad7 = document.getElementById('screen-gad7');
   const screenGame = document.getElementById('screen-game');
+  const screenReflection = document.getElementById('screen-reflection');
   const screenResults = document.getElementById('screen-results');
-  const screenDone = document.getElementById('screen-done');
   const hudBalance = document.getElementById('hud-balance');
   const hudTrial = document.getElementById('hud-trial');
   const progressFill = document.getElementById('progress-fill');
@@ -495,7 +623,7 @@
       state.trial++;
       state.locked = false;
       if(state.trial >= TOTAL_TRIALS){
-        showResults();
+        goToReflection();
       } else {
         renderBetRow();
         updateHud();
@@ -510,8 +638,7 @@
 
   document.getElementById('btn-start').addEventListener('click', ()=>{
     screenIntro.classList.add('hidden');
-    screenGame.classList.remove('hidden');
-    startGame();
+    screenGad7.classList.remove('hidden');
   });
 
   function startGame(){
@@ -617,23 +744,38 @@
 
   let lastFit = { alpha: 0.1 };
 
-  function showResults(){
+  function goToReflection(){
     screenGame.classList.add('hidden');
+    screenReflection.classList.remove('hidden');
+
+    lastFit = fitModel(state.log);
+
+    const profit = state.balance - START_BALANCE;
+    document.getElementById('reflection-summary').textContent = profit >= 0
+      ? ('You finished up $' + profit + ' from where you started.')
+      : ('You finished down $' + Math.abs(profit) + ' from where you started.');
+  }
+
+  function showResults(){
+    screenReflection.classList.add('hidden');
     screenResults.classList.remove('hidden');
 
     const profit = state.balance - START_BALANCE;
     document.getElementById('result-headline').textContent = profit >= 0 ? 'You Walked Away Ahead' : 'The House Edge Caught Up';
-    document.getElementById('result-summary').textContent = profit >= 0
-      ? ('You finished up $' + profit + ' from where you started. Now let\'s look at how you actually made your decisions.')
-      : ('You finished down $' + Math.abs(profit) + ' from where you started. Now let\'s look at how you actually made your decisions.');
+    document.getElementById('result-summary').textContent = 'Here\'s how you actually made your decisions, alongside your questionnaire score.';
 
     document.getElementById('stat-balance').textContent = '$' + state.balance;
+    document.getElementById('stat-alpha').textContent = lastFit.alpha.toFixed(2);
+    drawChart(state.log, lastFit.alpha);
 
-    const fit = fitModel(state.log);
-    lastFit = fit;
-    document.getElementById('stat-alpha').textContent = fit.alpha.toFixed(2);
+    document.getElementById('stat-gad-score').textContent = gadScore + ' / 21';
+    document.getElementById('stat-gad-band').textContent = gadBand;
 
-    drawChart(state.log, fit.alpha);
+    const alphaDesc = lastFit.alpha >= 0.35 ? 'a relatively high' : (lastFit.alpha <= 0.12 ? 'a relatively low' : 'a middle-of-the-range');
+    document.getElementById('gad-alpha-callout').innerHTML =
+      '<strong style="color:var(--text)">In your own results:</strong> your GAD-7 score placed you in the "' + gadBand.toLowerCase() +
+      '" range, and your fitted learning rate (α = ' + lastFit.alpha.toFixed(2) + ') was ' + alphaDesc +
+      ' one for this class. On its own, that pairing doesn\'t confirm or refute anything about you personally &mdash; but it\'s the same kind of pairing researchers look at, just averaged across many more people than one.';
   }
 
   // ---------- Reflection + save ----------
@@ -652,7 +794,9 @@
     statusEl.textContent = 'Saving...';
     statusEl.className = 'save-status';
 
-    const notes = 'Final chips: $' + state.balance + ' | Estimated learning rate (α): ' + lastFit.alpha.toFixed(2);
+    const notes = 'Final chips: $' + state.balance +
+      ' | Estimated learning rate (α): ' + lastFit.alpha.toFixed(2) +
+      ' | GAD-7 score: ' + gadScore + '/21 (' + gadBand + ')';
 
     const { error } = await sb.from('case_attempts').insert({
       student_session_id: studentSession.sessionId,
@@ -672,18 +816,21 @@
       return;
     }
 
-    screenResults.classList.add('hidden');
-    screenDone.classList.remove('hidden');
+    showResults();
   });
 
   document.getElementById('btn-restart').addEventListener('click', ()=>{
-    screenDone.classList.add('hidden');
-    screenGame.classList.remove('hidden');
+    screenResults.classList.add('hidden');
+    screenGad7.classList.remove('hidden');
+    gadAnswers = new Array(GAD7_ITEMS.length).fill(null);
+    gadScore = null;
+    gadBand = null;
+    renderGad7();
+    document.getElementById('btn-gad-continue').disabled = true;
     document.getElementById('reflection').value = '';
     document.getElementById('reflection-warning').classList.add('hidden');
     document.getElementById('save-status').textContent = '';
     document.getElementById('btn-submit-reflection').disabled = false;
-    startGame();
   });
 
 })();
