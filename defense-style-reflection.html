@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Defense Style Reflection</title>
+<style>
+  :root{
+    --paper:#F6F4EF;
+    --paper-2:#EFEBE2;
+    --ink:#2A2C2E;
+    --ink-soft:#5B5E60;
+    --line:#D8D2C2;
+    --mature:#4E6E62;
+    --neurotic:#8A6A3D;
+    --immature:#A6493D;
+    --mature-bg:#E4EBE7;
+    --neurotic-bg:#EFE6D6;
+    --immature-bg:#F1E1DD;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    line-height:1.5;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:40px 20px 100px;}
+  .eyebrow{
+    font-family:Georgia,"Iowan Old Style",serif;
+    font-style:italic;
+    color:var(--ink-soft);
+    font-size:14px;
+    letter-spacing:.02em;
+    margin-bottom:4px;
+  }
+  h1{
+    font-family:Georgia,"Iowan Old Style",serif;
+    font-weight:400;
+    font-size:34px;
+    margin:0 0 10px;
+    letter-spacing:-0.01em;
+  }
+  .intro-text{color:var(--ink-soft);font-size:15px;max-width:58ch;}
+  .card{
+    background:var(--paper-2);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:22px 24px;
+    margin-top:18px;
+  }
+  .disclaimer{
+    font-size:13px;
+    color:var(--ink-soft);
+    border-left:3px solid var(--line);
+    padding-left:14px;
+    margin-top:22px;
+  }
+  button{
+    font-family:inherit;
+    font-size:15px;
+    cursor:pointer;
+  }
+  .start-btn, .next-btn, .restart-btn{
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    padding:13px 26px;
+    border-radius:3px;
+    margin-top:22px;
+    letter-spacing:.01em;
+  }
+  .start-btn:hover, .next-btn:hover, .restart-btn:hover{opacity:.85;}
+  .back-btn{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    padding:13px 20px;
+    border-radius:3px;
+    margin-top:22px;
+    margin-right:10px;
+  }
+  #screen-intro, #screen-results{display:block;}
+  #screen-test, #screen-results{display:none;}
+
+  .progress-track{
+    height:4px;
+    background:var(--line);
+    border-radius:2px;
+    overflow:hidden;
+    margin-bottom:30px;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--ink);
+    width:0%;
+    transition:width .25s ease;
+  }
+  .item-counter{
+    font-size:13px;
+    color:var(--ink-soft);
+    font-family:Georgia,serif;
+    font-style:italic;
+    margin-bottom:14px;
+  }
+  .item-text{
+    font-size:21px;
+    line-height:1.4;
+    margin-bottom:26px;
+    min-height:88px;
+  }
+  .scale{
+    display:flex;
+    justify-content:space-between;
+    gap:6px;
+  }
+  .scale button{
+    flex:1;
+    height:52px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    border-radius:3px;
+    font-size:15px;
+    color:var(--ink);
+    transition:background .12s, color .12s, border-color .12s;
+  }
+  .scale button:hover{border-color:var(--ink-soft);}
+  .scale button.selected{
+    background:var(--ink);
+    color:var(--paper);
+    border-color:var(--ink);
+  }
+  .scale-labels{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:8px;
+  }
+  .nav-row{margin-top:30px;}
+
+  /* results */
+  .style-row{margin-bottom:20px;}
+  .style-name{
+    font-family:Georgia,serif;
+    font-size:17px;
+    display:flex;
+    justify-content:space-between;
+  }
+  .style-bar-track{
+    height:14px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:7px;
+    margin-top:6px;
+    overflow:hidden;
+  }
+  .style-bar-fill{height:100%;border-radius:7px 0 0 7px;}
+  .fill-mature{background:var(--mature);}
+  .fill-neurotic{background:var(--neurotic);}
+  .fill-immature{background:var(--immature);}
+  .style-desc{font-size:13px;color:var(--ink-soft);margin-top:6px;}
+
+  .mech-toggle{
+    margin-top:26px;
+    background:transparent;
+    border:1px solid var(--line);
+    padding:9px 16px;
+    border-radius:3px;
+    color:var(--ink);
+    font-size:14px;
+  }
+  .mech-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:16px;
+    font-size:14px;
+    display:none;
+  }
+  .mech-table.show{display:table;}
+  .mech-table th{
+    text-align:left;
+    font-weight:600;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    color:var(--ink-soft);
+    border-bottom:1px solid var(--line);
+    padding:8px 6px;
+  }
+  .mech-table td{
+    padding:8px 6px;
+    border-bottom:1px solid var(--line);
+  }
+  .tag{
+    display:inline-block;
+    font-size:11px;
+    padding:2px 7px;
+    border-radius:10px;
+    color:#fff;
+  }
+  .tag-mature{background:var(--mature);}
+  .tag-neurotic{background:var(--neurotic);}
+  .tag-immature{background:var(--immature);}
+
+  footer{
+    margin-top:40px;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- INTRO -->
+  <div id="screen-intro">
+    <div class="eyebrow">Psychological Tests</div>
+    <h1>Defense Style Reflection</h1>
+    <p class="intro-text">
+      Psychodynamic theory suggests that everyone relies on habitual mental strategies — "defense
+      mechanisms" — to manage anxiety, conflict, and uncomfortable feelings without fully realizing
+      it. This reflection tool walks through 40 short statements about everyday coping habits and
+      groups your responses into three broad styles: <strong>Mature</strong>, <strong>Neurotic</strong>,
+      and <strong>Immature</strong>.
+    </p>
+    <div class="card">
+      <strong>How it works</strong>
+      <p style="margin-bottom:0;color:var(--ink-soft);font-size:14px;">
+        You'll rate 40 statements from 1 (strongly disagree) to 9 (strongly agree). Each statement
+        contributes to one of 20 specific coping patterns, which are then grouped into the three
+        broader styles above. It takes about 8–10 minutes.
+      </p>
+    </div>
+    <p class="disclaimer">
+      This is an original reflection tool built for classroom use, written to illustrate the
+      psychodynamic concept of defense styles — it is not a validated psychological test, not a
+      clinical or diagnostic instrument, and your answers are not saved or sent anywhere. Everyone
+      uses defense mechanisms; using immature ones sometimes doesn't mean anything is wrong with you.
+    </p>
+    <button class="start-btn" onclick="startTest()">Begin</button>
+  </div>
+
+  <!-- TEST -->
+  <div id="screen-test">
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="item-counter" id="itemCounter">Item 1 of 40</div>
+    <div class="item-text" id="itemText"></div>
+    <div class="scale" id="scaleRow"></div>
+    <div class="scale-labels"><span>Strongly disagree</span><span>Strongly agree</span></div>
+    <div class="nav-row">
+      <button class="back-btn" id="backBtn" onclick="goBack()">Back</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="screen-results">
+    <div class="eyebrow">Your Results</div>
+    <h1>Defense Style Profile</h1>
+    <p class="intro-text">Your average rating (1–9) within each style, based on your 40 responses.</p>
+
+    <div class="card">
+      <div id="styleRows"></div>
+      <button class="mech-toggle" onclick="toggleMechTable()">Show breakdown by individual coping pattern</button>
+      <table class="mech-table" id="mechTable">
+        <thead><tr><th>Coping pattern</th><th>Style</th><th>Your average</th></tr></thead>
+        <tbody id="mechTableBody"></tbody>
+      </table>
+    </div>
+
+    <p class="disclaimer">
+      These three styles come from psychodynamic theory: <strong>Mature</strong> defenses tend to be
+      flexible and adaptive; <strong>Neurotic</strong> defenses distort feelings in socially acceptable
+      but sometimes self-limiting ways; <strong>Immature</strong> defenses tend to distort reality more
+      and are linked, in research on this theory, to more difficulty with stress. Higher scores mean you
+      recognized that pattern more often in yourself — not that it's your only style, and not that it's
+      good or bad on its own. This is a reflection exercise, not a diagnostic tool, and nothing here is saved.
+    </p>
+    <button class="restart-btn" onclick="restartTest()">Start over</button>
+  </div>
+
+  <footer>Original instrument written for classroom use — not adapted from any published or copyrighted questionnaire.</footer>
+</div>
+
+<script>
+// ---- Item bank: 40 original items, 2 per coping pattern, grouped into 3 styles ----
+// style: 'mature' | 'neurotic' | 'immature'
+const items = [
+  // MATURE
+  {mech:"Sublimation", style:"mature", text:"When I'm upset, I channel that energy into something productive, like art, music, sports, or building something."},
+  {mech:"Sublimation", style:"mature", text:"Physical activity or creative projects help me process feelings I can't easily put into words."},
+  {mech:"Humor", style:"mature", text:"I can usually find something funny in a situation that's stressing me out."},
+  {mech:"Humor", style:"mature", text:"Making jokes about my own mistakes helps me feel less bothered by them."},
+  {mech:"Anticipation", style:"mature", text:"Before a difficult event, I think through what might happen and plan how I'll handle it."},
+  {mech:"Anticipation", style:"mature", text:"I feel calmer about upcoming challenges once I've mapped out a few ways to deal with them."},
+  {mech:"Suppression", style:"mature", text:"I can set a worry aside on purpose and come back to it later, once I actually have time to deal with it."},
+  {mech:"Suppression", style:"mature", text:"I'm good at not letting a problem take over my mind before it's actually the right moment to handle it."},
+
+  // NEUROTIC
+  {mech:"Undoing", style:"neurotic", text:"After I say or do something I regret, I go out of my way to make it up to that person, even in small ways."},
+  {mech:"Undoing", style:"neurotic", text:"If I feel guilty about a thought or action, I find myself doing something afterward to balance it out."},
+  {mech:"Pseudo-altruism", style:"neurotic", text:"I get so much of my sense of purpose from helping others that I'd feel lost without it."},
+  {mech:"Pseudo-altruism", style:"neurotic", text:"I sometimes put other people's needs ahead of my own to the point that I ignore what I actually want."},
+  {mech:"Idealization", style:"neurotic", text:"There's someone in my life I see as basically perfect, without real flaws."},
+  {mech:"Idealization", style:"neurotic", text:"I tend to believe certain people in my life would never really let me down, no matter what."},
+  {mech:"Reaction Formation", style:"neurotic", text:"When someone treats me badly, I sometimes end up being extra kind to them instead of showing how I really feel."},
+  {mech:"Reaction Formation", style:"neurotic", text:"I've noticed I can act unusually cheerful or caring toward someone right after they've upset me."},
+
+  // IMMATURE
+  {mech:"Projection", style:"immature", text:"I often feel like other people are against me or trying to undermine me."},
+  {mech:"Projection", style:"immature", text:"It seems like people are frequently unfair to me, even when I can't quite explain why."},
+  {mech:"Passive Aggression", style:"immature", text:"When I'm annoyed with someone in charge of me, I might quietly slow down or do a worse job instead of saying anything."},
+  {mech:"Passive Aggression", style:"immature", text:"If I'm upset with someone, I sometimes show it by 'forgetting' things or dragging my feet rather than telling them directly."},
+  {mech:"Acting Out", style:"immature", text:"When something is really bothering me, I tend to act on it right away instead of thinking it through first."},
+  {mech:"Acting Out", style:"immature", text:"I've done impulsive things in the heat of the moment that were really just about relieving stress."},
+  {mech:"Isolation of Affect", style:"immature", text:"I can talk about upsetting events in my life without really feeling the emotion behind them."},
+  {mech:"Isolation of Affect", style:"immature", text:"People sometimes tell me I describe hard experiences in a strangely calm, detached way."},
+  {mech:"Devaluation", style:"immature", text:"I sometimes find it satisfying to point out other people's flaws or put them in their place."},
+  {mech:"Devaluation", style:"immature", text:"I have a knack for spotting exactly what's wrong or weak about people or things."},
+  {mech:"Autistic Fantasy", style:"immature", text:"My imagination or daydreams feel more rewarding to me than a lot of what happens in real life."},
+  {mech:"Autistic Fantasy", style:"immature", text:"When things get hard, I'd rather retreat into my own imagination than deal with the situation directly."},
+  {mech:"Denial", style:"immature", text:"People close to me say I ignore problems as if they weren't really happening."},
+  {mech:"Denial", style:"immature", text:"I tend to act like nothing is wrong even when there are clear signs that something is."},
+  {mech:"Displacement", style:"immature", text:"When I'm frustrated with someone I can't confront, I take it out on someone else instead."},
+  {mech:"Displacement", style:"immature", text:"I've snapped at people who had nothing to do with what was actually bothering me."},
+  {mech:"Dissociation", style:"immature", text:"Under stress, I can feel like I'm not fully myself, almost like I'm watching things happen from outside."},
+  {mech:"Dissociation", style:"immature", text:"There are times I feel like two very different versions of me, depending on the situation."},
+  {mech:"Splitting", style:"immature", text:"I tend to see people as either completely good or completely bad, without much in between."},
+  {mech:"Splitting", style:"immature", text:"My opinion of someone can flip entirely — from thinking they're great to thinking they're terrible — based on one incident."},
+  {mech:"Rationalization", style:"immature", text:"I can always come up with a reasonable explanation for why I did something, even if the real reason was different."},
+  {mech:"Rationalization", style:"immature", text:"When things don't go my way, I usually find a good reason it wasn't really my fault."},
+  {mech:"Somatization", style:"immature", text:"When I'm stressed or upset, I often end up with physical symptoms like headaches or stomachaches."},
+  {mech:"Somatization", style:"immature", text:"My body seems to react to emotional problems more than my mind does — I get sick or achy instead of feeling upset."},
+];
+
+let order = [];
+let current = 0;
+let responses = {};
+
+function shuffledOrder(n){
+  const arr = Array.from({length:n}, (_,i)=>i);
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+
+function startTest(){
+  order = shuffledOrder(items.length);
+  current = 0;
+  responses = {};
+  document.getElementById("screen-intro").style.display = "none";
+  document.getElementById("screen-test").style.display = "block";
+  renderItem();
+}
+
+function renderItem(){
+  const idx = order[current];
+  const item = items[idx];
+  document.getElementById("itemCounter").textContent = `Item ${current+1} of ${items.length}`;
+  document.getElementById("itemText").textContent = item.text;
+  document.getElementById("progressFill").style.width = `${(current/items.length)*100}%`;
+  document.getElementById("backBtn").style.visibility = current === 0 ? "hidden" : "visible";
+
+  const scaleRow = document.getElementById("scaleRow");
+  scaleRow.innerHTML = "";
+  for(let v=1; v<=9; v++){
+    const btn = document.createElement("button");
+    btn.textContent = v;
+    if(responses[idx] === v) btn.classList.add("selected");
+    btn.onclick = () => selectValue(idx, v);
+    scaleRow.appendChild(btn);
+  }
+}
+
+function selectValue(idx, v){
+  responses[idx] = v;
+  setTimeout(()=>{
+    if(current < items.length - 1){
+      current++;
+      renderItem();
+    } else {
+      showResults();
+    }
+  }, 150);
+  renderItem();
+}
+
+function goBack(){
+  if(current > 0){
+    current--;
+    renderItem();
+  }
+}
+
+function showResults(){
+  document.getElementById("screen-test").style.display = "none";
+  document.getElementById("screen-results").style.display = "block";
+
+  // per-mechanism averages
+  const mechScores = {};
+  items.forEach((item, idx) => {
+    if(!mechScores[item.mech]) mechScores[item.mech] = {sum:0, count:0, style:item.style};
+    mechScores[item.mech].sum += responses[idx];
+    mechScores[item.mech].count += 1;
+  });
+  const mechAverages = Object.entries(mechScores).map(([mech, d]) => ({
+    mech, style:d.style, avg: d.sum / d.count
+  }));
+
+  // per-style averages (mean of mechanism averages within that style)
+  const styleGroups = {mature:[], neurotic:[], immature:[]};
+  mechAverages.forEach(m => styleGroups[m.style].push(m.avg));
+  const styleAverages = {};
+  Object.keys(styleGroups).forEach(s => {
+    const arr = styleGroups[s];
+    styleAverages[s] = arr.reduce((a,b)=>a+b,0) / arr.length;
+  });
+
+  const styleMeta = {
+    mature: {label:"Mature", cls:"fill-mature", tag:"tag-mature", desc:"Flexible, reality-based coping — using stress constructively, planning ahead, keeping perspective."},
+    neurotic: {label:"Neurotic", cls:"fill-neurotic", tag:"tag-neurotic", desc:"Coping that manages anxiety in socially acceptable ways, but can involve distorting your own feelings or the people around you."},
+    immature: {label:"Immature", cls:"fill-immature", tag:"tag-immature", desc:"Coping that more heavily distorts reality or discharges tension outward — common under high stress or earlier in development."},
+  };
+
+  const rowsHtml = ["mature","neurotic","immature"].map(s => {
+    const avg = styleAverages[s];
+    const pct = (avg/9)*100;
+    return `
+      <div class="style-row">
+        <div class="style-name"><span>${styleMeta[s].label}</span><span>${avg.toFixed(1)} / 9</span></div>
+        <div class="style-bar-track"><div class="style-bar-fill ${styleMeta[s].cls}" style="width:${pct}%"></div></div>
+        <div class="style-desc">${styleMeta[s].desc}</div>
+      </div>`;
+  }).join("");
+  document.getElementById("styleRows").innerHTML = rowsHtml;
+
+  const sortedMechs = mechAverages.sort((a,b)=> b.avg - a.avg);
+  const tbody = document.getElementById("mechTableBody");
+  tbody.innerHTML = sortedMechs.map(m => `
+    <tr>
+      <td>${m.mech}</td>
+      <td><span class="tag ${styleMeta[m.style].tag}">${styleMeta[m.style].label}</span></td>
+      <td>${m.avg.toFixed(1)}</td>
+    </tr>
+  `).join("");
+}
+
+function toggleMechTable(){
+  document.getElementById("mechTable").classList.toggle("show");
+}
+
+function restartTest(){
+  document.getElementById("screen-results").style.display = "none";
+  document.getElementById("screen-intro").style.display = "block";
+}
+</script>
+</body>
+</html>

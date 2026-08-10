@@ -167,6 +167,11 @@
       <div class="case-desc">The actual, published SIAS used in research. Not a diagnostic tool, and nothing is saved.</div>
     </div>
 
+    <div class="case-card" id="defense-style-card" style="border-style:dashed;">
+      <div class="case-title">Defense Style Reflection</div>
+      <div class="case-desc">A 40-statement self-reflection on how you cope with stress, grouped into three psychodynamic defense styles. Not a diagnostic tool, and nothing is saved.</div>
+    </div>
+
     <div class="section-header" id="cat-research">Research Studies</div>
 
     <div class="case-card" id="thompson-card" style="border-style:dashed;">
@@ -242,6 +247,10 @@
 
     document.getElementById('sias-card').addEventListener('click', () => {
       window.location.href = 'sias.html';
+    });
+
+    document.getElementById('defense-style-card').addEventListener('click', () => {
+      window.location.href = 'defense-style-reflection.html';
     });
 
     document.getElementById('thompson-card').addEventListener('click', () => {
