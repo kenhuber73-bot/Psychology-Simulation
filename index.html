@@ -110,6 +110,36 @@
     margin:34px 0 14px; color:var(--ink);
   }
   .activities-wrap .card-grid + .subsection{margin-top:34px;}
+  .cat-nav{
+    position:sticky; top:12px; z-index:20;
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:12px 16px; margin:0 0 26px;
+    box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+    display:flex; align-items:center; gap:12px;
+  }
+  .cat-nav-label{font-family:'Courier Prime', monospace; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft); white-space:nowrap;}
+  .cat-nav-select-wrap{position:relative; flex:1; max-width:320px;}
+  .cat-nav-btn{
+    width:100%; text-align:left; font-family:'Space Grotesk', sans-serif; font-size:0.92rem;
+    background:var(--paper); border:1px solid var(--line); border-radius:6px;
+    padding:9px 32px 9px 12px; cursor:pointer; color:var(--ink);
+  }
+  .cat-nav-btn::after{
+    content:"▾"; position:absolute; right:14px; top:50%; transform:translateY(-50%);
+    pointer-events:none; color:var(--ink-soft);
+  }
+  .cat-nav-menu{
+    display:none; position:absolute; top:calc(100% + 4px); left:0; right:0;
+    background:var(--white-card); border:1px solid var(--ink); border-radius:6px;
+    box-shadow:4px 4px 0 rgba(43,42,37,0.1); overflow:hidden; z-index:21;
+  }
+  .cat-nav-menu button{
+    display:block; width:100%; text-align:left; font-family:'Space Grotesk', sans-serif;
+    font-size:0.88rem; background:none; border:none; padding:10px 12px; cursor:pointer;
+    color:var(--ink); border-bottom:1px dashed var(--line);
+  }
+  .cat-nav-menu button:last-child{border-bottom:none;}
+  .cat-nav-menu button:hover{background:var(--paper);}
 
   footer{
     text-align:center; padding:34px 20px; color:var(--ink-soft);
@@ -164,9 +194,26 @@
   <div class="activities-wrap" id="activities">
     <h2>Case File 0001 — Available Activities</h2>
 
-    <p style="color:var(--ink-soft); font-size:0.92rem; margin:-8px 0 8px; max-width:600px; line-height:1.6;">Most of what's below you can try right now, no login required — the case studies and the conditioning follow-up are the only two that need a class join code.</p>
+    <p style="color:var(--ink-soft); font-size:0.92rem; margin:-8px 0 8px; max-width:600px; line-height:1.6;">Most of what's below you can try right now, no login required — the case studies and the conditioning and antipsychotics follow-ups are the only ones that need a class join code.</p>
 
-    <div class="subsection">Case Studies</div>
+    <div class="cat-nav">
+      <span class="cat-nav-label">Jump to</span>
+      <div class="cat-nav-select-wrap">
+        <button class="cat-nav-btn" id="catNavBtn" type="button">All activities</button>
+        <div class="cat-nav-menu" id="catNavMenu">
+          <button data-target="activities" type="button">All activities</button>
+          <button data-target="cat-case-studies" type="button">Case Studies</button>
+          <button data-target="cat-experiments" type="button">Experiments</button>
+          <button data-target="cat-neuroscience" type="button">Neuroscience</button>
+          <button data-target="cat-biology" type="button">Biology</button>
+          <button data-target="cat-psych-tests" type="button">Psychological Tests</button>
+          <button data-target="cat-research" type="button">Research Studies</button>
+          <button data-target="cat-coming-soon" type="button">Coming Soon</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection" id="cat-case-studies">Case Studies</div>
     <div class="card-grid">
       <a href="teacher-login.html" class="card">
         <span class="tag">Available Now</span>
@@ -185,7 +232,7 @@
       </a>
     </div>
 
-    <div class="subsection">Experiments</div>
+    <div class="subsection" id="cat-experiments">Experiments</div>
     <div class="card-grid">
       <a href="stroop.html" class="card">
         <span class="tag try-now">Try It Now — No Login</span>
@@ -214,7 +261,30 @@
       </a>
     </div>
 
-    <div class="subsection">Psychological Tests</div>
+    <div class="subsection" id="cat-neuroscience">Neuroscience</div>
+    <div class="card-grid">
+      <a href="neurotransmitter-mechanisms.html" class="card">
+        <span class="tag try-now">Try It Now — No Login</span>
+        <h3>Inside the Synapse — SSRI vs. Benzodiazepine</h3>
+        <p>An interactive synapse diagram. Toggle the drug on and off to see how an SSRI blocks serotonin reuptake, or how a benzodiazepine changes GABA signaling.</p>
+      </a>
+      <a href="teacher-login.html" class="card">
+        <span class="tag">Available Now</span>
+        <h3>Key Concepts: Antipsychotics</h3>
+        <p>Watch how typical and atypical antipsychotics act differently at the synapse, test yourself on telling them apart, read about each, then explain the difference.</p>
+      </a>
+    </div>
+
+    <div class="subsection" id="cat-biology">Biology</div>
+    <div class="card-grid">
+      <a href="evolving-ecosystem.html" class="card">
+        <span class="tag try-now">Try It Now — No Login</span>
+        <h3>Evolving Ecosystem — Natural Selection Simulator</h3>
+        <p>Watch a population of digital organisms evolve over generations — no fitness score, no designed creatures. Just inherited genes, mutation, mate choice, and survival deciding who reproduces.</p>
+      </a>
+    </div>
+
+    <div class="subsection" id="cat-psych-tests">Psychological Tests</div>
     <div class="card-grid">
       <a href="social-situations-reflection.html" class="card">
         <span class="tag try-now">Try It Now — No Login</span>
@@ -228,7 +298,7 @@
       </a>
     </div>
 
-    <div class="subsection">Research Studies</div>
+    <div class="subsection" id="cat-research">Research Studies</div>
     <div class="card-grid">
       <a href="thompson-2011-oxtr.html" class="card">
         <span class="tag try-now">Try It Now — No Login</span>
@@ -247,7 +317,7 @@
       </a>
     </div>
 
-    <div class="subsection">Coming Soon</div>
+    <div class="subsection" id="cat-coming-soon">Coming Soon</div>
     <div class="card-grid">
       <div class="card coming-soon">
         <span class="tag">Coming Soon</span>
@@ -264,6 +334,33 @@
   </div>
 
   <footer>Built for classroom use &middot; not a diagnostic tool</footer>
+
+  <script>
+    const catNavBtn = document.getElementById('catNavBtn');
+    const catNavMenu = document.getElementById('catNavMenu');
+
+    catNavBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      catNavMenu.style.display = catNavMenu.style.display === 'block' ? 'none' : 'block';
+    });
+
+    document.addEventListener('click', () => {
+      catNavMenu.style.display = 'none';
+    });
+
+    catNavMenu.querySelectorAll('button[data-target]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const targetEl = document.getElementById(btn.dataset.target);
+        catNavBtn.textContent = btn.textContent;
+        catNavMenu.style.display = 'none';
+        if(targetEl){
+          const offset = targetEl.getBoundingClientRect().top + window.scrollY - 20;
+          window.scrollTo({top: offset, behavior: 'smooth'});
+        }
+      });
+    });
+  </script>
 
 </body>
 </html>
