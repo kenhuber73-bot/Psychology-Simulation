@@ -140,6 +140,13 @@
   .report-gene-row .rv.down{color:var(--sky);}
   .report-log-item{font-family:var(--font-mono);font-size:11px;color:var(--muted);padding:3px 0;}
   .report-log-item b{color:var(--amber);font-weight:600;}
+
+  .rs-row-label{font-family:var(--font-mono);font-size:10px;color:var(--muted);margin:10px 0 4px 0;}
+  .report-specimens{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 10px 2px;}
+  .report-specimen{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .report-specimen canvas{background:var(--bg-panel-alt);border:1px solid var(--line-soft);border-radius:6px;}
+  .report-specimen .rs-label{font-family:var(--font-mono);font-size:9px;color:var(--muted);letter-spacing:.3px;}
+  .report-specimens-empty{font-family:var(--font-mono);font-size:11px;color:var(--muted);padding:6px 0;}
 </style>
 </head>
 <body>
@@ -257,6 +264,16 @@ const AVOID_RADIUS = 34;
 const MAX_EFFECTS = 40;          // hard cap on simultaneous floating text/particles
 const MUTATION_LABEL_COOLDOWN = 10; // min frames between mutation callouts, even at high pop
 
+// --- Terrain: elevation/water barriers ---
+// A separate, finer-grained layer from the biome hue grid (which only affects
+// camouflage) — this one has real mechanical teeth: it slows movement, costs
+// more energy to cross, and has no food. A river + mountain range can genuinely
+// split the map into two territories, isolating populations from each other.
+const TERRAIN_CELL = 50; // world units per terrain cell
+const TERRAIN_PLAIN = 0, TERRAIN_HILL = 1, TERRAIN_WATER = 2;
+const TERRAIN_SPEED_MULT = {0:1.0, 1:0.55, 2:0.3};
+const TERRAIN_COST_MULT  = {0:1.0, 1:1.25, 2:1.5};
+
 // --- Predation tuning ---
 const CARNIVORE_THRESHOLD = 0.15;   // carnivory below this = pure herbivore, ignores hunting entirely
 const FLEE_WEIGHT = 2.6;            // fleeing a detected threat outweighs normal food-seeking
@@ -329,6 +346,19 @@ function computeGeneAverages(organisms){
   const avgs = {};
   for(const k of GENE_KEYS) avgs[k] = sums[k]/n;
   return avgs;
+}
+// Pick up to `count` genomes spread evenly through the array (not just the
+// first N) and clone their values, so later mutation of a still-living
+// organism can't retroactively change a stored "then" specimen.
+function pickSampleGenomes(organisms, count=6){
+  if(organisms.length===0) return [];
+  const n = Math.min(count, organisms.length);
+  const picks = [];
+  for(let i=0;i<n;i++){
+    const idx = Math.floor((i/n) * organisms.length);
+    picks.push({ ...organisms[idx].genome.values });
+  }
+  return picks;
 }
 // How much a target's detection range should shrink because it blends into the
 // local terrain color. A showy ornament works against this — it's hard to hide
@@ -597,9 +627,11 @@ class Organism {
       this.angle += clamp(diff, -maxTurn, maxTurn);
     }
 
-    // --- Move ---
-    const moveX = Math.cos(this.angle) * g.speed;
-    const moveY = Math.sin(this.angle) * g.speed;
+    // --- Move --- (terrain underfoot slows movement — water and hills are a
+    // real cost to cross, not just scenery)
+    const terrain = world.terrainMultipliers(this.x, this.y);
+    const moveX = Math.cos(this.angle) * g.speed * terrain.speed;
+    const moveY = Math.sin(this.angle) * g.speed * terrain.speed;
     this.x += moveX; this.y += moveY;
     this.distanceTraveled += Math.hypot(moveX,moveY);
 
@@ -610,8 +642,8 @@ class Organism {
     if(this.y < margin){ this.y = margin; this.angle = -this.angle; }
     if(this.y > WORLD_H-margin){ this.y = WORLD_H-margin; this.angle = -this.angle; }
 
-    // --- Energy ---
-    this.energy -= this.metabolicCost(true) * world.metabolismMultiplier;
+    // --- Energy --- (harsh terrain costs more energy to move through too)
+    this.energy -= this.metabolicCost(true) * world.metabolismMultiplier * terrain.cost;
     this.age++;
     if(this.attackCooldown>0) this.attackCooldown--;
     if(this.matingCooldown>0) this.matingCooldown--;
@@ -762,12 +794,19 @@ class World {
     this.showMutationLabels = false; // gated behind the "Concept Labels" toggle
     this.lastMutationFrame = -999;
     this._initBiomes();
+    this._initTerrain();
     this._initRocks();
     this._initFood();
     this._initOrganisms();
     this.lastEventMessage = "";
     // Snapshot of the founding population's trait averages, for the field report.
-    this.baseline = { population: this.organisms.length, averages: computeGeneAverages(this.organisms) };
+    // Also keep a handful of actual founding genomes (not just averages) so the
+    // report can render real "then" specimens side-by-side with "now" ones.
+    this.baseline = {
+      population: this.organisms.length,
+      averages: computeGeneAverages(this.organisms),
+      sampleGenomes: pickSampleGenomes(this.organisms)
+    };
   }
 
   // A coarse grid of terrain "zones," each with its own hue. Organisms whose
@@ -786,6 +825,116 @@ class World {
     const col = clamp(Math.floor(x/(WORLD_W/this.biomeCols)), 0, this.biomeCols-1);
     const row = clamp(Math.floor(y/(WORLD_H/this.biomeRows)), 0, this.biomeRows-1);
     return this.biomeGrid[row][col].hue;
+  }
+
+  // Elevation layer: a winding river (usually splitting the map left/right)
+  // plus a separate winding mountain range, both wide enough to be a real
+  // barrier — slow, costly, foodless. A few extra lakes/hill clusters add
+  // texture. This is independent of the biome hue grid above; it's a purely
+  // additive layer on top of everything that already worked.
+  _initTerrain(){
+    this.terrainCols = Math.ceil(WORLD_W/TERRAIN_CELL);
+    this.terrainRows = Math.ceil(WORLD_H/TERRAIN_CELL);
+    this.terrain = new Uint8Array(this.terrainCols*this.terrainRows); // defaults to TERRAIN_PLAIN (0)
+
+    const riverPhase = rand(0,Math.PI*2);
+    const riverAmp = WORLD_W*0.12;
+    const riverCenterX = WORLD_W*0.5 + rand(-WORLD_W*0.06, WORLD_W*0.06);
+    const riverHalfWidth = 40;
+    const riverXAt = (y)=>{
+      const t = y/WORLD_H;
+      return riverCenterX + Math.sin(t*Math.PI*2.3+riverPhase)*riverAmp + Math.sin(t*Math.PI*5+riverPhase*1.7)*riverAmp*0.25;
+    };
+
+    const mtnPhase = rand(0,Math.PI*2);
+    const mtnAmp = WORLD_H*0.05;
+    const mtnCenterY = rand(WORLD_H*0.18, WORLD_H*0.34);
+    const mtnHalfWidth = 60;
+    const mtnYAt = (x)=>{
+      const t = x/WORLD_W;
+      return mtnCenterY + Math.sin(t*Math.PI*2+mtnPhase)*mtnAmp;
+    };
+
+    for(let row=0; row<this.terrainRows; row++){
+      for(let col=0; col<this.terrainCols; col++){
+        const wx = col*TERRAIN_CELL + TERRAIN_CELL/2;
+        const wy = row*TERRAIN_CELL + TERRAIN_CELL/2;
+        let type = TERRAIN_PLAIN;
+        if(Math.abs(wx - riverXAt(wy)) < riverHalfWidth){
+          type = TERRAIN_WATER;
+        } else if(Math.abs(wy - mtnYAt(wx)) < mtnHalfWidth){
+          type = TERRAIN_HILL;
+        }
+        this.terrain[row*this.terrainCols+col] = type;
+      }
+    }
+
+    // A couple of extra lakes and hill clusters, scattered, for texture.
+    const stampBlob = (cx,cy,radius,type)=>{
+      const minCol = clamp(Math.floor((cx-radius)/TERRAIN_CELL),0,this.terrainCols-1);
+      const maxCol = clamp(Math.floor((cx+radius)/TERRAIN_CELL),0,this.terrainCols-1);
+      const minRow = clamp(Math.floor((cy-radius)/TERRAIN_CELL),0,this.terrainRows-1);
+      const maxRow = clamp(Math.floor((cy+radius)/TERRAIN_CELL),0,this.terrainRows-1);
+      for(let row=minRow; row<=maxRow; row++){
+        for(let col=minCol; col<=maxCol; col++){
+          const wx = col*TERRAIN_CELL+TERRAIN_CELL/2, wy = row*TERRAIN_CELL+TERRAIN_CELL/2;
+          if(dist2(wx,wy,cx,cy) < radius*radius) this.terrain[row*this.terrainCols+col] = type;
+        }
+      }
+    };
+    for(let i=0;i<2;i++) stampBlob(rand(300,WORLD_W-300), rand(300,WORLD_H-300), rand(70,130), TERRAIN_WATER);
+    for(let i=0;i<2;i++) stampBlob(rand(300,WORLD_W-300), rand(300,WORLD_H-300), rand(90,150), TERRAIN_HILL);
+
+    this._buildTerrainTexture();
+  }
+  terrainTypeAt(x,y){
+    const col = clamp(Math.floor(x/TERRAIN_CELL), 0, this.terrainCols-1);
+    const row = clamp(Math.floor(y/TERRAIN_CELL), 0, this.terrainRows-1);
+    return this.terrain[row*this.terrainCols+col];
+  }
+  terrainMultipliers(x,y){
+    const t = this.terrainTypeAt(x,y);
+    return {speed: TERRAIN_SPEED_MULT[t], cost: TERRAIN_COST_MULT[t], type:t};
+  }
+  // A world position guaranteed to be on plain terrain — used for food and
+  // founder placement so nothing spawns stranded in a lake or on a peak.
+  randomPlainPosition(){
+    let x,y,tries=0;
+    do{
+      x = rand(20,WORLD_W-20); y = rand(20,WORLD_H-20);
+      tries++;
+    } while(this.terrainTypeAt(x,y)!==TERRAIN_PLAIN && tries<25);
+    return {x,y};
+  }
+  // Bake the (static) biome hue tint + terrain type into an offscreen texture
+  // once, instead of redrawing thousands of cells every animation frame.
+  _buildTerrainTexture(){
+    const scale = 0.25; // texture px per world unit — coarse on purpose, blends softly
+    const tw = Math.max(1,Math.round(WORLD_W*scale)), th = Math.max(1,Math.round(WORLD_H*scale));
+    const off = document.createElement("canvas");
+    off.width = tw; off.height = th;
+    const octx = off.getContext("2d");
+    octx.fillStyle = "#0d1714";
+    octx.fillRect(0,0,tw,th);
+
+    const bcw = tw/this.biomeCols, bch = th/this.biomeRows;
+    for(let r=0;r<this.biomeRows;r++){
+      for(let c=0;c<this.biomeCols;c++){
+        octx.fillStyle = `hsla(${this.biomeGrid[r][c].hue},45%,32%,0.16)`;
+        octx.fillRect(c*bcw, r*bch, bcw+1, bch+1);
+      }
+    }
+
+    const tcw = TERRAIN_CELL*scale, tch = TERRAIN_CELL*scale;
+    for(let row=0; row<this.terrainRows; row++){
+      for(let col=0; col<this.terrainCols; col++){
+        const t = this.terrain[row*this.terrainCols+col];
+        if(t===TERRAIN_PLAIN) continue;
+        octx.fillStyle = t===TERRAIN_WATER ? "rgba(70,130,165,0.55)" : "rgba(122,102,74,0.5)";
+        octx.fillRect(col*tcw, row*tch, tcw+1, tch+1);
+      }
+    }
+    this.terrainTexture = off;
   }
   // At low population, average spacing between organisms can exceed even a
   // generous fixed mate-signal range, causing an Allee-effect death spiral
@@ -808,13 +957,15 @@ class World {
     this.food = [];
     for(let i=0;i<INITIAL_FOOD;i++){
       const type = Math.random()<RICH_FOOD_SPAWN_SHARE ? "rich" : "common";
-      this.food.push(new Food(rand(20,WORLD_W-20), rand(20,WORLD_H-20), type));
+      const pos = this.randomPlainPosition();
+      this.food.push(new Food(pos.x, pos.y, type));
     }
   }
   _initOrganisms(){
     this.organisms = [];
     for(let i=0;i<INITIAL_ORGANISMS;i++){
-      const o = new Organism(rand(200,WORLD_W-200), rand(200,WORLD_H-200), new Genome(), 0, null);
+      const pos = this.randomPlainPosition();
+      const o = new Organism(pos.x, pos.y, new Genome(), 0, null);
       this.organisms.push(o);
     }
   }
@@ -902,7 +1053,8 @@ class World {
   addFoodBatch(n){
     for(let i=0;i<n && this.food.length<FOOD_CAP;i++){
       const type = Math.random()<RICH_FOOD_SPAWN_SHARE ? "rich" : "common";
-      this.food.push(new Food(rand(20,WORLD_W-20), rand(20,WORLD_H-20), type));
+      const pos = this.randomPlainPosition();
+      this.food.push(new Food(pos.x, pos.y, type));
     }
   }
   removeFoodBatch(n){
@@ -1181,17 +1333,12 @@ function drawBackground(){
   ctx.fillStyle = "#0d1714";
   ctx.fillRect(0,0,canvas._cw,canvas._ch);
 
-  // Terrain zones — soft color regions organisms can camouflage against.
-  // Drawn faint enough to read as "background," not decoration.
-  const cellW = WORLD_W/world.biomeCols, cellH = WORLD_H/world.biomeRows;
-  for(let r=0;r<world.biomeRows;r++){
-    for(let c=0;c<world.biomeCols;c++){
-      const wx = c*cellW, wy = r*cellH;
-      const tl = worldToScreen(wx,wy), br = worldToScreen(wx+cellW,wy+cellH);
-      if(br.sx<0||tl.sx>canvas._cw||br.sy<0||tl.sy>canvas._ch) continue;
-      ctx.fillStyle = `hsla(${world.biomeGrid[r][c].hue},45%,32%,0.16)`;
-      ctx.fillRect(tl.sx,tl.sy,br.sx-tl.sx,br.sy-tl.sy);
-    }
+  // Cached biome + terrain texture (built once per world, not redrawn per
+  // frame) — covers both the camouflage hue zones and the river/mountains.
+  if(world.terrainTexture){
+    const tl = worldToScreen(0,0), br = worldToScreen(WORLD_W,WORLD_H);
+    ctx.drawImage(world.terrainTexture, 0,0, world.terrainTexture.width, world.terrainTexture.height,
+      tl.sx, tl.sy, br.sx-tl.sx, br.sy-tl.sy);
   }
 
   // subtle dot grid across visible world
@@ -1360,6 +1507,61 @@ function drawOrganism(o){
   ctx.restore();
 }
 
+// A static, camera-independent render of a single genome — used by the Field
+// Report's "Then vs. Now" specimen gallery. Reuses the same trait-to-shape
+// mapping as drawOrganism (elongation from speed, hunter silhouette from
+// carnivory, eye size from vision, ornament plume) but with no energy glow,
+// no selection ring, and a fixed facing so specimens are directly comparable.
+function drawGenomeThumb(targetCtx, values, cx, cy, fitSize){
+  const g = values;
+  const size = Math.max(2.2, g.bodySize*0.9) * (fitSize/16);
+  const hue = g.colorHue;
+  const isHunter = g.carnivory > CARNIVORE_THRESHOLD;
+
+  targetCtx.save();
+  targetCtx.translate(cx,cy);
+
+  if(g.ornamentSize > 0.05){
+    const plumeLen = size * (1.2 + g.ornamentSize*2.2);
+    const plumeSpread = size * (0.4 + g.ornamentSize*0.5);
+    targetCtx.beginPath();
+    targetCtx.moveTo(-size*0.6, 0);
+    targetCtx.quadraticCurveTo(-size*1.4, plumeSpread, -plumeLen, plumeSpread*0.4);
+    targetCtx.quadraticCurveTo(-size*1.4, -plumeSpread, -size*0.6, 0);
+    targetCtx.closePath();
+    targetCtx.fillStyle = `hsla(${hue}, 90%, 75%, ${0.35+g.ornamentSize*0.35})`;
+    targetCtx.fill();
+  }
+
+  const speedFrac = clamp((g.speed-0.6)/(3.2-0.6), 0, 1);
+  const nose = size * (1.2 + speedFrac*1.1);
+  targetCtx.beginPath();
+  if(isHunter){
+    targetCtx.moveTo(nose*1.4,0);
+    targetCtx.lineTo(-size*0.7, size*0.7);
+    targetCtx.lineTo(-size*0.3, 0);
+    targetCtx.lineTo(-size*0.7, -size*0.7);
+  } else {
+    targetCtx.moveTo(nose,0);
+    targetCtx.lineTo(-size*0.9, size*0.9);
+    targetCtx.lineTo(-size*0.9, -size*0.9);
+  }
+  targetCtx.closePath();
+  targetCtx.fillStyle = `hsl(${hue}, 88%, 62%)`;
+  targetCtx.fill();
+  targetCtx.strokeStyle = isHunter ? "#e5453a" : `hsl(${hue}, 70%, 22%)`;
+  targetCtx.lineWidth = isHunter ? 1.6 : 1.2;
+  targetCtx.stroke();
+
+  const eyeR = clamp(size*0.12 + (g.visionRadius/GENES.visionRadius.max)*size*0.22, 0.6, size*0.4);
+  targetCtx.beginPath();
+  targetCtx.arc(nose*0.35, 0, eyeR, 0, Math.PI*2);
+  targetCtx.fillStyle = "rgba(15,25,22,0.85)";
+  targetCtx.fill();
+
+  targetCtx.restore();
+}
+
 function drawEffects(){
   for(const e of world.effects){
     const t = e.life/e.maxLife;
@@ -1517,7 +1719,8 @@ const GLOSSARY = [
   {term:"Schooling", def:"Organisms with a strong schooling drive cluster with similarly colored neighbors. A prey animal surrounded by a group is genuinely harder for a predator to lock onto."},
   {term:"Adaptation", def:"Over many generations, average trait values drift toward whatever works in the current environment — watch the graphs below shift after an event."},
   {term:"Population", def:"The number of living organisms right now. Watch it rise and crash as food, weather events, and reproduction interact."},
-  {term:"Genetic Variation", def:"No two organisms have identical genomes. This variety is the raw material selection acts on — without it, nothing could adapt."}
+  {term:"Genetic Variation", def:"No two organisms have identical genomes. This variety is the raw material selection acts on — without it, nothing could adapt."},
+  {term:"Geographic Isolation", def:"Rivers and mountains are slow and costly to cross. A population split across one can drift apart genetically over generations simply because the two sides rarely interbreed — the first step toward two populations becoming genuinely different."}
 ];
 function buildGlossary(){
   const el = document.getElementById("glossary");
@@ -1638,14 +1841,50 @@ function buildReportHTML(){
     <p class="report-title">Field Report</p>
     <p class="report-sub">Generation ${s.generation} · ${s.births} births · ${s.deaths} deaths · oldest living organism: ${s.oldest} steps</p>
     <div class="report-narrative">${narrative}</div>
+    <p class="report-section-title">Then vs. Now</p>
+    <div class="report-specimen-block">
+      <p class="rs-row-label">Founding population (Gen 0)</p>
+      <div class="report-specimens" id="rsThen"></div>
+      <p class="rs-row-label">Living population now (Gen ${s.generation})</p>
+      <div class="report-specimens" id="rsNow"></div>
+    </div>
     <p class="report-section-title">Trait Drift (founding average → now)</p>
     ${geneRows}
     <p class="report-section-title">Events During This Run</p>
     ${logHtml}
   `;
 }
+// Fill the two specimen rows with actual rendered organisms — must run after
+// buildReportHTML()'s markup is in the DOM, since it needs real <canvas> nodes.
+function renderSpecimenRow(containerId, genomeList){
+  const row = document.getElementById(containerId);
+  if(!row) return;
+  if(genomeList.length===0){
+    row.innerHTML = `<div class="report-specimens-empty">No organisms available.</div>`;
+    return;
+  }
+  row.innerHTML = "";
+  for(const values of genomeList){
+    const wrap = document.createElement("div");
+    wrap.className = "report-specimen";
+    const cv = document.createElement("canvas");
+    cv.width = 64; cv.height = 64;
+    cv.style.width = "64px"; cv.style.height = "64px";
+    const label = document.createElement("div");
+    label.className = "rs-label";
+    label.textContent = `${GENES.speed.label.slice(0,1)}:${values.speed.toFixed(1)} ${GENES.visionRadius.label.slice(0,1)}:${Math.round(values.visionRadius)}`;
+    wrap.appendChild(cv);
+    wrap.appendChild(label);
+    row.appendChild(wrap);
+    const tctx = cv.getContext("2d");
+    drawGenomeThumb(tctx, values, 32, 32, 16);
+  }
+}
 function showReport(){
   document.getElementById("reportBody").innerHTML = buildReportHTML();
+  const nowGenomes = pickSampleGenomes(world.organisms.filter(o=>o.alive));
+  renderSpecimenRow("rsThen", world.baseline.sampleGenomes);
+  renderSpecimenRow("rsNow", nowGenomes);
   document.getElementById("reportOverlay").classList.add("show");
 }
 function hideReport(){
