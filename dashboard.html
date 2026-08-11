@@ -88,13 +88,6 @@
       <button id="logout-btn" class="logout-btn" style="display:none;">Log out</button>
     </div>
 
-    <div class="card" id="create-class-card" style="display:none;">
-      <h2>Create a Class</h2>
-      <input type="text" id="class-name-input" placeholder="e.g. Psych 4B, Period 2">
-      <button id="create-class-btn">Create Class</button>
-      <div id="create-message"></div>
-    </div>
-
     <div class="card" id="classes-card" style="display:none;">
       <h2>Your Classes</h2>
       <p style="font-size:0.85rem; margin-top:-8px;">Click a class to see student results.</p>
@@ -120,15 +113,6 @@
   <script src="js/supabase-config.js"></script>
   <script>
     let currentUser = null;
-
-    function generateJoinCode(){
-      const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-      let code = '';
-      for(let i = 0; i < 6; i++){
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return code;
-    }
 
     function escapeHtml(str){
       const div = document.createElement('div');
@@ -195,7 +179,6 @@
         statusEl.textContent = 'Logged in as ' + currentUser.email + ', but there was an issue setting up your profile: ' + error.message;
       } else {
         statusEl.textContent = 'Logged in as ' + currentUser.email + '.';
-        document.getElementById('create-class-card').style.display = 'block';
         document.getElementById('classes-card').style.display = 'block';
         document.getElementById('activity-links-card').style.display = 'block';
         populateActivitySelect();
@@ -327,42 +310,6 @@
     document.getElementById('close-results-btn').addEventListener('click', () => {
       document.getElementById('results-card').style.display = 'none';
       document.getElementById('classes-card').style.display = 'block';
-    });
-
-    document.getElementById('create-class-btn').addEventListener('click', async () => {
-      const input = document.getElementById('class-name-input');
-      const name = input.value.trim();
-      const msgEl = document.getElementById('create-message');
-      const btn = document.getElementById('create-class-btn');
-
-      if(!name){
-        msgEl.textContent = 'Please enter a class name.';
-        msgEl.className = 'message error';
-        return;
-      }
-
-      btn.disabled = true;
-      btn.textContent = 'Creating...';
-
-      const joinCode = generateJoinCode();
-
-      const { error } = await sb.from('classes').insert({
-        teacher_id: currentUser.id,
-        name: name,
-        join_code: joinCode
-      });
-
-      btn.disabled = false;
-      btn.textContent = 'Create Class';
-
-      if(error){
-        msgEl.textContent = 'Something went wrong: ' + error.message;
-        msgEl.className = 'message error';
-      } else {
-        msgEl.textContent = '';
-        input.value = '';
-        loadClasses();
-      }
     });
 
     document.getElementById('logout-btn').addEventListener('click', async () => {
