@@ -82,10 +82,26 @@
     padding:11px 22px; font-family:'Space Grotesk', sans-serif; font-size:0.88rem; cursor:pointer;
   }
   .ghost-btn:hover{color:var(--ink); border-color:var(--ink);}
+  .locked-panel{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:40px 32px; text-align:center; box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+  }
+  .locked-panel h1{font-size:1.2rem;}
+  .locked-panel p{color:var(--ink-soft); font-size:0.9rem;}
 </style>
 </head>
 <body>
 <div class="wrap">
+
+  <div id="activity-locked">
+    <div class="eyebrow">Psych Simulations</div>
+    <div class="locked-panel">
+      <h1>🔒 This activity requires a link from your teacher</h1>
+      <p>Ask your teacher for the activity link, or check your class page for it.</p>
+    </div>
+  </div>
+
+  <div id="activity-content" style="display:none;">
   <div class="eyebrow">Psych Simulations &middot; Self-Reflection Tool</div>
   <div class="panel">
 
@@ -129,6 +145,8 @@
     </div>
 
   </div>
+  </div>
+
 </div>
 
 <script>
@@ -253,6 +271,12 @@
   document.getElementById('btn-start').addEventListener('click', resetQuiz);
   document.getElementById('btn-see-results').addEventListener('click', showResults);
   document.getElementById('btn-retry').addEventListener('click', resetQuiz);
+</script>
+
+<script src="js/supabase-config.js"></script>
+<script src="js/activity-gate.js"></script>
+<script>
+  initActivityGate('sias.html');
 </script>
 </body>
 </html>
