@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>High School Psychology Units — Psych Sims</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1E9D2; --paper-dark:#E3D5AE; --folder:#D8C393; --ink:#2B2A25; --ink-soft:#5C5648;
+    --navy:#2F4858; --red:#A13D3D; --sage:#5E7A52; --line:#C7B78E; --white-card:#FBF7EC;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper); color:var(--ink); font-family:'Space Grotesk', sans-serif;}
+  a{color:inherit;}
+
+  .topnav{display:flex; gap:6px; padding:18px 24px 0; max-width:1100px; margin:0 auto;}
+  .topnav a{
+    font-family:'Courier Prime', monospace; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em;
+    padding:9px 18px; border:1px solid var(--line); border-bottom:none; background:var(--paper-dark);
+    color:var(--ink-soft); border-radius:7px 7px 0 0; text-decoration:none; opacity:0.6;
+  }
+  .topnav a.active{background:var(--white-card); color:var(--ink); opacity:1; font-weight:700; border-color:var(--ink);}
+  .topnav a:hover:not(.active){opacity:0.85;}
+
+  .page-wrap{max-width:1100px; margin:0 auto; padding:0 24px 70px;}
+  .page-hero{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:0 10px 10px 10px;
+    padding:40px 40px; box-shadow:6px 6px 0 rgba(43,42,37,0.08); margin:24px 0 40px;
+  }
+  .page-hero .eyebrow{
+    font-family:'Courier Prime', monospace; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em;
+    color:var(--ink-soft); margin:0 0 10px;
+  }
+  .page-hero h1{font-size:clamp(1.8rem, 4vw, 2.6rem); margin:0 0 14px;}
+  .page-hero p{color:var(--ink-soft); font-size:1rem; line-height:1.65; max-width:640px; margin:0;}
+
+  .unit-grid{display:grid; grid-template-columns:1fr; gap:22px;}
+  @media(min-width:700px){.unit-grid{grid-template-columns:1fr 1fr;}}
+
+  .unit-card{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:26px; box-shadow:4px 4px 0 rgba(43,42,37,0.08); text-decoration:none; color:inherit;
+    display:block; transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .unit-card:hover{transform:translate(-2px,-2px); box-shadow:6px 6px 0 rgba(43,42,37,0.14);}
+  .unit-card .tag{
+    display:inline-block; font-family:'Courier Prime', monospace; font-size:0.68rem; text-transform:uppercase;
+    letter-spacing:0.05em; background:var(--navy); color:white; padding:3px 10px; border-radius:12px;
+    margin-bottom:12px; font-weight:700;
+  }
+  .unit-card h3{margin:0 0 8px; font-size:1.25rem;}
+  .unit-card p{margin:0 0 14px; color:var(--ink-soft); font-size:0.92rem; line-height:1.6;}
+  .unit-card .topic-list{
+    list-style:none; margin:0; padding:0; font-family:'Courier Prime', monospace;
+    font-size:0.78rem; color:var(--ink-soft);
+  }
+  .unit-card .topic-list li{padding:4px 0; border-top:1px dashed var(--line);}
+  .unit-card .topic-list li:first-child{border-top:none;}
+
+  .unit-card.coming-soon{cursor:default; opacity:0.6;}
+  .unit-card.coming-soon:hover{transform:none; box-shadow:4px 4px 0 rgba(43,42,37,0.08);}
+  .unit-card.coming-soon .tag{background:var(--ink-soft);}
+
+  footer{
+    text-align:center; padding:34px 20px; color:var(--ink-soft);
+    font-family:'Courier Prime', monospace; font-size:0.78rem; border-top:1px dashed var(--line);
+    max-width:1100px; margin:0 auto;
+  }
+</style>
+</head>
+<body>
+
+  <nav class="topnav">
+    <a href="index.html">Home</a>
+    <a href="index.html#activities">Activities</a>
+    <a href="units.html" class="active">Units</a>
+    <a href="join.html">Student Login</a>
+    <a href="teacher-login.html">Teacher Login</a>
+  </nav>
+
+  <div class="page-wrap">
+    <div class="page-hero">
+      <p class="eyebrow">Curriculum Map</p>
+      <h1>High School Psychology Units</h1>
+      <p>Full units built around IB Psychology's structure — each one bundles lesson decks, review games, and simulations into a single sequence you can teach start to finish. Ontario (HSP3U / HSB4U) strand coverage is noted at the unit level.</p>
+    </div>
+
+    <div class="unit-grid">
+      <a href="unit-health-wellbeing.html" class="unit-card">
+        <span class="tag">In Progress</span>
+        <h3>Health and Well-Being</h3>
+        <p>Stress, mental health disorders, treatment &amp; prevention, and health problems — anchored by a full Social Anxiety Disorder case series.</p>
+        <ul class="topic-list">
+          <li>The Nature of Stress</li>
+          <li>Mental Health Disorders — Social Anxiety Disorder</li>
+          <li>Treatment and Prevention</li>
+          <li>Health Problems</li>
+          <li>The Practical — Interview Prep</li>
+        </ul>
+      </a>
+
+      <div class="unit-card coming-soon">
+        <span class="tag">Coming Soon</span>
+        <h3>More Units</h3>
+        <p>Additional IB units will appear here as they're built out — same structure, same crosswalk-note approach.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>Built for classroom use &middot; not a diagnostic tool</footer>
+
+</body>
+</html>

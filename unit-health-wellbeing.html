@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Health and Well-Being — Psych Sims</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1E9D2; --paper-dark:#E3D5AE; --folder:#D8C393; --ink:#2B2A25; --ink-soft:#5C5648;
+    --navy:#2F4858; --red:#A13D3D; --sage:#5E7A52; --line:#C7B78E; --white-card:#FBF7EC;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper); color:var(--ink); font-family:'Space Grotesk', sans-serif;}
+  a{color:inherit;}
+
+  .topnav{display:flex; gap:6px; padding:18px 24px 0; max-width:1100px; margin:0 auto;}
+  .topnav a{
+    font-family:'Courier Prime', monospace; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em;
+    padding:9px 18px; border:1px solid var(--line); border-bottom:none; background:var(--paper-dark);
+    color:var(--ink-soft); border-radius:7px 7px 0 0; text-decoration:none; opacity:0.6;
+  }
+  .topnav a.active{background:var(--white-card); color:var(--ink); opacity:1; font-weight:700; border-color:var(--ink);}
+  .topnav a:hover:not(.active){opacity:0.85;}
+
+  .page-wrap{max-width:1100px; margin:0 auto; padding:0 24px 70px;}
+  .breadcrumb{
+    font-family:'Courier Prime', monospace; font-size:0.75rem; color:var(--ink-soft);
+    margin:24px 0 14px; letter-spacing:0.03em;
+  }
+  .breadcrumb a{text-decoration:underline;}
+
+  .page-hero{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:0 10px 10px 10px;
+    padding:36px 40px; box-shadow:6px 6px 0 rgba(43,42,37,0.08); margin:0 0 28px;
+  }
+  .page-hero h1{font-size:clamp(1.7rem, 4vw, 2.3rem); margin:0 0 12px;}
+  .page-hero p{color:var(--ink-soft); font-size:0.98rem; line-height:1.65; max-width:680px; margin:0;}
+
+  .crosswalk{
+    background:var(--paper-dark); border-left:3px solid var(--navy); border-radius:0 6px 6px 0;
+    padding:16px 20px; margin:0 0 44px; font-size:0.88rem; line-height:1.6; color:var(--ink);
+  }
+  .crosswalk strong{
+    display:block; font-family:'Courier Prime', monospace; font-size:0.72rem; text-transform:uppercase;
+    letter-spacing:0.06em; color:var(--ink-soft); margin-bottom:6px;
+  }
+
+  .topic-block{margin-bottom:48px;}
+  .topic-head{
+    display:flex; align-items:baseline; gap:12px; margin-bottom:6px;
+    border-bottom:1px dashed var(--line); padding-bottom:10px;
+  }
+  .topic-num{
+    font-family:'Courier Prime', monospace; font-size:0.78rem; color:var(--ink-soft); white-space:nowrap;
+  }
+  .topic-head h2{font-size:1.3rem; margin:0;}
+  .topic-desc{color:var(--ink-soft); font-size:0.9rem; line-height:1.6; margin:10px 0 20px; max-width:680px;}
+
+  .disorder-label{
+    font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:0.95rem;
+    margin:20px 0 12px; color:var(--ink);
+  }
+
+  .card-grid{display:grid; grid-template-columns:1fr; gap:18px;}
+  @media(min-width:700px){.card-grid{grid-template-columns:1fr 1fr;}}
+  @media(min-width:980px){.card-grid.decks{grid-template-columns:repeat(3,1fr);}}
+
+  .card{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:20px; box-shadow:4px 4px 0 rgba(43,42,37,0.08); text-decoration:none; color:inherit;
+    display:block; transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .card:hover{transform:translate(-2px,-2px); box-shadow:6px 6px 0 rgba(43,42,37,0.14);}
+  .card.coming-soon{cursor:default; opacity:0.6;}
+  .card.coming-soon:hover{transform:none; box-shadow:4px 4px 0 rgba(43,42,37,0.08);}
+
+  .card .tag{
+    display:inline-block; font-family:'Courier Prime', monospace; font-size:0.66rem; text-transform:uppercase;
+    letter-spacing:0.05em; background:var(--sage); color:white; padding:3px 10px; border-radius:12px;
+    margin-bottom:10px; font-weight:700;
+  }
+  .card.coming-soon .tag{background:var(--ink-soft);}
+  .card h3{margin:0 0 6px; font-size:1.02rem;}
+  .card p{margin:0; color:var(--ink-soft); font-size:0.85rem; line-height:1.5;}
+
+  /* deck download cards */
+  .deck-card{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:0; box-shadow:4px 4px 0 rgba(43,42,37,0.08); text-decoration:none; color:inherit;
+    overflow:hidden; display:flex; flex-direction:column; transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .deck-card:hover{transform:translate(-2px,-2px); box-shadow:6px 6px 0 rgba(43,42,37,0.14);}
+  .deck-thumb{
+    height:110px; background:linear-gradient(135deg, var(--navy), #3d5f73);
+    display:flex; align-items:center; justify-content:center; position:relative;
+  }
+  .deck-thumb svg{width:34px; height:34px; stroke:white; opacity:0.9;}
+  .deck-thumb .ext{
+    position:absolute; bottom:8px; right:10px; font-family:'Courier Prime', monospace;
+    font-size:0.62rem; color:white; opacity:0.85; letter-spacing:0.05em;
+  }
+  .deck-body{padding:16px 18px;}
+  .deck-body h3{margin:0 0 5px; font-size:0.95rem;}
+  .deck-body p{margin:0; color:var(--ink-soft); font-size:0.8rem; line-height:1.5;}
+  .deck-body .dl-hint{
+    display:inline-flex; align-items:center; gap:5px; margin-top:10px;
+    font-family:'Courier Prime', monospace; font-size:0.68rem; text-transform:uppercase;
+    letter-spacing:0.05em; color:var(--navy); font-weight:700;
+  }
+
+  footer{
+    text-align:center; padding:34px 20px; color:var(--ink-soft);
+    font-family:'Courier Prime', monospace; font-size:0.78rem; border-top:1px dashed var(--line);
+    max-width:1100px; margin:0 auto;
+  }
+</style>
+</head>
+<body>
+
+  <nav class="topnav">
+    <a href="index.html">Home</a>
+    <a href="index.html#activities">Activities</a>
+    <a href="units.html" class="active">Units</a>
+    <a href="join.html">Student Login</a>
+    <a href="teacher-login.html">Teacher Login</a>
+  </nav>
+
+  <div class="page-wrap">
+    <p class="breadcrumb"><a href="units.html">Units</a> / Health and Well-Being</p>
+
+    <div class="page-hero">
+      <h1>Health and Well-Being</h1>
+      <p>Stress, one mental health disorder studied in depth, treatment and prevention, and a health problem examined through changing or differing prevalence — built around IB Psychology's Health and Well-Being option.</p>
+    </div>
+
+    <div class="crosswalk">
+      <strong>Ontario Crosswalk (HSP3U / HSB4U)</strong>
+      This unit's activities satisfy Strand A (Research and Inquiry Skills) through embedded skills — evaluating bias in etiology models, analyzing correlational vs. experimental evidence in treatment studies — rather than through topic-by-topic mapping. Content-specific strand alignment is added as each topic is finalized.
+    </div>
+
+    <!-- TOPIC 1 -->
+    <div class="topic-block">
+      <div class="topic-head">
+        <span class="topic-num">01</span>
+        <h2>The Nature of Stress</h2>
+      </div>
+      <p class="topic-desc">The physiological stress response as the biological foundation for the disorders and health problems that follow.</p>
+      <div class="card-grid">
+        <div class="card coming-soon">
+          <span class="tag">Coming Soon</span>
+          <h3>Stress Response Lesson</h3>
+          <p>HPA axis, cortisol, general adaptation syndrome.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOPIC 2 -->
+    <div class="topic-block">
+      <div class="topic-head">
+        <span class="topic-num">02</span>
+        <h2>Mental Health Disorders</h2>
+      </div>
+      <p class="topic-desc">Full etiology cycle for Social Anxiety Disorder across biological, cognitive, environmental, and cultural factors.</p>
+
+      <div class="disorder-label">Social Anxiety Disorder</div>
+      <div class="card-grid decks">
+
+        <a href="downloads/Biological_Factors_in_Social_Anxiety_Disorder.pptx" class="deck-card" download>
+          <div class="deck-thumb">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="1.5"/><path d="M3 8h18"/><path d="M8 12h8"/></svg>
+            <span class="ext">.PPTX</span>
+          </div>
+          <div class="deck-body">
+            <h3>Biological Factors</h3>
+            <p>Genetics, oxytocin &amp; the amygdala, the gut-brain axis.</p>
+            <span class="dl-hint">↓ Download deck</span>
+          </div>
+        </a>
+
+        <a href="downloads/Cognitive_Factors_in_Social_Anxiety_Disorder.pptx" class="deck-card" download>
+          <div class="deck-thumb">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="1.5"/><path d="M3 8h18"/><path d="M8 12h8"/></svg>
+            <span class="ext">.PPTX</span>
+          </div>
+          <div class="deck-body">
+            <h3>Cognitive Factors</h3>
+            <p>Conditioning, Clark &amp; Wells (1995), rumination, Shaw et al. (2015).</p>
+            <span class="dl-hint">↓ Download deck</span>
+          </div>
+        </a>
+
+        <a href="downloads/Environmental_Factors_in_Social_Anxiety_Disorder.pptx" class="deck-card" download>
+          <div class="deck-thumb">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="1.5"/><path d="M3 8h18"/><path d="M8 12h8"/></svg>
+            <span class="ext">.PPTX</span>
+          </div>
+          <div class="deck-body">
+            <h3>Environmental Factors</h3>
+            <p>Family environment, Festa &amp; Ginsburg (2011), COVID-19 effects.</p>
+            <span class="dl-hint">↓ Download deck</span>
+          </div>
+        </a>
+
+        <a href="downloads/Cultural_Differences_in_Social_Anxiety_Disorder.pptx" class="deck-card" download>
+          <div class="deck-thumb">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="1.5"/><path d="M3 8h18"/><path d="M8 12h8"/></svg>
+            <span class="ext">.PPTX</span>
+          </div>
+          <div class="deck-body">
+            <h3>Cultural Differences</h3>
+            <p>Hikikomori, cross-cultural prevalence, the Yuto Unishi case.</p>
+            <span class="dl-hint">↓ Download deck</span>
+          </div>
+        </a>
+
+        <a href="downloads/SAD_Review_Game.pptx" class="deck-card" download>
+          <div class="deck-thumb" style="background:linear-gradient(135deg, var(--sage), #4a6640);">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            <span class="ext">.PPTX</span>
+          </div>
+          <div class="deck-body">
+            <h3>Review Game</h3>
+            <p>Box-based board covering all four decks — points, bombs, and a synthesis wrap-up.</p>
+            <span class="dl-hint">↓ Download deck</span>
+          </div>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- TOPIC 3 -->
+    <div class="topic-block">
+      <div class="topic-head">
+        <span class="topic-num">03</span>
+        <h2>Treatment and Prevention</h2>
+      </div>
+      <p class="topic-desc">One biological and one psychological treatment, evaluated through a shared effectiveness lens.</p>
+      <div class="card-grid">
+        <div class="card coming-soon">
+          <span class="tag">Coming Soon</span>
+          <h3>Measuring Treatment Effectiveness</h3>
+          <p>RCTs, effect size, relapse rates — the evaluation lens used across both treatments.</p>
+        </div>
+        <div class="card coming-soon">
+          <span class="tag">Coming Soon</span>
+          <h3>Biological Treatment</h3>
+          <p>Pharmacological approach to anxiety.</p>
+        </div>
+        <div class="card coming-soon">
+          <span class="tag">Coming Soon</span>
+          <h3>Psychological Treatment</h3>
+          <p>CBT, connecting back to the Cognitive Factors deck.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOPIC 4 -->
+    <div class="topic-block">
+      <div class="topic-head">
+        <span class="topic-num">04</span>
+        <h2>Health Problems</h2>
+      </div>
+      <p class="topic-desc">Why prevalence changes over time or differs between populations — not yet finalized.</p>
+      <div class="card-grid">
+        <div class="card coming-soon">
+          <span class="tag">Not Yet Chosen</span>
+          <h3>Obesity, Drug Misuse, or Social Media Addiction</h3>
+          <p>One health problem, examined through changing or differing prevalence.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOPIC 5 -->
+    <div class="topic-block">
+      <div class="topic-head">
+        <span class="topic-num">05</span>
+        <h2>The Practical</h2>
+      </div>
+      <p class="topic-desc">Interview technique and preparation for Paper 2.</p>
+      <div class="card-grid">
+        <div class="card coming-soon">
+          <span class="tag">Coming Soon</span>
+          <h3>Interview Prep for Paper 2</h3>
+          <p>Practicing interview-style questions, built into each disorder section over time.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>Built for classroom use &middot; not a diagnostic tool</footer>
+
+</body>
+</html>
