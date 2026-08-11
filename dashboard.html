@@ -62,6 +62,21 @@
   .reflection-tag{background:#E3D5AE; color:#2F4858; padding:2px 8px; border-radius:4px; font-size:0.78rem; font-weight:600;}
   .paragraph-preview{cursor:pointer; text-decoration:underline dotted; text-underline-offset:2px;}
   .paragraph-full{white-space:pre-wrap; max-width:340px;}
+  .link-row{
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    padding:12px 0; border-bottom:1px dashed #C7B78E;
+  }
+  .link-row:last-child{border-bottom:none;}
+  .link-info{flex:1; min-width:0;}
+  .link-label{font-weight:600; font-size:0.92rem;}
+  .link-url{
+    font-family:'Courier New', monospace; font-size:0.78rem; color:#5C5648;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:2px;
+  }
+  .link-actions{display:flex; gap:6px; flex-shrink:0;}
+  .link-actions button{padding:6px 12px; font-size:0.78rem;}
+  .revoke-btn{background:#A13D3D;}
+  .copy-btn{background:#5E7A52;}
 </style>
 </head>
 <body>
@@ -83,6 +98,15 @@
       <h2>Your Classes</h2>
       <p style="font-size:0.85rem; margin-top:-8px;">Click a class to see student results.</p>
       <div id="classes-list"></div>
+    </div>
+
+    <div class="card" id="activity-links-card" style="display:none;">
+      <h2>Activity Links</h2>
+      <p style="font-size:0.85rem; margin-top:-8px;">Generate a link for a specific activity — anyone with the link can access it, no student login needed.</p>
+      <select id="activity-select"></select>
+      <button id="generate-link-btn">Generate Link</button>
+      <div id="link-message"></div>
+      <div id="activity-links-list" style="margin-top:16px;"></div>
     </div>
 
     <div class="card" id="results-card" style="display:none;">
@@ -109,6 +133,27 @@
       const div = document.createElement('div');
       div.textContent = str;
       return div.innerHTML;
+    }
+
+    // Activities that can have a share link generated for them.
+    // slug = the exact filename used in initActivityGate() on that page.
+    const shareableActivities = [
+      { slug: 'sias.html', label: 'Social Interaction Anxiety Scale (SIAS)' },
+      { slug: 'social-situations-reflection.html', label: 'Social Situations Reflection' },
+      { slug: 'social-anxiety-stroop.html', label: 'Social Anxiety Stroop Task' },
+      { slug: 'defense-style-reflection.html', label: 'Defense Style Reflection' },
+      { slug: 'conditioning-key-concepts.html', label: 'Key Concepts: Conditioning' },
+      { slug: 'pavlov-dog.html', label: 'Condition the Dog' },
+      { slug: 'neurotransmitter-mechanisms.html', label: 'Inside the Synapse — SSRI vs. Benzodiazepine' },
+      { slug: 'antipsychotics-key-concepts.html', label: 'Key Concepts: Antipsychotics' },
+      { slug: 'brain-labeling.html', label: 'The Brain — Labeling Activity' },
+      { slug: 'neuron-firing.html', label: 'Neurons — Action Potential Visualizer' },
+      { slug: 'unit-health-wellbeing.html', label: 'Full Unit: Health and Well-Being' }
+    ];
+
+    function populateActivitySelect(){
+      const sel = document.getElementById('activity-select');
+      sel.innerHTML = shareableActivities.map(a => `<option value="${a.slug}">${a.label}</option>`).join('');
     }
 
     const activityLabels = {
@@ -143,7 +188,10 @@
         statusEl.textContent = 'Logged in as ' + currentUser.email + '.';
         document.getElementById('create-class-card').style.display = 'block';
         document.getElementById('classes-card').style.display = 'block';
+        document.getElementById('activity-links-card').style.display = 'block';
+        populateActivitySelect();
         loadClasses();
+        loadActivityLinks();
       }
 
       document.getElementById('logout-btn').style.display = 'inline-block';
@@ -311,6 +359,83 @@
     document.getElementById('logout-btn').addEventListener('click', async () => {
       await sb.auth.signOut();
       window.location.href = 'teacher-login.html';
+    });
+
+    async function loadActivityLinks(){
+      const { data, error } = await sb
+        .from('activity_links')
+        .select('*')
+        .eq('teacher_id', currentUser.id)
+        .eq('revoked', false)
+        .order('created_at', { ascending: false });
+
+      const listEl = document.getElementById('activity-links-list');
+
+      if(error){
+        listEl.innerHTML = '<p class="empty">Could not load links: ' + error.message + '</p>';
+        return;
+      }
+
+      if(!data || data.length === 0){
+        listEl.innerHTML = '<p class="empty">No links generated yet.</p>';
+        return;
+      }
+
+      listEl.innerHTML = '';
+      data.forEach(link => {
+        const fullUrl = window.location.origin + window.location.pathname.replace('dashboard.html', '') + link.activity_slug + '?access=' + link.token;
+        const row = document.createElement('div');
+        row.className = 'link-row';
+        row.innerHTML = `
+          <div class="link-info">
+            <div class="link-label">${link.activity_label}</div>
+            <div class="link-url">${fullUrl}</div>
+          </div>
+          <div class="link-actions">
+            <button class="copy-btn" data-url="${fullUrl}">Copy</button>
+            <button class="revoke-btn" data-id="${link.id}">Revoke</button>
+          </div>
+        `;
+        row.querySelector('.copy-btn').addEventListener('click', async (e) => {
+          await navigator.clipboard.writeText(e.target.dataset.url);
+          e.target.textContent = 'Copied!';
+          setTimeout(() => { e.target.textContent = 'Copy'; }, 1500);
+        });
+        row.querySelector('.revoke-btn').addEventListener('click', async (e) => {
+          const id = e.target.dataset.id;
+          await sb.from('activity_links').update({ revoked: true }).eq('id', id);
+          loadActivityLinks();
+        });
+        listEl.appendChild(row);
+      });
+    }
+
+    document.getElementById('generate-link-btn').addEventListener('click', async () => {
+      const sel = document.getElementById('activity-select');
+      const slug = sel.value;
+      const label = shareableActivities.find(a => a.slug === slug)?.label || slug;
+      const msgEl = document.getElementById('link-message');
+      const btn = document.getElementById('generate-link-btn');
+
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+
+      const { error } = await sb.from('activity_links').insert({
+        teacher_id: currentUser.id,
+        activity_slug: slug,
+        activity_label: label
+      });
+
+      btn.disabled = false;
+      btn.textContent = 'Generate Link';
+
+      if(error){
+        msgEl.textContent = 'Something went wrong: ' + error.message;
+        msgEl.className = 'message error';
+      } else {
+        msgEl.textContent = '';
+        loadActivityLinks();
+      }
     });
 
     init();
