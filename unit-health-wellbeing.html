@@ -86,6 +86,33 @@
   .card .tag.try-now{background:var(--navy);}
   .card .tag.video{background:var(--red);}
   .card .tag.locked{background:var(--red);}
+
+  .lesson{margin:0 0 40px; padding-left:20px; border-left:3px solid var(--navy);}
+  .lesson-head{display:flex; align-items:baseline; gap:10px; margin-bottom:16px;}
+  .lesson-num{
+    font-family:'Courier Prime', monospace; font-size:0.7rem; text-transform:uppercase;
+    letter-spacing:0.05em; color:var(--ink-soft); white-space:nowrap;
+  }
+  .lesson-head h3{margin:0; font-size:1.08rem;}
+  .slot{margin-bottom:18px;}
+  .slot:last-child{margin-bottom:0;}
+  .slot-label{
+    font-family:'Courier Prime', monospace; font-size:0.66rem; text-transform:uppercase;
+    letter-spacing:0.06em; color:var(--ink-soft); margin-bottom:8px;
+  }
+  .slot-empty{font-size:0.82rem; color:var(--ink-soft); font-style:italic;}
+  .slot .card-grid, .slot .card-grid.decks{gap:14px;}
+
+  .lesson-select-wrap{margin:0 0 24px;}
+  .lesson-select{
+    font-family:'Space Grotesk', sans-serif; font-size:0.95rem; font-weight:600; color:var(--ink);
+    background:var(--white-card); border:1px solid var(--ink); border-radius:6px;
+    padding:10px 14px; box-shadow:3px 3px 0 rgba(43,42,37,0.08); cursor:pointer;
+    max-width:420px; width:100%;
+  }
+  .lesson{display:none;}
+  .lesson.active{display:block;}
+
   .card h3{margin:0 0 6px; font-size:1.02rem;}
   .card p{margin:0; color:var(--ink-soft); font-size:0.85rem; line-height:1.5;}
 
@@ -150,42 +177,120 @@
         <h2>Biological Basis of Behavior</h2>
       </div>
       <p class="topic-desc">A quick foundational review before the stress content itself — most students haven't touched the brain, neurons, or hormones since the year before.</p>
-      <div class="card-grid">
-        <a href="brain-labeling.html" class="card">
-          <span class="tag try-now">Try It Now — No Login</span>
-          <h3>The Brain</h3>
-          <p>Pin-and-label review of key brain structures, three levels deep.</p>
-        </a>
-        <a href="neuron-firing.html" class="card">
-          <span class="tag try-now">Try It Now — No Login</span>
-          <h3>Neurons</h3>
-          <p>An action potential visualizer — how a neuron actually fires.</p>
-        </a>
-        <div class="card coming-soon">
-          <span class="tag">Coming Soon</span>
-          <h3>Hormones</h3>
-          <p>What hormones are, how they signal, and the endocrine basics students need before cortisol makes sense.</p>
+
+      <div class="lesson-select-wrap">
+        <select class="lesson-select" id="bio-lesson-select">
+          <option value="" selected disabled>Select a lesson…</option>
+          <option value="brain">Lesson 1: The Brain</option>
+          <option value="neurons">Lesson 2: Neurons</option>
+          <option value="hormones">Lesson 3: Hormones</option>
+          <option value="stress-response">Lesson 4: The Stress Response</option>
+        </select>
+      </div>
+
+      <div class="lesson" data-group="bio" data-id="brain">
+        <div class="lesson-head"><span class="lesson-num">Lesson 1</span><h3>The Brain</h3></div>
+        <div class="slot">
+          <div class="slot-label">PowerPoint</div>
+          <div class="card coming-soon" style="max-width:320px;">
+            <span class="tag">Coming Soon</span>
+            <h3>The Brain — Deck</h3>
+          </div>
         </div>
-        <div class="card coming-soon">
-          <span class="tag">Coming Soon</span>
-          <h3>The Stress Response</h3>
-          <p>HPA axis, cortisol, general adaptation syndrome — pulling the brain, neuron, and hormone review together.</p>
+        <div class="slot">
+          <div class="slot-label">Videos</div>
+          <p class="slot-empty">No videos yet.</p>
         </div>
-        <a href="https://www.youtube.com/watch?v=0IDgBlCHVsA" class="card" target="_blank" rel="noopener">
-          <span class="tag video">Video</span>
-          <h3>Sympathetic Nervous System — Crash Course A&amp;P #14</h3>
-          <p>The fight-or-flight response, explained — good lead-in before the HPA axis and cortisol.</p>
-        </a>
-        <a href="https://www.youtube.com/watch?v=iVpoN0v47hc" class="card" target="_blank" rel="noopener">
-          <span class="tag video">Video</span>
-          <h3>The HPA Axis in Stress Physiology</h3>
-          <p>A closer look at the hypothalamic-pituitary-adrenal axis and its role in the stress response.</p>
-        </a>
-        <a href="defense-style-reflection.html" class="card">
-          <span class="tag locked">Requires Teacher Link</span>
-          <h3>Defense Style Reflection</h3>
-          <p>A self-reflection on how you cope with stress, grouped into mature, neurotic, and immature defense styles.</p>
-        </a>
+        <div class="slot">
+          <div class="slot-label">Activities</div>
+          <div class="card-grid">
+            <a href="brain-labeling.html" class="card">
+              <span class="tag try-now">Try It Now — No Login</span>
+              <h3>The Brain — Labeling Activity</h3>
+              <p>Pin-and-label review of key brain structures, three levels deep.</p>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="lesson" data-group="bio" data-id="neurons">
+        <div class="lesson-head"><span class="lesson-num">Lesson 2</span><h3>Neurons</h3></div>
+        <div class="slot">
+          <div class="slot-label">PowerPoint</div>
+          <div class="card coming-soon" style="max-width:320px;">
+            <span class="tag">Coming Soon</span>
+            <h3>Neurons — Deck</h3>
+          </div>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Videos</div>
+          <p class="slot-empty">No videos yet.</p>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Activities</div>
+          <div class="card-grid">
+            <a href="neuron-firing.html" class="card">
+              <span class="tag try-now">Try It Now — No Login</span>
+              <h3>Neurons — Action Potential Visualizer</h3>
+              <p>An action potential visualizer — how a neuron actually fires.</p>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="lesson" data-group="bio" data-id="hormones">
+        <div class="lesson-head"><span class="lesson-num">Lesson 3</span><h3>Hormones</h3></div>
+        <div class="slot">
+          <div class="slot-label">PowerPoint</div>
+          <div class="card coming-soon" style="max-width:320px;">
+            <span class="tag">Coming Soon</span>
+            <h3>Hormones — Deck</h3>
+          </div>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Videos</div>
+          <p class="slot-empty">No videos yet.</p>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Activities</div>
+          <p class="slot-empty">No activities yet.</p>
+        </div>
+      </div>
+
+      <div class="lesson" data-group="bio" data-id="stress-response">
+        <div class="lesson-head"><span class="lesson-num">Lesson 4</span><h3>The Stress Response</h3></div>
+        <div class="slot">
+          <div class="slot-label">PowerPoint</div>
+          <div class="card coming-soon" style="max-width:320px;">
+            <span class="tag">Coming Soon</span>
+            <h3>The Stress Response — Deck</h3>
+          </div>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Videos</div>
+          <div class="card-grid">
+            <a href="https://www.youtube.com/watch?v=0IDgBlCHVsA" class="card" target="_blank" rel="noopener">
+              <span class="tag video">Video</span>
+              <h3>Sympathetic Nervous System — Crash Course A&amp;P #14</h3>
+              <p>The fight-or-flight response, explained — good lead-in before the HPA axis and cortisol.</p>
+            </a>
+            <a href="https://www.youtube.com/watch?v=iVpoN0v47hc" class="card" target="_blank" rel="noopener">
+              <span class="tag video">Video</span>
+              <h3>The HPA Axis in Stress Physiology</h3>
+              <p>A closer look at the hypothalamic-pituitary-adrenal axis and its role in the stress response.</p>
+            </a>
+          </div>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Activities</div>
+          <div class="card-grid">
+            <a href="defense-style-reflection.html" class="card">
+              <span class="tag locked">Requires Teacher Link</span>
+              <h3>Defense Style Reflection</h3>
+              <p>A self-reflection on how you cope with stress, grouped into mature, neurotic, and immature defense styles.</p>
+            </a>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -196,104 +301,199 @@
         <h2>Mental Health Disorders</h2>
       </div>
       <p class="topic-desc">Full etiology cycle for Social Anxiety Disorder across biological, cognitive, environmental, and cultural factors.</p>
-
       <div class="disorder-label">Social Anxiety Disorder</div>
-      <div class="card-grid decks">
 
-        <a href="downloads/Biological_Factors_in_Social_Anxiety_Disorder.pptx" class="deck-card" download>
-          <div class="deck-thumb">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="1.5"/><path d="M3 8h18"/><path d="M8 12h8"/></svg>
-            <span class="ext">.PPTX</span>
-          </div>
-          <div class="deck-body">
-            <h3>Biological Factors</h3>
-            <p>Genetics, oxytocin &amp; the amygdala, the gut-brain axis.</p>
-            <span class="dl-hint">↓ Download deck</span>
-          </div>
-        </a>
-
-        <a href="downloads/Cognitive_Factors_in_Social_Anxiety_Disorder.pptx" class="deck-card" download>
-          <div class="deck-thumb">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="1.5"/><path d="M3 8h18"/><path d="M8 12h8"/></svg>
-            <span class="ext">.PPTX</span>
-          </div>
-          <div class="deck-body">
-            <h3>Cognitive Factors</h3>
-            <p>Conditioning, Clark &amp; Wells (1995), rumination, Shaw et al. (2015).</p>
-            <span class="dl-hint">↓ Download deck</span>
-          </div>
-        </a>
-
-        <a href="downloads/Environmental_Factors_in_Social_Anxiety_Disorder.pptx" class="deck-card" download>
-          <div class="deck-thumb">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="1.5"/><path d="M3 8h18"/><path d="M8 12h8"/></svg>
-            <span class="ext">.PPTX</span>
-          </div>
-          <div class="deck-body">
-            <h3>Environmental Factors</h3>
-            <p>Family environment, Festa &amp; Ginsburg (2011), COVID-19 effects.</p>
-            <span class="dl-hint">↓ Download deck</span>
-          </div>
-        </a>
-
-        <a href="downloads/Cultural_Differences_in_Social_Anxiety_Disorder.pptx" class="deck-card" download>
-          <div class="deck-thumb">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="1.5"/><path d="M3 8h18"/><path d="M8 12h8"/></svg>
-            <span class="ext">.PPTX</span>
-          </div>
-          <div class="deck-body">
-            <h3>Cultural Differences</h3>
-            <p>Hikikomori, cross-cultural prevalence, the Yuto Unishi case.</p>
-            <span class="dl-hint">↓ Download deck</span>
-          </div>
-        </a>
-
-        <a href="downloads/SAD_Review_Game.pptx" class="deck-card" download>
-          <div class="deck-thumb" style="background:linear-gradient(135deg, var(--sage), #4a6640);">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-            <span class="ext">.PPTX</span>
-          </div>
-          <div class="deck-body">
-            <h3>Review Game</h3>
-            <p>Box-based board covering all four decks — points, bombs, and a synthesis wrap-up.</p>
-            <span class="dl-hint">↓ Download deck</span>
-          </div>
-        </a>
-
+      <div class="lesson-select-wrap">
+        <select class="lesson-select" id="mh-lesson-select">
+          <option value="" selected disabled>Select a lesson…</option>
+          <option value="overview">Overview: Introducing Anxiety Disorders</option>
+          <option value="biological">Lesson 1: Biological Factors</option>
+          <option value="cognitive">Lesson 2: Cognitive Factors</option>
+          <option value="environmental">Lesson 3: Environmental Factors</option>
+          <option value="cultural">Lesson 4: Cultural Differences</option>
+          <option value="review">Wrap-Up: Review Game</option>
+        </select>
       </div>
 
-      <div class="disorder-label">Related Activities</div>
-      <div class="card-grid">
-        <a href="https://www.youtube.com/watch?v=aX7jnVXXG5o" class="card" target="_blank" rel="noopener">
-          <span class="tag video">Video</span>
-          <h3>OCD and Anxiety Disorders — Crash Course Psychology #29</h3>
-          <p>A general overview of anxiety disorders and OCD — good grounding before narrowing in on Social Anxiety Disorder specifically.</p>
-        </a>
-        <a href="social-anxiety-stroop.html" class="card">
-          <span class="tag locked">Requires Teacher Link</span>
-          <h3>Social Anxiety Stroop Task</h3>
-          <p>Click the ink color of words about social situations — a demonstration of attentional bias.</p>
-        </a>
-        <a href="sias.html" class="card">
-          <span class="tag locked">Requires Teacher Link</span>
-          <h3>Social Interaction Anxiety Scale</h3>
-          <p>The actual, published SIAS used in research. Not a diagnostic tool.</p>
-        </a>
-        <a href="social-situations-reflection.html" class="card">
-          <span class="tag locked">Requires Teacher Link</span>
-          <h3>Social Situations Reflection</h3>
-          <p>A short original self-reflection scale on how you feel in social situations.</p>
-        </a>
-        <a href="conditioning-key-concepts.html" class="card">
-          <span class="tag locked">Requires Teacher Link</span>
-          <h3>Key Concepts: Conditioning</h3>
-          <p>Learn UCS, UCR, CS, and CR, then explain how someone might develop social anxiety this way.</p>
-        </a>
-        <a href="pavlov-dog.html" class="card">
-          <span class="tag locked">Requires Teacher Link</span>
-          <h3>Condition the Dog</h3>
-          <p>The free-play conditioning sandbox behind the Key Concepts activity above.</p>
-        </a>
+      <div class="lesson" data-group="mh" data-id="overview">
+        <div class="lesson-head"><span class="lesson-num">Overview</span><h3>Introducing Anxiety Disorders</h3></div>
+        <div class="slot">
+          <div class="slot-label">PowerPoint</div>
+          <p class="slot-empty">No overview deck — jump straight into the four factor decks below.</p>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Videos</div>
+          <div class="card-grid">
+            <a href="https://www.youtube.com/watch?v=aX7jnVXXG5o" class="card" target="_blank" rel="noopener">
+              <span class="tag video">Video</span>
+              <h3>OCD and Anxiety Disorders — Crash Course Psychology #29</h3>
+              <p>A general overview of anxiety disorders and OCD — good grounding before narrowing in on Social Anxiety Disorder specifically.</p>
+            </a>
+          </div>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Activities</div>
+          <div class="card-grid">
+            <a href="sias.html" class="card">
+              <span class="tag locked">Requires Teacher Link</span>
+              <h3>Social Interaction Anxiety Scale</h3>
+              <p>The actual, published SIAS used in research. Not a diagnostic tool.</p>
+            </a>
+            <a href="social-situations-reflection.html" class="card">
+              <span class="tag locked">Requires Teacher Link</span>
+              <h3>Social Situations Reflection</h3>
+              <p>A short original self-reflection scale on how you feel in social situations.</p>
+            </a>
+            <a href="social-anxiety-stroop.html" class="card">
+              <span class="tag locked">Requires Teacher Link</span>
+              <h3>Social Anxiety Stroop Task</h3>
+              <p>Click the ink color of words about social situations — a demonstration of attentional bias.</p>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="lesson" data-group="mh" data-id="biological">
+        <div class="lesson-head"><span class="lesson-num">Lesson 1</span><h3>Biological Factors</h3></div>
+        <div class="slot">
+          <div class="slot-label">PowerPoint</div>
+          <div class="card-grid decks" style="max-width:320px;">
+            <a href="downloads/Biological_Factors_in_Social_Anxiety_Disorder.pptx" class="deck-card" download>
+              <div class="deck-thumb">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="1.5"/><path d="M3 8h18"/><path d="M8 12h8"/></svg>
+                <span class="ext">.PPTX</span>
+              </div>
+              <div class="deck-body">
+                <h3>Biological Factors</h3>
+                <p>Genetics, oxytocin &amp; the amygdala, the gut-brain axis.</p>
+                <span class="dl-hint">↓ Download deck</span>
+              </div>
+            </a>
+          </div>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Videos</div>
+          <p class="slot-empty">No videos yet.</p>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Activities</div>
+          <p class="slot-empty">No activities yet.</p>
+        </div>
+      </div>
+
+      <div class="lesson" data-group="mh" data-id="cognitive">
+        <div class="lesson-head"><span class="lesson-num">Lesson 2</span><h3>Cognitive Factors</h3></div>
+        <div class="slot">
+          <div class="slot-label">PowerPoint</div>
+          <div class="card-grid decks" style="max-width:320px;">
+            <a href="downloads/Cognitive_Factors_in_Social_Anxiety_Disorder.pptx" class="deck-card" download>
+              <div class="deck-thumb">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="1.5"/><path d="M3 8h18"/><path d="M8 12h8"/></svg>
+                <span class="ext">.PPTX</span>
+              </div>
+              <div class="deck-body">
+                <h3>Cognitive Factors</h3>
+                <p>Conditioning, Clark &amp; Wells (1995), rumination, Shaw et al. (2015).</p>
+                <span class="dl-hint">↓ Download deck</span>
+              </div>
+            </a>
+          </div>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Videos</div>
+          <p class="slot-empty">No videos yet.</p>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Activities</div>
+          <div class="card-grid">
+            <a href="conditioning-key-concepts.html" class="card">
+              <span class="tag locked">Requires Teacher Link</span>
+              <h3>Key Concepts: Conditioning</h3>
+              <p>Learn UCS, UCR, CS, and CR, then explain how someone might develop social anxiety this way.</p>
+            </a>
+            <a href="pavlov-dog.html" class="card">
+              <span class="tag locked">Requires Teacher Link</span>
+              <h3>Condition the Dog</h3>
+              <p>The free-play conditioning sandbox behind the Key Concepts activity above.</p>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="lesson" data-group="mh" data-id="environmental">
+        <div class="lesson-head"><span class="lesson-num">Lesson 3</span><h3>Environmental Factors</h3></div>
+        <div class="slot">
+          <div class="slot-label">PowerPoint</div>
+          <div class="card-grid decks" style="max-width:320px;">
+            <a href="downloads/Environmental_Factors_in_Social_Anxiety_Disorder.pptx" class="deck-card" download>
+              <div class="deck-thumb">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="1.5"/><path d="M3 8h18"/><path d="M8 12h8"/></svg>
+                <span class="ext">.PPTX</span>
+              </div>
+              <div class="deck-body">
+                <h3>Environmental Factors</h3>
+                <p>Family environment, Festa &amp; Ginsburg (2011), COVID-19 effects.</p>
+                <span class="dl-hint">↓ Download deck</span>
+              </div>
+            </a>
+          </div>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Videos</div>
+          <p class="slot-empty">No videos yet.</p>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Activities</div>
+          <p class="slot-empty">No activities yet.</p>
+        </div>
+      </div>
+
+      <div class="lesson" data-group="mh" data-id="cultural">
+        <div class="lesson-head"><span class="lesson-num">Lesson 4</span><h3>Cultural Differences</h3></div>
+        <div class="slot">
+          <div class="slot-label">PowerPoint</div>
+          <div class="card-grid decks" style="max-width:320px;">
+            <a href="downloads/Cultural_Differences_in_Social_Anxiety_Disorder.pptx" class="deck-card" download>
+              <div class="deck-thumb">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="1.5"/><path d="M3 8h18"/><path d="M8 12h8"/></svg>
+                <span class="ext">.PPTX</span>
+              </div>
+              <div class="deck-body">
+                <h3>Cultural Differences</h3>
+                <p>Hikikomori, cross-cultural prevalence, the Yuto Unishi case.</p>
+                <span class="dl-hint">↓ Download deck</span>
+              </div>
+            </a>
+          </div>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Videos</div>
+          <p class="slot-empty">No videos yet.</p>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Activities</div>
+          <p class="slot-empty">No activities yet.</p>
+        </div>
+      </div>
+
+      <div class="lesson" data-group="mh" data-id="review" style="border-left-color:var(--sage);">
+        <div class="lesson-head"><span class="lesson-num">Wrap-Up</span><h3>Review Game</h3></div>
+        <div class="slot">
+          <div class="slot-label">PowerPoint</div>
+          <div class="card-grid decks" style="max-width:320px;">
+            <a href="downloads/SAD_Review_Game.pptx" class="deck-card" download>
+              <div class="deck-thumb" style="background:linear-gradient(135deg, var(--sage), #4a6640);">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                <span class="ext">.PPTX</span>
+              </div>
+              <div class="deck-body">
+                <h3>Review Game</h3>
+                <p>Box-based board covering all four decks — points, bombs, and a synthesis wrap-up.</p>
+                <span class="dl-hint">↓ Download deck</span>
+              </div>
+            </a>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -304,32 +504,83 @@
         <h2>Treatment and Prevention</h2>
       </div>
       <p class="topic-desc">One biological and one psychological treatment, evaluated through a shared effectiveness lens.</p>
-      <div class="card-grid">
-        <div class="card coming-soon">
-          <span class="tag">Coming Soon</span>
-          <h3>Measuring Treatment Effectiveness</h3>
-          <p>RCTs, effect size, relapse rates — the evaluation lens used across both treatments.</p>
+
+      <div class="lesson-select-wrap">
+        <select class="lesson-select" id="tx-lesson-select">
+          <option value="" selected disabled>Select a lesson…</option>
+          <option value="effectiveness">Lesson 1: Measuring Treatment Effectiveness</option>
+          <option value="biological">Lesson 2: Biological Treatment</option>
+          <option value="psychological">Lesson 3: Psychological Treatment</option>
+        </select>
+      </div>
+
+      <div class="lesson" data-group="tx" data-id="effectiveness">
+        <div class="lesson-head"><span class="lesson-num">Lesson 1</span><h3>Measuring Treatment Effectiveness</h3></div>
+        <div class="slot">
+          <div class="slot-label">PowerPoint</div>
+          <div class="card coming-soon" style="max-width:320px;">
+            <span class="tag">Coming Soon</span>
+            <h3>Treatment Effectiveness — Deck</h3>
+          </div>
         </div>
-        <div class="card coming-soon">
-          <span class="tag">Coming Soon</span>
-          <h3>Biological Treatment</h3>
-          <p>Pharmacological approach to anxiety.</p>
+        <div class="slot">
+          <div class="slot-label">Videos</div>
+          <p class="slot-empty">No videos yet.</p>
         </div>
-        <div class="card coming-soon">
-          <span class="tag">Coming Soon</span>
-          <h3>Psychological Treatment</h3>
-          <p>CBT, connecting back to the Cognitive Factors deck.</p>
+        <div class="slot">
+          <div class="slot-label">Activities</div>
+          <p class="slot-empty">No activities yet.</p>
         </div>
-        <a href="neurotransmitter-mechanisms.html" class="card">
-          <span class="tag locked">Requires Teacher Link</span>
-          <h3>Inside the Synapse — SSRI vs. Benzodiazepine</h3>
-          <p>An interactive synapse diagram showing how each drug class changes signaling.</p>
-        </a>
-        <a href="https://www.youtube.com/watch?v=PxjxY9VilCs" class="card" target="_blank" rel="noopener">
-          <span class="tag video">Video</span>
-          <h3>How to Deal With Anxiety — Step-by-Step Guide</h3>
-          <p>A practical, therapist-led walkthrough of coping strategies — pairs well with the psychological treatment lesson.</p>
-        </a>
+      </div>
+
+      <div class="lesson" data-group="tx" data-id="biological">
+        <div class="lesson-head"><span class="lesson-num">Lesson 2</span><h3>Biological Treatment</h3></div>
+        <div class="slot">
+          <div class="slot-label">PowerPoint</div>
+          <div class="card coming-soon" style="max-width:320px;">
+            <span class="tag">Coming Soon</span>
+            <h3>Biological Treatment — Deck</h3>
+          </div>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Videos</div>
+          <p class="slot-empty">No videos yet.</p>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Activities</div>
+          <div class="card-grid">
+            <a href="neurotransmitter-mechanisms.html" class="card">
+              <span class="tag locked">Requires Teacher Link</span>
+              <h3>Inside the Synapse — SSRI vs. Benzodiazepine</h3>
+              <p>An interactive synapse diagram showing how each drug class changes signaling.</p>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="lesson" data-group="tx" data-id="psychological">
+        <div class="lesson-head"><span class="lesson-num">Lesson 3</span><h3>Psychological Treatment</h3></div>
+        <div class="slot">
+          <div class="slot-label">PowerPoint</div>
+          <div class="card coming-soon" style="max-width:320px;">
+            <span class="tag">Coming Soon</span>
+            <h3>Psychological Treatment — Deck</h3>
+          </div>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Videos</div>
+          <div class="card-grid">
+            <a href="https://www.youtube.com/watch?v=PxjxY9VilCs" class="card" target="_blank" rel="noopener">
+              <span class="tag video">Video</span>
+              <h3>How to Deal With Anxiety — Step-by-Step Guide</h3>
+              <p>A practical, therapist-led walkthrough of coping strategies — pairs well with this lesson.</p>
+            </a>
+          </div>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Activities</div>
+          <p class="slot-empty">No activities yet.</p>
+        </div>
       </div>
     </div>
 
@@ -340,11 +591,27 @@
         <h2>Health Problems</h2>
       </div>
       <p class="topic-desc">Why prevalence changes over time or differs between populations — not yet finalized.</p>
-      <div class="card-grid">
-        <div class="card coming-soon">
-          <span class="tag">Not Yet Chosen</span>
-          <h3>Obesity, Drug Misuse, or Social Media Addiction</h3>
-          <p>One health problem, examined through changing or differing prevalence.</p>
+
+      <div class="lesson-select-wrap">
+        <select class="lesson-select" id="hp-lesson-select">
+          <option value="" selected disabled>Select a lesson…</option>
+          <option value="tbd">Not Yet Chosen</option>
+        </select>
+      </div>
+
+      <div class="lesson" data-group="hp" data-id="tbd">
+        <div class="lesson-head"><span class="lesson-num">Lesson 1</span><h3>Obesity, Drug Misuse, or Social Media Addiction</h3></div>
+        <div class="slot">
+          <div class="slot-label">PowerPoint</div>
+          <p class="slot-empty">Health problem not yet chosen.</p>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Videos</div>
+          <p class="slot-empty">No videos yet.</p>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Activities</div>
+          <p class="slot-empty">No activities yet.</p>
         </div>
       </div>
     </div>
@@ -369,5 +636,23 @@
 
   <footer>Built for classroom use &middot; not a diagnostic tool</footer>
 
+
+<script>
+  function setupLessonDropdown(selectId, group){
+    const select = document.getElementById(selectId);
+    const lessons = document.querySelectorAll('.lesson[data-group="' + group + '"]');
+    function show(val){
+      lessons.forEach(el => {
+        el.classList.toggle('active', el.dataset.id === val);
+      });
+    }
+    select.addEventListener('change', () => show(select.value));
+    // Nothing shown until the user picks a lesson from the dropdown.
+  }
+  setupLessonDropdown('bio-lesson-select', 'bio');
+  setupLessonDropdown('mh-lesson-select', 'mh');
+  setupLessonDropdown('tx-lesson-select', 'tx');
+  setupLessonDropdown('hp-lesson-select', 'hp');
+</script>
 </body>
 </html>
