@@ -78,6 +78,7 @@
         <div class="cat-nav-menu" id="catNavMenu">
           <button data-target="top" type="button">All activities</button>
           <button data-target="cat-case-studies" type="button">Case Studies</button>
+          <button data-target="cat-narrative-cases" type="button">Narrative Cases</button>
           <button data-target="cat-experiments" type="button">Experiments</button>
           <button data-target="cat-neuroscience" type="button">Neuroscience</button>
           <button data-target="cat-biology" type="button">Biology</button>
@@ -102,6 +103,13 @@
     <div class="case-card" data-case="maya_dysthymia_v1">
       <div class="case-title">Maya S. — Dysthymia vs. MDD vs. Bipolar</div>
       <div class="case-desc">A 17-year-old referred for persistent low mood. Interview to distinguish Persistent Depressive Disorder from Major Depressive Disorder and Bipolar Disorder.</div>
+    </div>
+
+    <div class="section-header" id="cat-narrative-cases">Narrative Cases</div>
+
+    <div class="case-card" id="little-hans-card" style="border-style:dashed;">
+      <div class="case-title">Little Hans — A Case Study in Interpretation</div>
+      <div class="case-desc">Freud's 1909 case history, told in six parts. Read the evidence, form your own theory, then see Freud's actual interpretation — and decide if you agree.</div>
     </div>
 
     <div class="section-header" id="cat-experiments">Experiments</div>
@@ -207,6 +215,10 @@
         localStorage.setItem('studentSession', JSON.stringify(session));
         window.location.href = 'case.html';
       });
+    });
+
+    document.getElementById('little-hans-card').addEventListener('click', () => {
+      window.location.href = 'narrative-cases/little-hans/little-hans.html';
     });
 
     document.getElementById('stroop-card').addEventListener('click', () => {

@@ -457,6 +457,12 @@
 </head>
 <body>
 
+<div id="activity-locked" style="max-width:480px; margin:80px auto; padding:0 24px; text-align:center; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif; color:#2c3634;">
+  <p style="font-size:16px;">This activity requires a link from your teacher.</p>
+</div>
+
+<div id="activity-content" style="display:none;">
+
 <div class="masthead">
   <div class="eyebrow">Psychology Simulations · History of Psychology · Psychoanalysis</div>
   <h1>Little Hans</h1>
@@ -477,8 +483,8 @@
     </div>
     <h2>The Referral</h2>
     <p>Vienna, 1908. Hans is not quite five years old — cheerful, curious, and unusually verbal for his age. His parents are devoted followers of Dr. Freud's work, and his father has taken to recording Hans's sayings and questions in detailed letters, which he sends to Freud almost as a running case file.</p>
-    <p>For months, Hans has shown an early and persistent interest in "widdlers" — his word for genitals. He's noticed that horses, dogs, and other animals have them, and that his mother and baby sister do not. He asks frequent questions about who has one and who doesn't.</p>
-    <p>One day, his mother catches him with his hand on his penis. She warns him sharply: if he keeps doing that, she will call the doctor to cut his widdler off.</p>
+    <p>For months, Hans has shown an early and persistent interest in "widdlers" — his own word for a certain part of the body. He's noticed that horses, dogs, and other animals have one, and that his mother and baby sister don't seem to. He asks frequent questions about who has one and who doesn't.</p>
+    <p>One day, his mother catches him with his hand somewhere it shouldn't be. She warns him sharply: if he keeps doing that, she will call the doctor to take his widdler away.</p>
     <p>Hans says nothing else about it at the time. But not long after, he starts refusing to leave the house.</p>
 
     <div class="questions-box">
@@ -674,7 +680,7 @@
         <li>Hans's widdler curiosity, and his mother's threat to cut it off, was repressed into his unconscious. This threat, Freud argued, planted the seed of <strong>castration anxiety</strong> that would go on to shape everything else.</li>
         <li>Hans's wish to have his father away, his contentment sleeping in his mother's bed, and his later wish (which Freud and Hans's father put to him directly, and which Hans agreed to) that his father was dead — all of this reflected an unconscious desire to <strong>possess his mother</strong> and remove his father as a rival.</li>
         <li>The horse phobia was a <strong>displacement</strong> of Hans's fear of his father onto a substitute object. Freud had Hans's father tell Hans directly that the white horse represented him: the black around the horse's eyes was his father's glasses, and the black around its mouth was his father's mustache. The fear that a horse might come into his room echoed a fear of his father's presence.</li>
-        <li>The warning Hans overheard — "don't put your finger there, it will bite you" — reinforced the link Freud drew between the horse and the earlier castration threat around masturbation.</li>
+        <li>The warning Hans overheard — "don't put your finger there, it will bite you" — reinforced the link Freud drew between the horse and the earlier widdler threat, tied to Hans's habit of touching himself.</li>
         <li>Hans's fear that his sister might go underwater and not resurface was read by Freud, with Hans's father's agreement after questioning him, as a disguised <strong>wish that she would drown</strong> — jealousy converted into anxiety. Freud concluded Hans wanted both his father and his sister out of the way so he could have his mother to himself.</li>
         <li>The <strong>giraffe dream</strong> was read as a symbolic sexual scene: the crumpled giraffe (which Hans sat on) represented his mother, and the big giraffe watching represented his father.</li>
         <li>The <strong>plumber dream</strong> — a bigger widdler — was read as a sign Hans was starting to resolve his castration fear by identifying with his father rather than fearing him. Hans agreed with this reading when it was put to him.</li>
@@ -853,6 +859,12 @@
     });
   });
 </script>
+
+</div>
+
+<script src="../../js/supabase-config.js"></script>
+<script src="../../js/activity-gate.js"></script>
+<script>initActivityGate('little-hans.html');</script>
 
 </body>
 </html>
