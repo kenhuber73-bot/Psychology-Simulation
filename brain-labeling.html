@@ -115,6 +115,52 @@
   .complete-banner h3{margin:0 0 6px; color:var(--sage);}
   .complete-banner p{margin:0; color:var(--ink-soft); font-size:0.9rem; line-height:1.6;}
 
+  .part-divider{
+    display:flex; align-items:center; gap:14px; margin:44px 0 22px;
+  }
+  .part-divider .num{
+    font-family:'Courier Prime', monospace; font-size:0.75rem; font-weight:700; color:var(--white-card);
+    background:var(--navy); border-radius:12px; padding:4px 12px; white-space:nowrap;
+  }
+  .part-divider .rule{flex:1; border-top:1px dashed var(--line);}
+
+  .puzzle-controls-row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:12px 18px; margin:0 0 20px; box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+  }
+  .puzzle-timer{font-family:'Courier Prime', monospace; font-size:0.95rem; color:var(--navy); font-weight:700;}
+  .puzzle-timer-label{font-family:'Courier Prime', monospace; font-size:0.78rem; color:var(--ink-soft); margin-right:6px;}
+  .shuffle-btn{
+    font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:0.86rem;
+    background:var(--navy); color:var(--white-card); border:none; border-radius:7px;
+    padding:9px 18px; cursor:pointer; box-shadow:3px 3px 0 rgba(43,42,37,0.3);
+    transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .shuffle-btn:hover{transform:translate(-2px,-2px); box-shadow:5px 5px 0 rgba(43,42,37,0.4);}
+
+  .puzzle-grid{
+    display:grid; grid-template-columns:repeat(3, 1fr); grid-template-rows:repeat(3, 1fr);
+    gap:2px; width:100%; max-width:559px; aspect-ratio:559/360; margin:0 auto;
+    background:var(--ink); border-radius:4px; overflow:hidden;
+  }
+  .puzzle-tile{
+    background-image:url('images/brain-diagram.png');
+    background-size:300% 300%;
+    cursor:pointer; position:relative; transition:outline 0.1s ease;
+    outline:2px solid transparent; outline-offset:-2px;
+  }
+  .puzzle-tile.selected{outline:3px solid var(--red); outline-offset:-3px;}
+  .puzzle-tile.solved-flash{outline:3px solid var(--sage); outline-offset:-3px;}
+
+  .puzzle-complete-banner{
+    display:none; background:var(--white-card); border:1px solid var(--sage); border-left:4px solid var(--sage);
+    border-radius:0 8px 8px 0; padding:20px 24px; box-shadow:4px 4px 0 rgba(43,42,37,0.08); margin:20px 0 0;
+  }
+  .puzzle-complete-banner.show{display:block;}
+  .puzzle-complete-banner h3{margin:0 0 6px; color:var(--sage);}
+  .puzzle-complete-banner p{margin:0; color:var(--ink-soft); font-size:0.9rem; line-height:1.6;}
+
   footer{
     text-align:center; padding:30px 20px; color:var(--ink-soft);
     font-family:'Courier Prime', monospace; font-size:0.78rem; border-top:1px dashed var(--line);
@@ -127,6 +173,11 @@
   <div class="backbar"><a href="lesson-bio-brain.html">← Back to The Brain lesson</a></div>
 
   <div class="wrap">
+    <div class="part-divider" style="margin-top:0;">
+      <span class="num">Part 1</span>
+      <span class="rule"></span>
+    </div>
+
     <div class="card-header">
       <p class="eyebrow">Biological Basis of Behavior · Lesson 1 · Try It Now — No Login</p>
       <h1>The Brain — Labeling Activity</h1>
@@ -140,7 +191,7 @@
 
     <div class="complete-banner" id="completeBanner">
       <h3>All six labeled correctly!</h3>
-      <p>Nice work. When you're ready, head back to the lesson to keep going.</p>
+      <p>Nice work. Scroll down for Part 2 — reassembling the same diagram against the clock.</p>
     </div>
 
     <div class="diagram-card">
@@ -154,6 +205,31 @@
       <span><span class="dot navy"></span> Not yet labeled</span>
       <span><span class="dot sage"></span> Correct</span>
       <span><span class="dot red"></span> Try again</span>
+    </div>
+
+    <div class="part-divider">
+      <span class="num">Part 2</span>
+      <span class="rule"></span>
+    </div>
+
+    <div class="card-header">
+      <p class="eyebrow">Biological Basis of Behavior · Lesson 1 · Try It Now — No Login</p>
+      <h1>Reassemble the Brain</h1>
+      <p>The same diagram, cut into nine pieces and shuffled. Click two pieces to swap them — race the clock to put it back together.</p>
+    </div>
+
+    <div class="puzzle-controls-row">
+      <span><span class="puzzle-timer-label">Time:</span><span class="puzzle-timer" id="puzzleTimer">0:00</span></span>
+      <button class="shuffle-btn" type="button" id="shuffleBtn">🔀 Shuffle &amp; Start</button>
+    </div>
+
+    <div class="diagram-card">
+      <div class="puzzle-grid" id="puzzleGrid"></div>
+    </div>
+
+    <div class="puzzle-complete-banner" id="puzzleCompleteBanner">
+      <h3 id="puzzleCompleteTitle">Solved!</h3>
+      <p id="puzzleCompleteText"></p>
     </div>
   </div>
 
@@ -291,6 +367,136 @@
 
   buildPins();
   updateProgress();
+
+  // ---------- Part 2: reassembly puzzle ----------
+  const GRID_SIZE = 3; // 3x3 = 9 pieces
+  const puzzleGrid = document.getElementById('puzzleGrid');
+  const puzzleTimerEl = document.getElementById('puzzleTimer');
+  const shuffleBtn = document.getElementById('shuffleBtn');
+  const puzzleCompleteBanner = document.getElementById('puzzleCompleteBanner');
+  const puzzleCompleteTitle = document.getElementById('puzzleCompleteTitle');
+  const puzzleCompleteText = document.getElementById('puzzleCompleteText');
+
+  let board = []; // board[slotIndex] = pieceIndex currently shown there
+  let selectedSlot = null;
+  let timerInterval = null;
+  let elapsedSeconds = 0;
+  let puzzleActive = false;
+  let bestTime = null;
+
+  function formatTime(sec){
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return m + ':' + String(s).padStart(2, '0');
+  }
+
+  function piecePosition(pieceIndex){
+    const col = pieceIndex % GRID_SIZE;
+    const row = Math.floor(pieceIndex / GRID_SIZE);
+    const pct = 100 / (GRID_SIZE - 1);
+    return (col * pct) + '% ' + (row * pct) + '%';
+  }
+
+  function isSolved(){
+    return board.every((pieceIndex, slot) => pieceIndex === slot);
+  }
+
+  function renderBoard(){
+    const tiles = puzzleGrid.querySelectorAll('.puzzle-tile');
+    tiles.forEach((tile, slot) => {
+      tile.style.backgroundPosition = piecePosition(board[slot]);
+    });
+  }
+
+  function buildGrid(){
+    puzzleGrid.innerHTML = '';
+    for(let i = 0; i < GRID_SIZE * GRID_SIZE; i++){
+      const tile = document.createElement('div');
+      tile.className = 'puzzle-tile';
+      tile.dataset.slot = i;
+      tile.addEventListener('click', () => onTileClick(i));
+      puzzleGrid.appendChild(tile);
+    }
+  }
+
+  function onTileClick(slot){
+    if(!puzzleActive) return;
+    const tiles = puzzleGrid.querySelectorAll('.puzzle-tile');
+    if(selectedSlot === null){
+      selectedSlot = slot;
+      tiles[slot].classList.add('selected');
+      return;
+    }
+    if(selectedSlot === slot){
+      tiles[slot].classList.remove('selected');
+      selectedSlot = null;
+      return;
+    }
+    // swap
+    [board[selectedSlot], board[slot]] = [board[slot], board[selectedSlot]];
+    tiles[selectedSlot].classList.remove('selected');
+    selectedSlot = null;
+    renderBoard();
+
+    if(isSolved()){
+      finishPuzzle();
+    }
+  }
+
+  function startTimer(){
+    stopTimer();
+    elapsedSeconds = 0;
+    puzzleTimerEl.textContent = formatTime(0);
+    timerInterval = setInterval(() => {
+      elapsedSeconds++;
+      puzzleTimerEl.textContent = formatTime(elapsedSeconds);
+    }, 1000);
+  }
+
+  function stopTimer(){
+    if(timerInterval){ clearInterval(timerInterval); timerInterval = null; }
+  }
+
+  function finishPuzzle(){
+    puzzleActive = false;
+    stopTimer();
+    puzzleGrid.querySelectorAll('.puzzle-tile').forEach(t => t.classList.add('solved-flash'));
+    const isBest = bestTime === null || elapsedSeconds < bestTime;
+    if(isBest) bestTime = elapsedSeconds;
+    puzzleCompleteTitle.textContent = 'Solved in ' + formatTime(elapsedSeconds) + '!';
+    puzzleCompleteText.textContent = isBest
+      ? 'That\'s your best time this session. Hit Shuffle to try to beat it.'
+      : 'Best so far this session: ' + formatTime(bestTime) + '. Hit Shuffle to try again.';
+    puzzleCompleteBanner.classList.add('show');
+  }
+
+  function shuffleBoard(){
+    let pieces = Array.from({length: GRID_SIZE * GRID_SIZE}, (_, i) => i);
+    // shuffle, then re-shuffle if it comes out already solved
+    do {
+      for(let i = pieces.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
+      }
+    } while(pieces.every((p, i) => p === i));
+    board = pieces;
+    renderBoard();
+  }
+
+  function startPuzzle(){
+    selectedSlot = null;
+    puzzleCompleteBanner.classList.remove('show');
+    puzzleGrid.querySelectorAll('.puzzle-tile').forEach(t => t.classList.remove('solved-flash', 'selected'));
+    shuffleBoard();
+    puzzleActive = true;
+    startTimer();
+  }
+
+  shuffleBtn.addEventListener('click', startPuzzle);
+
+  buildGrid();
+  board = Array.from({length: GRID_SIZE * GRID_SIZE}, (_, i) => i);
+  renderBoard();
 </script>
 
 </body>
