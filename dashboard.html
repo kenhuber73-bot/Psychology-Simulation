@@ -103,6 +103,16 @@
       <div id="activity-links-list" style="margin-top:16px;"></div>
     </div>
 
+    <div class="card" id="lesson-links-card" style="display:none;">
+      <h2>Lesson Links</h2>
+      <p style="font-size:0.85rem; margin-top:-8px;">Pick a unit, then a lesson within it, to generate a link straight to that lesson page — same idea as an activity link.</p>
+      <select id="unit-select"></select>
+      <select id="lesson-select"></select>
+      <button id="generate-lesson-link-btn">Generate Link</button>
+      <div id="lesson-link-message"></div>
+      <p style="font-size:0.8rem; margin-top:10px;">Generated lesson links show up in the Activity Links list above, alongside everything else.</p>
+    </div>
+
     <div class="card" id="results-card" style="display:none;">
       <button id="close-results-btn" class="close-results">← Back to classes</button>
       <h2 id="results-title">Results</h2>
@@ -151,6 +161,50 @@
       sel.innerHTML = shareableActivities.map(a => `<option value="${a.slug}">${a.label}</option>`).join('');
     }
 
+    // Lessons, organized by unit — each unit maps to its lesson slugs
+    // (must match the exact filename used in initActivityGate() on that
+    // lesson page). Add new units here as they're built.
+    const unitLessons = {
+      'unit-health-wellbeing.html': {
+        unitLabel: 'Health and Well-Being',
+        lessons: [
+          { slug: 'lesson-bio-brain.html', label: 'Biological Basis of Behavior — The Brain' },
+          { slug: 'lesson-bio-neurons.html', label: 'Biological Basis of Behavior — Neurons' },
+          { slug: 'lesson-bio-hormones.html', label: 'Biological Basis of Behavior — Hormones' },
+          { slug: 'lesson-bio-stress-response.html', label: 'Biological Basis of Behavior — The Stress Response' },
+          { slug: 'lesson-mh-overview.html', label: 'Mental Health Disorders — Overview: Introducing Anxiety Disorders' },
+          { slug: 'lesson-mh-biological.html', label: 'Mental Health Disorders — Biological Factors' },
+          { slug: 'lesson-mh-cognitive.html', label: 'Mental Health Disorders — Cognitive Factors' },
+          { slug: 'lesson-mh-environmental.html', label: 'Mental Health Disorders — Environmental Factors' },
+          { slug: 'lesson-mh-cultural.html', label: 'Mental Health Disorders — Cultural Differences' },
+          { slug: 'lesson-mh-review.html', label: 'Mental Health Disorders — Review Game' },
+          { slug: 'lesson-tx-effectiveness.html', label: 'Treatment and Prevention — Measuring Treatment Effectiveness' },
+          { slug: 'lesson-tx-biological.html', label: 'Treatment and Prevention — Biological Treatment' },
+          { slug: 'lesson-tx-psychological.html', label: 'Treatment and Prevention — Psychological Treatment' },
+          { slug: 'lesson-hp-tbd.html', label: 'Health Problems' },
+        ]
+      }
+    };
+
+    function populateUnitSelect(){
+      const unitSel = document.getElementById('unit-select');
+      unitSel.innerHTML = Object.entries(unitLessons)
+        .map(([slug, u]) => `<option value="${slug}">${u.unitLabel}</option>`).join('');
+      populateLessonSelect(unitSel.value);
+    }
+
+    function populateLessonSelect(unitSlug){
+      const lessonSel = document.getElementById('lesson-select');
+      const unit = unitLessons[unitSlug];
+      lessonSel.innerHTML = unit
+        ? unit.lessons.map(l => `<option value="${l.slug}">${l.label}</option>`).join('')
+        : '';
+    }
+
+    document.getElementById('unit-select').addEventListener('change', (e) => {
+      populateLessonSelect(e.target.value);
+    });
+
     const activityLabels = {
       jordan_gad_mdd_v1: 'Anxiety vs. Depression — Jordan R.',
       alex_adhd_gad_v1: 'ADHD vs. Anxiety — Alex M.',
@@ -183,7 +237,9 @@
         statusEl.textContent = 'Logged in as ' + currentUser.email + '.';
         document.getElementById('classes-card').style.display = 'block';
         document.getElementById('activity-links-card').style.display = 'block';
+        document.getElementById('lesson-links-card').style.display = 'block';
         populateActivitySelect();
+        populateUnitSelect();
         loadClasses();
         loadActivityLinks();
       }
@@ -382,6 +438,36 @@
         teacher_id: currentUser.id,
         activity_slug: slug,
         activity_label: label
+      });
+
+      btn.disabled = false;
+      btn.textContent = 'Generate Link';
+
+      if(error){
+        msgEl.textContent = 'Something went wrong: ' + error.message;
+        msgEl.className = 'message error';
+      } else {
+        msgEl.textContent = '';
+        loadActivityLinks();
+      }
+    });
+
+    document.getElementById('generate-lesson-link-btn').addEventListener('click', async () => {
+      const unitSel = document.getElementById('unit-select');
+      const lessonSel = document.getElementById('lesson-select');
+      const unit = unitLessons[unitSel.value];
+      const lessonSlug = lessonSel.value;
+      const lessonLabel = unit?.lessons.find(l => l.slug === lessonSlug)?.label || lessonSlug;
+      const msgEl = document.getElementById('lesson-link-message');
+      const btn = document.getElementById('generate-lesson-link-btn');
+
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+
+      const { error } = await sb.from('activity_links').insert({
+        teacher_id: currentUser.id,
+        activity_slug: lessonSlug,
+        activity_label: lessonLabel
       });
 
       btn.disabled = false;
