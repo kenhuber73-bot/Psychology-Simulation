@@ -146,6 +146,21 @@
 
     <div class="section-header" id="cat-neuroscience">Neuroscience</div>
 
+    <div class="case-card" id="neuron-ap-card" style="border-style:dashed;">
+      <div class="case-title">Neuron Action Potential Simulator</div>
+      <div class="case-desc">A full free-play neuron simulator. Push it to threshold and watch Na⁺ and K⁺ ions move, channels open and close, and the signal regenerate down the axon — with pause and adjustable speed.</div>
+    </div>
+
+    <div class="case-card" id="neuron-firing-card" style="border-style:dashed;">
+      <div class="case-title">Neurons — Action Potential Visualizer</div>
+      <div class="case-desc">A quicker action potential visualizer — how a neuron actually fires.</div>
+    </div>
+
+    <div class="case-card" id="brain-labeling-card" style="border-style:dashed;">
+      <div class="case-title">The Brain — Labeling, Puzzle &amp; Matching</div>
+      <div class="case-desc">Label six brain structures by their leader lines, race the clock reassembling the same diagram, then match each structure to what it actually does.</div>
+    </div>
+
     <div class="case-card" id="neurotransmitters-card" style="border-style:dashed;">
       <div class="case-title">Inside the Synapse — SSRI vs. Benzodiazepine</div>
       <div class="case-desc">An interactive synapse diagram. Toggle the drug on and off to see how an SSRI blocks serotonin reuptake, or how a benzodiazepine changes GABA signaling.</div>
@@ -243,6 +258,18 @@
 
     document.getElementById('jung-word-association-card').addEventListener('click', () => {
       window.location.href = 'jung-word-association.html';
+    });
+
+    document.getElementById('neuron-ap-card').addEventListener('click', () => {
+      window.location.href = 'neuron-action-potential.html';
+    });
+
+    document.getElementById('neuron-firing-card').addEventListener('click', () => {
+      window.location.href = 'neuron-firing.html';
+    });
+
+    document.getElementById('brain-labeling-card').addEventListener('click', () => {
+      window.location.href = 'brain-labeling.html';
     });
 
     document.getElementById('neurotransmitters-card').addEventListener('click', () => {

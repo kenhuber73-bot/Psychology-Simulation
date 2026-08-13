@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neuron Action Potential Simulator — Psych Sims</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1E9D2; --paper-dark:#E3D5AE; --ink:#2B2A25; --ink-soft:#5C5648;
+    --navy:#2F4858; --red:#A13D3D; --sage:#5E7A52; --line:#C7B78E; --white-card:#FBF7EC;
+    --na:#D97A3D; --k:#5A4E9C; --myelin:#BFD9E8; --wave:#E0B84C;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper); color:var(--ink); font-family:'Space Grotesk', sans-serif;}
+  a{color:inherit;}
+
+  .backbar{max-width:960px; margin:0 auto; padding:18px 20px 0;}
+  .backbar a{font-family:'Courier Prime', monospace; font-size:0.78rem; color:var(--ink-soft); text-decoration:underline;}
+
+  .wrap{max-width:960px; margin:0 auto; padding:20px 20px 60px;}
+  .card-header{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:0 10px 10px 10px;
+    padding:26px 30px; box-shadow:6px 6px 0 rgba(43,42,37,0.08); margin:0 0 22px;
+  }
+  .card-header .eyebrow{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.07em;
+    color:var(--ink-soft); margin:0 0 8px;
+  }
+  .card-header h1{font-size:clamp(1.4rem, 4vw, 1.9rem); margin:0 0 10px;}
+  .card-header p{color:var(--ink-soft); font-size:0.92rem; line-height:1.6; margin:0;}
+
+  .controls-card{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:18px 22px; margin:0 0 16px; box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+    display:flex; flex-wrap:wrap; align-items:center; gap:16px;
+  }
+  .control-group{display:flex; flex-direction:column; gap:6px;}
+  .control-label{font-family:'Courier Prime', monospace; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft);}
+  .stim-slider{width:160px;}
+  .stim-value{font-family:'Courier Prime', monospace; font-size:0.8rem; color:var(--navy); font-weight:700;}
+  .fire-btn{
+    font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:0.86rem;
+    background:var(--navy); color:var(--white-card); border:none; border-radius:7px;
+    padding:11px 18px; cursor:pointer; box-shadow:3px 3px 0 rgba(43,42,37,0.3);
+    transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .fire-btn:hover{transform:translate(-2px,-2px); box-shadow:5px 5px 0 rgba(43,42,37,0.4);}
+  .pause-btn{
+    font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:0.86rem;
+    background:var(--sage); color:var(--white-card); border:none; border-radius:7px;
+    padding:11px 18px; cursor:pointer; box-shadow:3px 3px 0 rgba(43,42,37,0.3);
+    transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .pause-btn:hover{transform:translate(-2px,-2px); box-shadow:5px 5px 0 rgba(43,42,37,0.4);}
+  .pause-btn.is-paused{background:var(--red);}
+  .toggle-row{display:flex; align-items:center; gap:8px;}
+  .toggle-row label{font-family:'Space Grotesk', sans-serif; font-size:0.85rem; cursor:pointer;}
+  .reset-btn{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; background:var(--paper);
+    border:1px solid var(--line); border-radius:6px; padding:8px 14px; color:var(--ink-soft); cursor:pointer;
+  }
+  .reset-btn:hover{border-color:var(--ink); color:var(--ink);}
+  .status-pill{
+    font-family:'Courier Prime', monospace; font-size:0.74rem; padding:6px 12px; border-radius:12px;
+    background:var(--paper-dark); color:var(--ink-soft); font-weight:700; margin-left:auto;
+  }
+  .status-pill.firing{background:var(--wave); color:var(--ink);}
+  .status-pill.refractory{background:var(--red); color:white;}
+
+  .phase-caption{
+    background:var(--navy); color:var(--white-card); border-radius:8px; padding:12px 18px;
+    margin:0 0 16px; font-family:'Courier Prime', monospace; font-size:0.82rem; line-height:1.5;
+    box-shadow:4px 4px 0 rgba(43,42,37,0.15);
+  }
+  .phase-caption .phase-name{font-weight:700; letter-spacing:0.04em; margin-right:8px;}
+
+  .diagram-card{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    box-shadow:4px 4px 0 rgba(43,42,37,0.08); padding:16px; margin:0 0 20px;
+  }
+  .diagram-card svg{width:100%; height:auto; display:block; cursor:pointer;}
+  .diagram-caption{font-family:'Courier Prime', monospace; font-size:0.7rem; color:var(--ink-soft); margin:8px 0 0; line-height:1.5;}
+
+  .graph-card{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    box-shadow:4px 4px 0 rgba(43,42,37,0.08); padding:16px 18px; margin:0 0 20px;
+  }
+  .graph-card .graph-title{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--ink-soft); margin:0 0 8px;
+  }
+  .graph-card canvas{width:100%; height:190px; display:block;}
+
+  .legend-card{
+    background:var(--paper-dark); border-radius:8px; padding:16px 20px; margin:0 0 20px;
+    display:grid; grid-template-columns:1fr; gap:10px;
+  }
+  @media(min-width:640px){.legend-card{grid-template-columns:1fr 1fr;}}
+  .legend-term{font-size:0.82rem; line-height:1.5; color:var(--ink);}
+  .legend-term strong{color:var(--navy); font-weight:700;}
+  .legend-term ul{margin:8px 0 0; padding-left:20px;}
+  .legend-term li{margin-bottom:5px; line-height:1.5;}
+  .legend-term li:last-child{margin-bottom:0;}
+
+  footer{
+    text-align:center; padding:30px 20px; color:var(--ink-soft);
+    font-family:'Courier Prime', monospace; font-size:0.78rem; border-top:1px dashed var(--line);
+    max-width:960px; margin:0 auto;
+  }
+</style>
+</head>
+<body>
+
+  <div class="backbar"><a href="lesson-bio-neurons.html">← Back to Neurons lesson</a></div>
+
+  <div class="wrap">
+    <div class="card-header">
+      <p class="eyebrow">Biological Basis of Behavior · Lesson 2 · Try It Now — No Login</p>
+      <h1>Neuron Action Potential Simulator</h1>
+      <p>Click the cell body, or drag the stimulus slider and hit Fire, to send current into the neuron. Watch individual Na⁺ ions move in and K⁺ ions move out at each region, see the local current spread forward and trigger the next region, and see exactly why the signal only ever runs one way.</p>
+    </div>
+
+    <div class="controls-card">
+      <div class="control-group">
+        <span class="control-label">Stimulus strength</span>
+        <input type="range" class="stim-slider" id="stimSlider" min="0" max="100" value="60">
+        <span class="stim-value" id="stimValue">60</span>
+      </div>
+      <button class="fire-btn" type="button" id="fireBtn">⚡ Stimulate</button>
+      <button class="pause-btn" type="button" id="pauseBtn">⏸ Pause</button>
+      <div class="toggle-row">
+        <input type="checkbox" id="myelinToggle" checked>
+        <label for="myelinToggle">Myelinated axon</label>
+      </div>
+      <div class="control-group">
+        <span class="control-label">Simulation speed</span>
+        <select id="speedSelect" class="reset-btn" style="cursor:pointer;">
+          <option value="0.08">0.08x — crawl</option>
+          <option value="0.2">0.2x — very slow</option>
+          <option value="0.4">0.4x — slow</option>
+          <option value="1" selected>1x — normal</option>
+          <option value="1.75">1.75x — fast</option>
+        </select>
+      </div>
+      <button class="reset-btn" type="button" id="resetBtn">↺ Reset</button>
+      <span class="status-pill" id="statusPill">Resting: −70 mV</span>
+    </div>
+
+    <div class="phase-caption" id="phaseCaption">
+      <span class="phase-name">RESTING.</span><span id="phaseText">Voltage-gated channels are closed.</span>
+    </div>
+
+    <div class="diagram-card">
+      <svg id="neuronSvg" viewBox="0 0 900 400" xmlns="http://www.w3.org/2000/svg"></svg>
+      <p class="diagram-caption">Dots at each region show relative charge <em>near the membrane at that spot</em> — not the charge of the whole cell. Gold halo = actively firing. Gray halo = refractory (just fired, can't fire again yet).</p>
+    </div>
+
+    <div class="graph-card">
+      <p class="graph-title">Membrane potential at the axon initial segment (mV vs. time)</p>
+      <canvas id="voltGraph" width="860" height="190"></canvas>
+    </div>
+
+    <div class="legend-card">
+      <div class="legend-term" style="grid-column:1/-1;">
+        <strong>1. Resting Potential — about −70 mV</strong>
+        <ul>
+          <li>At rest, the membrane is much more permeable to K⁺ than to Na⁺ because there are many K⁺ leak channels.</li>
+          <li>K⁺ tends to leave the neuron, leaving the inside relatively negative.</li>
+          <li>The Na⁺/K⁺ pump maintains the concentration gradients by moving 3 Na⁺ out and 2 K⁺ in.</li>
+          <li>The pump contributes slightly to the voltage, but the difference in ion permeability, especially K⁺ leak, is the main reason for the resting potential.</li>
+        </ul>
+      </div>
+      <div class="legend-term" style="grid-column:1/-1;">
+        <strong>2. Stimulus → Graded Potential</strong>
+        <ul>
+          <li>A stimulus opens ion channels and changes the membrane potential.</li>
+          <li>A weak stimulus produces a small, local depolarization.</li>
+          <li>This is a graded potential: stronger stimulus → larger change.</li>
+          <li>It spreads passively but gets weaker with distance.</li>
+        </ul>
+      </div>
+      <div class="legend-term" style="grid-column:1/-1;">
+        <strong>3. Threshold — about −55 mV</strong>
+        <ul>
+          <li>If the depolarization reaches threshold, usually at the axon initial segment, enough voltage-gated Na⁺ channels open to trigger an action potential.</li>
+          <li>If threshold is not reached, there is no action potential.</li>
+          <li>This is where the all-or-none principle begins.</li>
+        </ul>
+      </div>
+      <div class="legend-term" style="grid-column:1/-1;">
+        <strong>4. Depolarization</strong>
+        <ul>
+          <li>Voltage-gated Na⁺ channels open rapidly.</li>
+          <li>Na⁺ rushes into the neuron.</li>
+          <li>The inside becomes less negative and then temporarily positive.</li>
+          <li>This rapidly drives the membrane potential upward.</li>
+        </ul>
+      </div>
+      <div class="legend-term" style="grid-column:1/-1;">
+        <strong>5. Repolarization</strong>
+        <ul>
+          <li>Na⁺ channels quickly become inactivated.</li>
+          <li>Voltage-gated K⁺ channels, which opened more slowly, are now strongly open.</li>
+          <li>K⁺ flows out of the neuron.</li>
+          <li>The membrane potential becomes negative again.</li>
+        </ul>
+      </div>
+      <div class="legend-term" style="grid-column:1/-1;">
+        <strong>6. Hyperpolarization</strong>
+        <ul>
+          <li>K⁺ channels close relatively slowly.</li>
+          <li>K⁺ continues leaving even after the membrane has returned toward −70 mV.</li>
+          <li>The membrane therefore becomes more negative than resting potential.</li>
+          <li>Eventually the K⁺ channels close and the membrane returns toward resting potential.</li>
+        </ul>
+      </div>
+      <div class="legend-term" style="grid-column:1/-1;">
+        <strong>7. Refractory Period</strong>
+        <ul>
+          <li>The membrane cannot immediately fire another normal action potential.</li>
+          <li>During the absolute refractory period, another action potential is impossible because Na⁺ channels are inactivated.</li>
+          <li>During the relative refractory period, another action potential is possible but requires a stronger stimulus.</li>
+          <li>This creates an important asymmetry: the region behind the action potential is refractory, while the region ahead is ready to respond.</li>
+        </ul>
+      </div>
+      <div class="legend-term" style="grid-column:1/-1;">
+        <strong>8. How the Signal Moves</strong>
+        <ul>
+          <li>Na⁺ entering one region makes the inside of that region temporarily more positive.</li>
+          <li>This creates local electrical currents that spread in both directions along the axon.</li>
+          <li>The current spreads into the region ahead and depolarizes it.</li>
+          <li>If that region reaches threshold, its voltage-gated Na⁺ channels open.</li>
+          <li>A new action potential is generated in the next region.</li>
+          <li>Meanwhile, the region behind is refractory and cannot immediately fire again.</li>
+          <li>Therefore, the signal effectively moves forward.</li>
+        </ul>
+        <p style="margin:10px 0 0;"><strong>The key idea:</strong> the action potential does not physically travel down the axon as one continuous electrical wave. Instead, each section of the axon triggers the next section to generate a new action potential.</p>
+      </div>
+      <div class="legend-term" style="grid-column:1/-1;">
+        <strong>9. Myelin → Saltatory Conduction</strong>
+        <ul>
+          <li>Myelin electrically insulates the axon.</li>
+          <li>Local current can therefore spread rapidly underneath the myelin.</li>
+          <li>Voltage-gated Na⁺ channels are concentrated at the nodes of Ranvier.</li>
+          <li>The action potential is regenerated mainly at these nodes.</li>
+          <li>The signal therefore appears to "jump" from node to node.</li>
+          <li>This is called saltatory conduction.</li>
+        </ul>
+      </div>
+      <div class="legend-term" style="grid-column:1/-1;">
+        <strong>10. Why Does It Only Go One Way?</strong>
+        <ul>
+          <li>The electrical current itself spreads both forward and backward.</li>
+          <li>But the membrane behind the action potential is in its refractory period.</li>
+          <li>The membrane ahead is still capable of reaching threshold.</li>
+        </ul>
+        <p style="margin:10px 0 0;">Therefore: Na⁺ enters → local current spreads → next region reaches threshold → new action potential → previous region is refractory → forward propagation.</p>
+      </div>
+      <div class="legend-term" style="grid-column:1/-1;">
+        <strong>11. Equilibrium Potentials</strong>
+        <ul>
+          <li>Na⁺ equilibrium potential ≈ +60 mV</li>
+          <li>K⁺ equilibrium potential ≈ −90 to −93 mV</li>
+          <li>An ion's equilibrium potential is the voltage at which its electrical force and concentration gradient balance each other.</li>
+          <li>The membrane does not actually reach these values during a normal action potential because Na⁺ channels inactivate and K⁺ channels eventually close.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <footer>Built for classroom use &middot; not a diagnostic tool</footer>
+
+<script>
+(function(){
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.getElementById('neuronSvg');
+
+  function el(tag, attrs){
+    const e = document.createElementNS(NS, tag);
+    for(const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  // ---------------------------------------------------------------
+  // Layout: axon initial segment (labelled "hillock" internally) +
+  // 4 nodes of Ranvier + terminal. 2 unmyelinated sub-regions are
+  // inserted between each pair for the continuous-conduction view.
+  // ---------------------------------------------------------------
+  const SOMA = {x:95, y:200, r:52};
+  const HILLOCK_X = 165;
+  const TERMINAL_X = 820;
+  const AXON_Y = 200;
+  const NODE_XS = [165, 300, 435, 570, 705];
+  const POINTS = NODE_XS.map((x,i) => ({ id: i===0 ? 'hillock' : 'node'+i, x, y:AXON_Y, label: i===0 ? 'Axon Initial Segment' : ('Node of Ranvier ' + i) }));
+
+  // sub-regions used only for the unmyelinated continuous-conduction visual
+  const SUBPOINTS = [];
+  for(let i=0;i<POINTS.length-1;i++){
+    const xa = POINTS[i].x, xb = POINTS[i+1].x;
+    SUBPOINTS.push({ x: xa + (xb-xa)*0.33, afterIndex:i });
+    SUBPOINTS.push({ x: xa + (xb-xa)*0.66, afterIndex:i });
+  }
+
+  // ---- static structure ----
+  const dendriteGroup = el('g', {});
+  [[-40,-40],[-50,-10],[-45,25],[-30,45]].forEach(([dx,dy]) => {
+    dendriteGroup.appendChild(el('line', {x1:SOMA.x, y1:SOMA.y, x2:SOMA.x+dx, y2:SOMA.y+dy, stroke:'#8B6F9E', 'stroke-width':4, 'stroke-linecap':'round'}));
+  });
+  svg.appendChild(dendriteGroup);
+
+  const axonLine = el('line', {x1:HILLOCK_X, y1:AXON_Y, x2:TERMINAL_X, y2:AXON_Y, stroke:'#C9A67A', 'stroke-width':10, 'stroke-linecap':'round'});
+  svg.appendChild(axonLine);
+
+  const myelinGroup = el('g', {id:'myelinGroup'});
+  for(let i=0;i<POINTS.length-1;i++){
+    const x1 = POINTS[i].x + 16, x2 = POINTS[i+1].x - 16;
+    myelinGroup.appendChild(el('rect', {x:x1, y:AXON_Y-16, width:(x2-x1), height:32, rx:14, fill:'var(--myelin)', stroke:'#8FB6CC', 'stroke-width':1.5}));
+  }
+  myelinGroup.appendChild(el('rect', {x:POINTS[POINTS.length-1].x+16, y:AXON_Y-16, width:(TERMINAL_X-24-(POINTS[POINTS.length-1].x+16)), height:32, rx:14, fill:'var(--myelin)', stroke:'#8FB6CC', 'stroke-width':1.5}));
+  svg.appendChild(myelinGroup);
+
+  svg.appendChild(el('circle', {cx:SOMA.x, cy:SOMA.y, r:SOMA.r, fill:'#C9A2D6', stroke:'#7A5A8A', 'stroke-width':2, id:'somaCircle', style:'cursor:pointer;'}));
+  const somaLabel = el('text', {x:SOMA.x, y:SOMA.y+5, 'text-anchor':'middle', 'font-family':"'Courier Prime', monospace", 'font-size':'10', fill:'#4A2E5A', style:'pointer-events:none;'});
+  somaLabel.textContent = 'click me';
+  svg.appendChild(somaLabel);
+
+  const termGroup = el('g', {});
+  [[-22,-30],[0,-38],[22,-30],[0,38],[22,30],[-22,30]].forEach(([dx,dy]) => {
+    termGroup.appendChild(el('line', {x1:TERMINAL_X, y1:AXON_Y, x2:TERMINAL_X+dx, y2:AXON_Y+dy, stroke:'#C9A67A', 'stroke-width':5, 'stroke-linecap':'round'}));
+    termGroup.appendChild(el('circle', {cx:TERMINAL_X+dx, cy:AXON_Y+dy, r:5, fill:'#E0B84C'}));
+  });
+  svg.appendChild(termGroup);
+
+  svg.appendChild(el('text', {x:SOMA.x, y:SOMA.y-70, 'text-anchor':'middle', 'font-family':"'Space Grotesk', sans-serif", 'font-size':'13', 'font-weight':'700', fill:'#2B2A25'})).textContent = 'Soma';
+  svg.appendChild(el('text', {x:(HILLOCK_X+TERMINAL_X)/2, y:AXON_Y+58, 'text-anchor':'middle', 'font-family':"'Space Grotesk', sans-serif", 'font-size':'13', 'font-weight':'700', fill:'#2B2A25'})).textContent = 'Axon';
+  svg.appendChild(el('text', {x:TERMINAL_X+10, y:AXON_Y-55, 'text-anchor':'middle', 'font-family':"'Space Grotesk', sans-serif", 'font-size':'12', 'font-weight':'700', fill:'#2B2A25'})).textContent = 'Terminal';
+  svg.appendChild(el('text', {x:HILLOCK_X, y:AXON_Y+70, 'text-anchor':'middle', 'font-family':"'Courier Prime', monospace", 'font-size':'9', fill:'#5C5648'})).textContent = 'axon initial segment';
+
+  // region-state halo (behind each point) + channel rects + charge dots, per point
+  const pointEls = {};
+  function buildRegionVisual(parentSvg, p, scale){
+    const g = el('g', {});
+    const halo = el('circle', {cx:p.x, cy:AXON_Y, r:26*scale, fill:'var(--wave)', opacity:0});
+    g.appendChild(halo);
+    const naChan = el('rect', {x:p.x-7*scale, y:AXON_Y-24*scale, width:14*scale, height:10*scale, rx:2*scale, fill:'var(--na)', stroke:'#8A4A1E', 'stroke-width':1});
+    const kChan = el('rect', {x:p.x-7*scale, y:AXON_Y+14*scale, width:14*scale, height:10*scale, rx:2*scale, fill:'var(--k)', stroke:'#332B66', 'stroke-width':1, opacity:0.3});
+    g.appendChild(naChan); g.appendChild(kChan);
+    const outDot = el('circle', {cx:p.x, cy:AXON_Y-38*scale, r:6*scale, fill:'#A13D3D'});
+    const outSign = el('text', {x:p.x, y:AXON_Y-34*scale, 'text-anchor':'middle', 'font-size':(9*scale), fill:'white', 'font-weight':'700'});
+    outSign.textContent = '+';
+    const inDot = el('circle', {cx:p.x, cy:AXON_Y+38*scale, r:6*scale, fill:'#2F4858'});
+    const inSign = el('text', {x:p.x, y:AXON_Y+42*scale, 'text-anchor':'middle', 'font-size':(9*scale), fill:'white', 'font-weight':'700'});
+    inSign.textContent = '−';
+    g.appendChild(outDot); g.appendChild(outSign); g.appendChild(inDot); g.appendChild(inSign);
+    // ion particle placeholders (a handful, procedurally positioned each frame)
+    const naParticles = [], kParticles = [];
+    for(let i=0;i<3;i++){
+      const np = el('circle', {r:4*scale, fill:'var(--na)', opacity:0});
+      const nt = el('text', {'font-size':(6*scale), fill:'#5A2E0E', 'text-anchor':'middle', opacity:0});
+      nt.textContent = 'Na⁺';
+      g.appendChild(np); g.appendChild(nt);
+      naParticles.push({dot:np, tag:nt});
+      const kp = el('circle', {r:4*scale, fill:'var(--k)', opacity:0});
+      const kt = el('text', {'font-size':(6*scale), fill:'#221C4A', 'text-anchor':'middle', opacity:0});
+      kt.textContent = 'K⁺';
+      g.appendChild(kp); g.appendChild(kt);
+      kParticles.push({dot:kp, tag:kt});
+    }
+    parentSvg.appendChild(g);
+    return {g, halo, naChan, kChan, outDot, outSign, inDot, inSign, naParticles, kParticles, x:p.x};
+  }
+  POINTS.forEach(p => { pointEls[p.id] = buildRegionVisual(svg, p, 1); });
+
+  // small sub-region dots (unmyelinated continuous-conduction visual only)
+  const subEls = SUBPOINTS.map(sp => {
+    const dot = el('circle', {cx:sp.x, cy:AXON_Y, r:5, fill:'var(--paper-dark)', stroke:'#8A7A55', 'stroke-width':1});
+    svg.appendChild(dot);
+    return {dot, x:sp.x, active:0};
+  });
+
+  // legend chips
+  const chipG = el('g', {});
+  chipG.appendChild(el('rect', {x:20, y:20, width:14, height:10, rx:2, fill:'var(--na)'}));
+  const naLabel = el('text', {x:40, y:29, 'font-family':"'Courier Prime', monospace", 'font-size':'11', fill:'#2B2A25'}); naLabel.textContent = 'Na⁺ channel';
+  chipG.appendChild(naLabel);
+  chipG.appendChild(el('rect', {x:150, y:20, width:14, height:10, rx:2, fill:'var(--k)'}));
+  const kLabel = el('text', {x:170, y:29, 'font-family':"'Courier Prime', monospace", 'font-size':'11', fill:'#2B2A25'}); kLabel.textContent = 'K⁺ channel';
+  chipG.appendChild(kLabel);
+  svg.appendChild(chipG);
+
+  // spreading-current pulses (one per inter-node segment, shown while active)
+  const spreadPulses = {}; // key "i-i+1" -> {el, active}
+  for(let i=0;i<POINTS.length-1;i++){
+    const p = el('rect', {x:POINTS[i].x, y:AXON_Y-15, width:0, height:30, rx:10, fill:'var(--wave)', opacity:0});
+    svg.appendChild(p);
+    spreadPulses[i] = {rect:p, x0:POINTS[i].x, x1:POINTS[i+1].x};
+  }
+
+  // ---------------------------------------------------------------
+  // Physiology model — phase-driven (not voltage-threshold-driven)
+  // ---------------------------------------------------------------
+  const REST=-70, THRESH=-55, PEAK=30, HYPER=-80, NA_EQ=60, K_EQ=-93;
+  const AP_RISE_MS=60, AP_FALL_MS=90, AP_HYPER_MS=120, AP_RECOVER_MS=150;
+  const AP_TOTAL_MS = AP_RISE_MS+AP_FALL_MS+AP_HYPER_MS+AP_RECOVER_MS;
+  const ABS_REFRACT_MS = AP_RISE_MS + AP_FALL_MS; // Na+ channels inactivated through rise+fall
+  const REL_REFRACT_END_MS = AP_TOTAL_MS + 150;
+  const REL_THRESH = 82;
+  function THRESH_SCALE(){ return 55; }
+
+  const state = {};
+  POINTS.forEach(p => state[p.id] = { fireStart: null, gradedStart: null, gradedPeak: 0 });
+
+  let speedMultiplier = 1;
+
+  // ---- virtual (pausable) clock ----
+  let paused = false, pauseOffset = 0, pauseStartedAt = null;
+  function vnow(){
+    if(paused) return pauseStartedAt - pauseOffset;
+    return performance.now() - pauseOffset;
+  }
+  function togglePause(){
+    paused = !paused;
+    const btn = document.getElementById('pauseBtn');
+    if(paused){ pauseStartedAt = performance.now(); btn.textContent = '▶ Resume'; btn.classList.add('is-paused'); }
+    else { pauseOffset += performance.now() - pauseStartedAt; btn.textContent = '⏸ Pause'; btn.classList.remove('is-paused'); }
+  }
+
+  function elapsedAt(id, now){
+    const s = state[id];
+    if(s.fireStart === null) return null;
+    return (now - s.fireStart) * speedMultiplier;
+  }
+
+  function phaseAt(t){
+    if(t === null) return 'rest';
+    if(t < 0) return 'rest';
+    if(t < AP_RISE_MS) return 'rise';
+    if(t < AP_RISE_MS+AP_FALL_MS) return 'fall';
+    if(t < AP_RISE_MS+AP_FALL_MS+AP_HYPER_MS) return 'hyper';
+    if(t < AP_TOTAL_MS) return 'recover';
+    return 'rest';
+  }
+
+  const GRADED_DUR_MS = 220; // how long a subthreshold local bump takes to fade
+  function gradedDecayShape(frac){
+    if(frac < 0.15) return frac/0.15;
+    const d = (frac-0.15)/0.85;
+    return Math.exp(-4*d);
+  }
+  function gradedVoltageAt(id, now){
+    const s = state[id];
+    if(s.gradedStart === null) return 0;
+    const t2 = (now - s.gradedStart) * speedMultiplier;
+    if(t2 < 0 || t2 >= GRADED_DUR_MS) return 0;
+    return s.gradedPeak * gradedDecayShape(t2/GRADED_DUR_MS);
+  }
+
+  function voltageAt(id, now){
+    const t = elapsedAt(id, now);
+    if(t === null || t < 0) return REST + gradedVoltageAt(id, now);
+    if(t < AP_RISE_MS) return REST + (PEAK-REST) * (t/AP_RISE_MS);
+    if(t < AP_RISE_MS+AP_FALL_MS) return PEAK + (REST-PEAK) * ((t-AP_RISE_MS)/AP_FALL_MS);
+    if(t < AP_RISE_MS+AP_FALL_MS+AP_HYPER_MS){
+      const tt = (t-AP_RISE_MS-AP_FALL_MS)/AP_HYPER_MS;
+      return REST + (HYPER-REST) * Math.sin(Math.PI * tt);
+    }
+    return REST;
+  }
+
+  // channel open fractions are driven by TIME PHASE, not by voltage —
+  // this is the key physiology fix: K+ opens because threshold was
+  // crossed (same triggering event as Na+), not because voltage has
+  // already gone negative again.
+  function naOpenFracAt(t){
+    if(t === null || t < 0) return 0;
+    if(t < AP_RISE_MS) return Math.min(1, t / (AP_RISE_MS*0.3));
+    if(t < AP_RISE_MS+AP_FALL_MS*0.4) return 1 - (t-AP_RISE_MS)/(AP_FALL_MS*0.4);
+    return 0;
+  }
+  function kOpenFracAt(t){
+    if(t === null || t < AP_RISE_MS*0.4) return 0;
+    const fallStart = AP_RISE_MS;
+    if(t < fallStart) return (t-AP_RISE_MS*0.4)/(AP_RISE_MS*0.6)*0.3;
+    if(t < fallStart+AP_FALL_MS) return 0.3 + 0.7*((t-fallStart)/AP_FALL_MS);
+    const hyperEnd = fallStart+AP_FALL_MS+AP_HYPER_MS;
+    if(t < hyperEnd) return 1;
+    if(t < AP_TOTAL_MS) return Math.max(0, 1 - (t-hyperEnd)/AP_RECOVER_MS);
+    return 0;
+  }
+
+  function regionStateAt(t){
+    if(t === null) return 'resting';
+    if(t < ABS_REFRACT_MS) return 'active';
+    if(t < REL_REFRACT_END_MS) return 'refractory';
+    return 'resting';
+  }
+
+  function canFire(id, now, stimStrength){
+    const t = elapsedAt(id, now);
+    if(t === null) return stimStrength >= THRESH_SCALE();
+    if(t < ABS_REFRACT_MS) return false;
+    if(t < REL_REFRACT_END_MS) return stimStrength >= REL_THRESH;
+    return stimStrength >= THRESH_SCALE();
+  }
+
+  function fireAt(id, now){ state[id].fireStart = now; }
+
+  function lerp(a,b,f){ return a + (b-a)*f; }
+
+  function updatePointVisual(pe, id, now){
+    const t = elapsedAt(id, now);
+    const v = voltageAt(id, now);
+    const naOpen = naOpenFracAt(t);
+    const kOpen = kOpenFracAt(t);
+    const rstate = regionStateAt(t);
+    const gradedNow = t === null ? gradedVoltageAt(id, now) : 0;
+    const gradedFrac = Math.max(0, Math.min(1, gradedNow / 13));
+
+    pe.naChan.setAttribute('opacity', 0.25 + naOpen*0.75);
+    pe.kChan.setAttribute('opacity', 0.25 + kOpen*0.75);
+
+    if(rstate === 'active'){
+      pe.halo.setAttribute('opacity', 0.35); pe.halo.setAttribute('fill', 'var(--wave)');
+    } else if(rstate === 'refractory'){
+      pe.halo.setAttribute('opacity', 0.18); pe.halo.setAttribute('fill', '#8A8578');
+    } else if(gradedFrac > 0.03){
+      pe.halo.setAttribute('opacity', 0.14 + gradedFrac*0.18); pe.halo.setAttribute('fill', '#7FA6C4');
+    } else {
+      pe.halo.setAttribute('opacity', 0);
+    }
+
+    // charge dots: local relative charge near this patch of membrane
+    const depolFrac = Math.max(0, Math.min(1, (v - REST) / (PEAK - REST)));
+    if(depolFrac > 0.15){
+      pe.outDot.setAttribute('fill', '#2F4858'); pe.outSign.textContent = '−';
+      pe.inDot.setAttribute('fill', '#A13D3D'); pe.inSign.textContent = '+';
+    } else {
+      pe.outDot.setAttribute('fill', '#A13D3D'); pe.outSign.textContent = '+';
+      pe.inDot.setAttribute('fill', '#2F4858'); pe.inSign.textContent = '−';
+    }
+
+    // ion particles — procedural, no persistent spawn state needed.
+    // Na+ is a quick single burst that fully finishes BEFORE K+ starts
+    // (clean sequence: Na+ in, then — once done — K+ out). K+ is a
+    // sustained repeating stream through fall+hyper, not a single blip,
+    // to visually show the prolonged outflow that overshoots into
+    // hyperpolarization.
+    const cx = pe.x;
+    const NA_DUR = AP_RISE_MS * 0.62;
+    pe.naParticles.forEach((particle, i) => {
+      const offset = i * (AP_RISE_MS*0.16);
+      let pt = t === null ? -1 : t - offset;
+      if(pt >= 0 && pt < NA_DUR){
+        const frac = pt / NA_DUR;
+        const y = lerp(AXON_Y-22, AXON_Y-4, frac);
+        const x = cx + (i-1)*7;
+        const op = frac < 0.15 ? frac/0.15 : (frac > 0.8 ? (1-frac)/0.2 : 1);
+        particle.dot.setAttribute('cx', x); particle.dot.setAttribute('cy', y); particle.dot.setAttribute('opacity', Math.max(0,op)*0.95);
+        particle.tag.setAttribute('x', x); particle.tag.setAttribute('y', y-6); particle.tag.setAttribute('opacity', Math.max(0,op)*0.9);
+      } else {
+        particle.dot.setAttribute('opacity', 0); particle.tag.setAttribute('opacity', 0);
+      }
+    });
+    const K_WINDOW_START = AP_RISE_MS;
+    const K_WINDOW_END = AP_RISE_MS + AP_FALL_MS + AP_HYPER_MS;
+    const K_CYCLE = 55;
+    pe.kParticles.forEach((particle, i) => {
+      const inWindow = t !== null && t >= K_WINDOW_START && t < K_WINDOW_END;
+      if(inWindow){
+        const laneOffset = i * (K_CYCLE/3);
+        const localT = (t - K_WINDOW_START + laneOffset) % K_CYCLE;
+        const frac = localT / K_CYCLE;
+        const y = lerp(AXON_Y+22, AXON_Y+4, 1-frac);
+        const x = cx + (i-1)*7;
+        const op = frac < 0.12 ? frac/0.12 : (frac > 0.82 ? (1-frac)/0.18 : 1);
+        particle.dot.setAttribute('cx', x); particle.dot.setAttribute('cy', y); particle.dot.setAttribute('opacity', Math.max(0,op)*0.95);
+        particle.tag.setAttribute('x', x); particle.tag.setAttribute('y', y+10); particle.tag.setAttribute('opacity', Math.max(0,op)*0.9);
+      } else {
+        particle.dot.setAttribute('opacity', 0); particle.tag.setAttribute('opacity', 0);
+      }
+    });
+
+    return {t, v, phase: gradedFrac > 0.03 && t === null ? 'sub' : phaseAt(t), rstate};
+  }
+
+  // graph history (axon initial segment only)
+  const graphHistory = [];
+  function graphWindowMs(){ return (AP_TOTAL_MS / speedMultiplier) * 2.2; }
+
+  // ---------------------------------------------------------------
+  // Propagation — modeled as local current spreading forward, which
+  // then triggers regeneration at the next region. Scheduling uses
+  // vnow() via an explicit event queue so Pause freezes it cleanly.
+  // ---------------------------------------------------------------
+  let events = []; // {time, fn}
+  function schedule(delay, fn){ events.push({ time: vnow() + delay, fn }); }
+  function clearEvents(){ events = []; }
+  function runDueEvents(){
+    const now = vnow();
+    const due = events.filter(e => e.time <= now);
+    events = events.filter(e => e.time > now);
+    due.forEach(e => e.fn());
+  }
+
+  function propagateFromHillock(){
+    clearEvents();
+    subEls.forEach(s => { s.active = 0; s.dot.setAttribute('fill', 'var(--paper-dark)'); });
+    Object.values(spreadPulses).forEach(sp => sp.rect.setAttribute('opacity', 0));
+
+    const myelinated = document.getElementById('myelinToggle').checked;
+    let cursorDelay = 0;
+
+    for(let i=0;i<POINTS.length-1;i++){
+      const spreadDur = (myelinated ? 90 : 260) / speedMultiplier;
+      const segIndex = i;
+      // spreading current pulse animation along the segment
+      schedule(cursorDelay, () => animateSpread(segIndex, spreadDur, myelinated));
+      // sub-region blips for unmyelinated continuous conduction
+      if(!myelinated){
+        const subs = subEls.filter((s, idx) => Math.floor(idx/2) === segIndex);
+        subs.forEach((s, k) => {
+          schedule(cursorDelay + spreadDur*((k+1)/3), () => {
+            s.active = 1; s.dot.setAttribute('fill', 'var(--wave)');
+            schedule(140/speedMultiplier, () => { s.active = 0; s.dot.setAttribute('fill', 'var(--paper-dark)'); });
+          });
+        });
+      }
+      // regeneration at the next node once current arrives
+      schedule(cursorDelay + spreadDur, () => {
+        const now = vnow();
+        if(canFire(POINTS[segIndex+1].id, now, 100)) fireAt(POINTS[segIndex+1].id, now);
+      });
+      cursorDelay += spreadDur;
+    }
+  }
+
+  function animateSpread(segIndex, duration, myelinated){
+    const sp = spreadPulses[segIndex];
+    const startT = vnow();
+    sp.rect.setAttribute('opacity', myelinated ? 0.55 : 0.4);
+    function step(){
+      const now = vnow();
+      const frac = Math.min(1, (now-startT)/duration);
+      const w = (sp.x1 - sp.x0) * frac;
+      sp.rect.setAttribute('width', Math.max(0,w));
+      sp.rect.setAttribute('x', sp.x0);
+      if(frac < 1 && !paused) requestAnimationFrame(step);
+      else if(frac < 1) requestAnimationFrame(step);
+      if(frac >= 1) sp.rect.setAttribute('opacity', 0);
+    }
+    step();
+  }
+
+  function attemptStimulate(strength){
+    const now = vnow();
+    if(canFire('hillock', now, strength)){
+      fireAt('hillock', now);
+      state['hillock'].gradedStart = null;
+      propagateFromHillock();
+    } else if(state['hillock'].fireStart === null){
+      // subthreshold while resting: a real (if small) local graded
+      // potential — proportional to stimulus strength, decays away,
+      // never propagates. This is what a weak stimulus actually does.
+      const peak = (Math.min(strength, THRESH_SCALE()-1) / THRESH_SCALE()) * 13;
+      state['hillock'].gradedStart = now;
+      state['hillock'].gradedPeak = peak;
+    } else {
+      // blocked by refractory period — no new response
+      const pe = pointEls['hillock'];
+      pe.naChan.setAttribute('opacity', 0.45);
+      setTimeout(() => { if(!paused) pe.naChan.setAttribute('opacity', 0.25); }, 150);
+    }
+  }
+
+  // ---- graph ----
+  const canvas = document.getElementById('voltGraph');
+  const ctx = canvas.getContext('2d');
+  function resizeCanvas(){
+    const ratio = window.devicePixelRatio || 1;
+    const displayW = canvas.clientWidth;
+    canvas.width = displayW * ratio;
+    canvas.height = 190 * ratio;
+    ctx.setTransform(ratio,0,0,ratio,0,0);
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  function phaseColor(phase){
+    if(phase==='rise') return '#D97A3D';
+    if(phase==='fall' || phase==='hyper') return '#5A4E9C';
+    return '#5C5648';
+  }
+
+  function drawGraph(now, currentPhase, currentV){
+    const w = canvas.clientWidth, h = 190;
+    ctx.clearRect(0,0,w,h);
+    function yFor(v){ return h - ((v - (-105)) / (75-(-105))) * h; }
+    ctx.strokeStyle = '#D97A3D'; ctx.setLineDash([2,3]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, yFor(NA_EQ)); ctx.lineTo(w, yFor(NA_EQ)); ctx.stroke();
+    ctx.strokeStyle = '#5A4E9C';
+    ctx.beginPath(); ctx.moveTo(0, yFor(K_EQ)); ctx.lineTo(w, yFor(K_EQ)); ctx.stroke();
+    ctx.strokeStyle = '#C7B78E'; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(0, yFor(REST)); ctx.lineTo(w, yFor(REST)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, yFor(THRESH)); ctx.lineTo(w, yFor(THRESH)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#5C5648'; ctx.font = "10px 'Courier Prime', monospace";
+    ctx.fillText('resting −70', 4, yFor(REST)-4);
+    ctx.fillText('threshold −55', 4, yFor(THRESH)-4);
+    ctx.fillStyle = '#D97A3D'; ctx.fillText('Na⁺ equilibrium +60', 4, yFor(NA_EQ)-4);
+    ctx.fillStyle = '#5A4E9C'; ctx.fillText('K⁺ equilibrium −93', 4, yFor(K_EQ)+14);
+
+    const windowMs = graphWindowMs();
+    while(graphHistory.length && now - graphHistory[0].t > windowMs) graphHistory.shift();
+    ctx.strokeStyle = '#2F4858'; ctx.lineWidth = 2; ctx.beginPath();
+    let lastX=0,lastY=0;
+    graphHistory.forEach((pt,i) => {
+      const x = w - ((now - pt.t) / windowMs) * w;
+      const y = yFor(pt.v);
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      lastX=x; lastY=y;
+    });
+    ctx.stroke();
+    // current-position marker, colored by phase
+    ctx.fillStyle = phaseColor(currentPhase);
+    ctx.beginPath(); ctx.arc(lastX, lastY, 4, 0, Math.PI*2); ctx.fill();
+  }
+
+  const PHASE_MESSAGES = {
+    rest: ['RESTING.', 'Voltage-gated channels are closed.'],
+    sub: ['SUBTHRESHOLD.', 'Too weak to reach threshold — a small local bump that fades and never propagates.'],
+    rise: ['DEPOLARIZATION.', 'Na⁺ enters → membrane becomes less negative.'],
+    fall: ['REPOLARIZATION.', 'Na⁺ channels inactivate; K⁺ leaves.'],
+    hyper: ['REFRACTORY.', 'K⁺ still leaving — this region can\u2019t fire again yet.'],
+    recover: ['REFRACTORY.', 'Settling back toward resting — still hard to re-fire.'],
+  };
+
+  function loop(){
+    const now = vnow();
+    let hillockInfo = null;
+    POINTS.forEach(p => {
+      const info = updatePointVisual(pointEls[p.id], p.id, now);
+      if(p.id === 'hillock') hillockInfo = info;
+    });
+    graphHistory.push({t: now, v: hillockInfo.v});
+    document.getElementById('stimValue').textContent = document.getElementById('stimSlider').value;
+
+    const pill = document.getElementById('statusPill');
+    if(hillockInfo.rstate === 'active'){
+      pill.textContent = 'Active: ' + Math.round(hillockInfo.v) + ' mV';
+      pill.className = 'status-pill firing';
+    } else if(hillockInfo.rstate === 'refractory'){
+      pill.textContent = 'Refractory (' + Math.round(hillockInfo.v) + ' mV)';
+      pill.className = 'status-pill refractory';
+    } else if(hillockInfo.phase === 'sub'){
+      pill.textContent = 'Subthreshold (' + Math.round(hillockInfo.v) + ' mV)';
+      pill.className = 'status-pill';
+    } else {
+      pill.textContent = 'Resting: ' + Math.round(hillockInfo.v) + ' mV';
+      pill.className = 'status-pill';
+    }
+
+    const msg = PHASE_MESSAGES[hillockInfo.phase] || PHASE_MESSAGES.rest;
+    document.getElementById('phaseCaption').querySelector('.phase-name').textContent = msg[0];
+    document.getElementById('phaseText').textContent = msg[1];
+
+    drawGraph(now, hillockInfo.phase, hillockInfo.v);
+    if(!paused) runDueEvents();
+    requestAnimationFrame(loop);
+  }
+
+  // ---- controls ----
+  const stimSlider = document.getElementById('stimSlider');
+  const stimValue = document.getElementById('stimValue');
+  stimSlider.addEventListener('input', () => stimValue.textContent = stimSlider.value);
+  document.getElementById('fireBtn').addEventListener('click', () => attemptStimulate(parseInt(stimSlider.value, 10)));
+  document.getElementById('somaCircle').addEventListener('click', () => attemptStimulate(parseInt(stimSlider.value, 10)));
+  document.getElementById('pauseBtn').addEventListener('click', togglePause);
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    clearEvents();
+    POINTS.forEach(p => { state[p.id].fireStart = null; state[p.id].gradedStart = null; state[p.id].gradedPeak = 0; });
+    graphHistory.length = 0;
+    subEls.forEach(s => { s.active = 0; s.dot.setAttribute('fill', 'var(--paper-dark)'); });
+    Object.values(spreadPulses).forEach(sp => sp.rect.setAttribute('opacity', 0));
+    if(paused) togglePause();
+  });
+  document.getElementById('myelinToggle').addEventListener('change', (e) => {
+    myelinGroup.style.display = e.target.checked ? '' : 'none';
+    subEls.forEach(s => { s.dot.style.display = e.target.checked ? 'none' : ''; });
+  });
+  document.getElementById('speedSelect').addEventListener('change', (e) => {
+    speedMultiplier = parseFloat(e.target.value);
+  });
+
+  resizeCanvas();
+  requestAnimationFrame(loop);
+})();
+</script>
+
+</body>
+</html>
