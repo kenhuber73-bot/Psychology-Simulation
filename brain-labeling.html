@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Brain — Labeling Activity — Psych Sims</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1E9D2; --paper-dark:#E3D5AE; --ink:#2B2A25; --ink-soft:#5C5648;
+    --navy:#2F4858; --red:#A13D3D; --sage:#5E7A52; --line:#C7B78E; --white-card:#FBF7EC;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper); color:var(--ink); font-family:'Space Grotesk', sans-serif;}
+  a{color:inherit;}
+
+  .backbar{max-width:720px; margin:0 auto; padding:18px 20px 0;}
+  .backbar a{
+    font-family:'Courier Prime', monospace; font-size:0.78rem; color:var(--ink-soft);
+    text-decoration:underline;
+  }
+
+  .wrap{max-width:720px; margin:0 auto; padding:20px 20px 60px;}
+  .card-header{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:0 10px 10px 10px;
+    padding:26px 30px; box-shadow:6px 6px 0 rgba(43,42,37,0.08); margin:0 0 22px;
+  }
+  .card-header .eyebrow{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.07em;
+    color:var(--ink-soft); margin:0 0 8px;
+  }
+  .card-header h1{font-size:clamp(1.4rem, 4vw, 1.8rem); margin:0 0 10px;}
+  .card-header p{color:var(--ink-soft); font-size:0.92rem; line-height:1.6; margin:0;}
+
+  .progress-row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:12px 18px; margin:0 0 20px; box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+  }
+  .progress-label{font-family:'Courier Prime', monospace; font-size:0.78rem; color:var(--ink-soft);}
+  .progress-count{font-weight:700; color:var(--navy);}
+  .reset-btn{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; background:var(--paper);
+    border:1px solid var(--line); border-radius:6px; padding:6px 12px; color:var(--ink-soft); cursor:pointer;
+  }
+  .reset-btn:hover{border-color:var(--ink); color:var(--ink);}
+
+  .diagram-card{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    box-shadow:4px 4px 0 rgba(43,42,37,0.08); padding:20px; margin:0 0 24px;
+  }
+  .diagram-wrap{position:relative; width:100%; max-width:559px; margin:0 auto;}
+  .diagram-wrap img{width:100%; height:auto; display:block; border-radius:4px;}
+
+  .pin{
+    position:absolute; width:26px; height:26px; margin:-13px 0 0 -13px;
+    border-radius:50%; border:2px solid white; cursor:pointer;
+    background:var(--navy); color:white; font-family:'Space Grotesk', sans-serif;
+    font-weight:700; font-size:0.85rem; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 2px 6px rgba(0,0,0,0.35); transition:transform 0.12s ease;
+  }
+  .pin:hover{transform:scale(1.12);}
+  .pin.correct{background:var(--sage);}
+  .pin.incorrect{background:var(--red);}
+  .pin.answered{cursor:default;}
+  .pin.answered:hover{transform:none;}
+
+  .pin-panel{
+    position:absolute; z-index:50; background:var(--white-card); border:1px solid var(--ink);
+    border-radius:8px; box-shadow:5px 5px 0 rgba(43,42,37,0.15); padding:12px; width:220px;
+  }
+  .pin-panel .panel-title{
+    font-family:'Courier Prime', monospace; font-size:0.68rem; text-transform:uppercase;
+    letter-spacing:0.05em; color:var(--ink-soft); margin:0 0 8px;
+  }
+  .pin-panel button.option{
+    display:block; width:100%; text-align:left; font-family:'Space Grotesk', sans-serif;
+    font-size:0.85rem; background:var(--paper); border:1px solid var(--line); border-radius:6px;
+    padding:8px 10px; margin-bottom:6px; cursor:pointer; color:var(--ink);
+  }
+  .pin-panel button.option:last-child{margin-bottom:0;}
+  .pin-panel button.option:hover{border-color:var(--ink); background:var(--paper-dark);}
+  .pin-panel .panel-close{
+    display:block; margin-top:8px; text-align:center; font-family:'Courier Prime', monospace;
+    font-size:0.7rem; color:var(--ink-soft); background:none; border:none; cursor:pointer;
+  }
+
+  .feedback-toast{
+    position:absolute; z-index:60; background:var(--ink); color:var(--white-card);
+    font-family:'Space Grotesk', sans-serif; font-size:0.82rem; font-weight:600;
+    padding:8px 14px; border-radius:6px; box-shadow:3px 3px 0 rgba(0,0,0,0.2);
+    white-space:nowrap; pointer-events:none;
+  }
+  .feedback-toast.correct{background:var(--sage);}
+  .feedback-toast.incorrect{background:var(--red);}
+
+  .legend{
+    display:flex; flex-wrap:wrap; gap:10px 18px; margin:0 0 24px; padding:14px 18px;
+    background:var(--paper-dark); border-radius:8px; font-family:'Courier Prime', monospace; font-size:0.76rem;
+    color:var(--ink-soft);
+  }
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .legend .dot{width:11px; height:11px; border-radius:50%; display:inline-block;}
+  .dot.navy{background:var(--navy);}
+  .dot.sage{background:var(--sage);}
+  .dot.red{background:var(--red);}
+
+  .complete-banner{
+    display:none; background:var(--white-card); border:1px solid var(--sage); border-left:4px solid var(--sage);
+    border-radius:0 8px 8px 0; padding:20px 24px; box-shadow:4px 4px 0 rgba(43,42,37,0.08); margin:0 0 24px;
+  }
+  .complete-banner.show{display:block;}
+  .complete-banner h3{margin:0 0 6px; color:var(--sage);}
+  .complete-banner p{margin:0; color:var(--ink-soft); font-size:0.9rem; line-height:1.6;}
+
+  footer{
+    text-align:center; padding:30px 20px; color:var(--ink-soft);
+    font-family:'Courier Prime', monospace; font-size:0.78rem; border-top:1px dashed var(--line);
+    max-width:720px; margin:0 auto;
+  }
+</style>
+</head>
+<body>
+
+  <div class="backbar"><a href="lesson-bio-brain.html">← Back to The Brain lesson</a></div>
+
+  <div class="wrap">
+    <div class="card-header">
+      <p class="eyebrow">Biological Basis of Behavior · Lesson 1 · Try It Now — No Login</p>
+      <h1>The Brain — Labeling Activity</h1>
+      <p>Click a pin, then choose the structure it's pointing to. You'll know right away if you're right — get all six to complete the activity.</p>
+    </div>
+
+    <div class="progress-row">
+      <span class="progress-label">Labeled: <span class="progress-count" id="progressCount">0 / 6</span></span>
+      <button class="reset-btn" type="button" id="resetBtn">↺ Reset</button>
+    </div>
+
+    <div class="complete-banner" id="completeBanner">
+      <h3>All six labeled correctly!</h3>
+      <p>Nice work. When you're ready, head back to the lesson to keep going.</p>
+    </div>
+
+    <div class="diagram-card">
+      <div class="diagram-wrap" id="diagramWrap">
+        <img src="images/brain-diagram.png" alt="Diagram of the human brain with leader lines but no text labels" id="brainImg">
+        <!-- pins injected by JS -->
+      </div>
+    </div>
+
+    <div class="legend">
+      <span><span class="dot navy"></span> Not yet labeled</span>
+      <span><span class="dot sage"></span> Correct</span>
+      <span><span class="dot red"></span> Try again</span>
+    </div>
+  </div>
+
+  <footer>Built for classroom use &middot; not a diagnostic tool</footer>
+
+<script>
+  // Native image is 559x360 — pin coordinates below are in that native pixel space,
+  // converted to percentages so they stay aligned at any display size.
+  const NATIVE_W = 559, NATIVE_H = 360;
+  const structures = [
+    { id:'frontal',    label:'Frontal Lobe',    x:155, y:155 },
+    { id:'parietal',   label:'Parietal Lobe',   x:305, y:115 },
+    { id:'occipital',  label:'Occipital Lobe',  x:445, y:195 },
+    { id:'temporal',   label:'Temporal Lobe',   x:235, y:220 },
+    { id:'cerebellum', label:'Cerebellum',      x:345, y:298 },
+    { id:'spinal',     label:'Spinal Cord',     x:298, y:313 },
+  ];
+
+  const wrap = document.getElementById('diagramWrap');
+  const progressCount = document.getElementById('progressCount');
+  const completeBanner = document.getElementById('completeBanner');
+  const resetBtn = document.getElementById('resetBtn');
+
+  let answered = {}; // id -> true once correctly answered
+  let openPanel = null;
+
+  function shuffledOptions(){
+    const opts = structures.map(s => ({id:s.id, label:s.label}));
+    for(let i = opts.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i+1));
+      [opts[i], opts[j]] = [opts[j], opts[i]];
+    }
+    return opts;
+  }
+
+  function closePanel(){
+    if(openPanel){ openPanel.remove(); openPanel = null; }
+  }
+
+  function updateProgress(){
+    const n = Object.values(answered).filter(Boolean).length;
+    progressCount.textContent = n + ' / 6';
+    completeBanner.classList.toggle('show', n === 6);
+  }
+
+  function showToast(pinEl, text, cls){
+    const toast = document.createElement('div');
+    toast.className = 'feedback-toast ' + cls;
+    toast.textContent = text;
+    toast.style.left = pinEl.style.left;
+    toast.style.top = (parseFloat(pinEl.style.top) - 8) + '%';
+    toast.style.transform = 'translate(-50%, -100%)';
+    wrap.appendChild(toast);
+    setTimeout(() => toast.remove(), 1400);
+  }
+
+  function openPanelFor(struct, pinEl){
+    closePanel();
+    const panel = document.createElement('div');
+    panel.className = 'pin-panel';
+    const leftPct = (struct.x / NATIVE_W) * 100;
+    const topPct = (struct.y / NATIVE_H) * 100;
+    panel.style.left = Math.min(Math.max(leftPct, 15), 78) + '%';
+    panel.style.top = (topPct < 55 ? topPct + 6 : topPct - 6) + '%';
+    if(topPct >= 55) panel.style.transform = 'translateY(-100%)';
+
+    const title = document.createElement('p');
+    title.className = 'panel-title';
+    title.textContent = 'Which structure is this?';
+    panel.appendChild(title);
+
+    shuffledOptions().forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'option';
+      btn.type = 'button';
+      btn.textContent = opt.label;
+      btn.addEventListener('click', () => {
+        const isCorrect = opt.id === struct.id;
+        if(isCorrect){
+          answered[struct.id] = true;
+          pinEl.classList.add('correct', 'answered');
+          pinEl.textContent = '✓';
+          showToast(pinEl, 'Correct!', 'correct');
+        } else {
+          pinEl.classList.add('incorrect');
+          showToast(pinEl, 'Not quite — try again', 'incorrect');
+          setTimeout(() => pinEl.classList.remove('incorrect'), 900);
+        }
+        updateProgress();
+        closePanel();
+      });
+      panel.appendChild(btn);
+    });
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'panel-close';
+    closeBtn.type = 'button';
+    closeBtn.textContent = 'Cancel';
+    closeBtn.addEventListener('click', closePanel);
+    panel.appendChild(closeBtn);
+
+    wrap.appendChild(panel);
+    openPanel = panel;
+  }
+
+  function buildPins(){
+    structures.forEach((s, i) => {
+      const pin = document.createElement('button');
+      pin.type = 'button';
+      pin.className = 'pin';
+      pin.style.left = (s.x / NATIVE_W * 100) + '%';
+      pin.style.top = (s.y / NATIVE_H * 100) + '%';
+      pin.textContent = (i + 1);
+      pin.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if(answered[s.id]) return;
+        openPanelFor(s, pin);
+      });
+      wrap.appendChild(pin);
+    });
+  }
+
+  function resetAll(){
+    answered = {};
+    closePanel();
+    wrap.querySelectorAll('.pin').forEach((pin, i) => {
+      pin.classList.remove('correct', 'incorrect', 'answered');
+      pin.textContent = (i + 1);
+    });
+    updateProgress();
+  }
+
+  document.addEventListener('click', closePanel);
+  resetBtn.addEventListener('click', resetAll);
+
+  buildPins();
+  updateProgress();
+</script>
+
+</body>
+</html>
