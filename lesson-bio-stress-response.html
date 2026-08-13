@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Stress Response — Psych Sims</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1E9D2; --paper-dark:#E3D5AE; --folder:#D8C393; --ink:#2B2A25; --ink-soft:#5C5648;
+    --navy:#2F4858; --red:#A13D3D; --sage:#5E7A52; --line:#C7B78E; --white-card:#FBF7EC;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper); color:var(--ink); font-family:'Space Grotesk', sans-serif;}
+  a{color:inherit;}
+
+  /* ===== top nav (shared across site) ===== */
+  .topnav{display:flex; gap:6px; padding:18px 24px 0; max-width:1100px; margin:0 auto; flex-wrap:wrap; position:relative;}
+  .topnav a, .topnav button.nav-tab{
+    font-family:'Courier Prime', monospace; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em;
+    padding:9px 18px; border:1px solid var(--line); border-bottom:none; background:var(--paper-dark);
+    color:var(--ink-soft); border-radius:7px 7px 0 0; text-decoration:none; opacity:0.6;
+    cursor:pointer; display:inline-flex; align-items:center; gap:5px; font-weight:400;
+  }
+  .topnav a.active, .topnav .nav-item.open button.nav-tab{background:var(--white-card); color:var(--ink); opacity:1; font-weight:700; border-color:var(--ink);}
+  .topnav a:hover:not(.active), .topnav button.nav-tab:hover{opacity:0.85;}
+  .topnav .nav-item{position:relative;}
+  .topnav .chev{font-size:0.6rem; transition:transform .12s ease;}
+  .topnav .nav-item.open .chev{transform:rotate(180deg);}
+  .nav-panel{
+    display:none; position:absolute; top:100%; left:0; min-width:260px; z-index:40;
+    background:var(--white-card); border:1px solid var(--ink); border-radius:0 8px 8px 8px;
+    box-shadow:5px 5px 0 rgba(43,42,37,0.12); padding:14px;
+  }
+  .nav-item.open .nav-panel{display:block;}
+  .nav-panel .panel-eyebrow{font-family:'Courier Prime', monospace; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft); margin:0 0 10px;}
+  .nav-panel a.panel-link, .nav-panel .panel-link-disabled{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:8px 10px; border-radius:6px; text-decoration:none; color:var(--ink); font-size:0.86rem;
+    border-top:1px dashed var(--line);
+  }
+  .nav-panel .panel-link-disabled{color:var(--ink-soft); cursor:default;}
+  .nav-panel a.panel-link:first-of-type, .nav-panel .panel-link-disabled:first-of-type{border-top:none;}
+  .nav-panel a.panel-link:hover{background:var(--paper);}
+  .nav-panel .status{
+    font-family:'Courier Prime', monospace; font-size:0.58rem; text-transform:uppercase; letter-spacing:0.04em;
+    padding:2px 7px; border-radius:10px; white-space:nowrap; font-weight:700; color:white; background:var(--ink-soft);
+  }
+  .nav-panel .status.progress{background:var(--navy);}
+  .nav-panel .panel-footer{margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);}
+  .nav-panel .panel-footer a{font-family:'Courier Prime', monospace; font-size:0.74rem; text-decoration:underline; color:var(--ink);}
+
+  /* ===== subject sidebar (shared) ===== */
+  .sidebar-mobile-toggle{display:none;}
+  .subject-layout{max-width:1100px; margin:0 auto; padding:0 24px 70px; display:flex; gap:32px; align-items:flex-start;}
+  .subject-sidebar{
+    width:230px; flex-shrink:0; position:sticky; top:20px;
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:16px; box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+  }
+  .subject-sidebar .sidebar-label{
+    font-family:'Courier Prime', monospace; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--ink-soft); margin:0 0 12px; padding-bottom:8px; border-bottom:1px dashed var(--line);
+  }
+  .sidebar-unit{margin-bottom:4px;}
+  .sidebar-unit-toggle{
+    width:100%; text-align:left; background:none; border:none; cursor:pointer;
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:0.87rem; color:var(--ink);
+    padding:8px 6px; border-radius:6px; display:flex; align-items:center; justify-content:space-between; gap:6px;
+  }
+  .sidebar-unit-toggle:hover{background:var(--paper);}
+  .sidebar-unit-toggle .chev{font-size:0.62rem; color:var(--ink-soft); transition:transform .12s ease;}
+  .sidebar-unit.expanded > .sidebar-unit-toggle .chev{transform:rotate(180deg);}
+  .sidebar-unit-toggle.disabled{color:var(--ink-soft); cursor:default; opacity:0.75;}
+  .sidebar-topic-list{display:none; flex-direction:column; padding:2px 0 8px 14px; border-left:2px solid var(--line); margin:2px 0 4px 12px;}
+  .sidebar-unit.expanded > .sidebar-topic-list{display:flex;}
+  .sidebar-topic-list a{font-size:0.81rem; color:var(--ink-soft); text-decoration:none; padding:6px 8px; border-radius:5px;}
+  .sidebar-topic-list a:hover, .sidebar-topic-list a.current{background:var(--paper); color:var(--ink); font-weight:600;}
+  .sidebar-status{
+    font-family:'Courier Prime', monospace; font-size:0.56rem; text-transform:uppercase; letter-spacing:0.03em;
+    color:white; background:var(--ink-soft); padding:1px 6px; border-radius:9px;
+  }
+  .sidebar-status.progress{background:var(--navy);}
+  .subject-main{flex:1; min-width:0;}
+  @media(max-width:860px){
+    .subject-layout{flex-direction:column;}
+    .subject-sidebar{width:100%; position:static; display:none;}
+    .subject-sidebar.mobile-open{display:block;}
+    .sidebar-mobile-toggle{
+      display:flex; justify-content:space-between; align-items:center; width:calc(100% - 48px);
+      margin:24px 24px 0; max-width:1100px; font-family:'Space Grotesk', sans-serif; font-weight:700;
+      font-size:0.9rem; color:var(--ink); background:var(--white-card); border:1px solid var(--ink);
+      border-radius:8px; padding:12px 16px; box-shadow:4px 4px 0 rgba(43,42,37,0.08); cursor:pointer;
+    }
+  }
+
+  /* ===== lesson page specific ===== */
+  .breadcrumb{
+    font-family:'Courier Prime', monospace; font-size:0.75rem; color:var(--ink-soft);
+    margin:24px 0 14px; letter-spacing:0.03em;
+  }
+  .breadcrumb a{text-decoration:underline;}
+
+  .lesson-toolbar{display:flex; justify-content:flex-end; gap:8px; margin:0 0 10px;}
+  .lesson-toolbar button{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; background:var(--white-card);
+    border:1px solid var(--line); border-radius:6px; padding:6px 12px; color:var(--ink-soft); cursor:pointer;
+  }
+  .lesson-toolbar button:hover{border-color:var(--ink); color:var(--ink);}
+
+  .lesson-hero{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:0 10px 10px 10px;
+    padding:36px 40px; box-shadow:6px 6px 0 rgba(43,42,37,0.08); margin:0 0 36px;
+  }
+  .lesson-hero .eyebrow{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.07em;
+    color:var(--ink-soft); margin:0 0 10px;
+  }
+  .lesson-hero h1{font-size:clamp(1.6rem, 3.6vw, 2.2rem); margin:0 0 12px;}
+  .lesson-hero p{color:var(--ink-soft); font-size:0.96rem; line-height:1.65; max-width:640px; margin:0;}
+
+  .lesson-section{margin:0 0 46px;}
+  .lesson-section-head{display:flex; align-items:baseline; gap:12px; margin-bottom:16px; border-bottom:1px dashed var(--line); padding-bottom:10px;}
+  .lesson-section-head .sec-label{
+    font-family:'Courier Prime', monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--ink-soft);
+  }
+  .lesson-section-head h2{font-size:1.25rem; margin:0;}
+  .lesson-section > p.intro{color:var(--ink-soft); font-size:0.94rem; line-height:1.65; max-width:680px; margin:0 0 20px;}
+
+  .hook-box{
+    background:var(--white-card); border:1px solid var(--ink); border-left:4px solid var(--red);
+    border-radius:0 8px 8px 0; padding:22px 26px; box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+  }
+  .hook-box p{margin:0 0 14px; font-size:0.96rem; line-height:1.7; color:var(--ink);}
+  .hook-box p:last-child{margin-bottom:0;}
+  .hook-prompt{
+    font-family:'Courier Prime', monospace; font-size:0.85rem; color:var(--navy); font-weight:700;
+    background:var(--paper); border-radius:6px; padding:12px 16px; margin-top:6px;
+  }
+
+  .video-embed{
+    position:relative; width:100%; max-width:640px; aspect-ratio:16/9; border-radius:8px; overflow:hidden;
+    border:1px solid var(--ink); box-shadow:4px 4px 0 rgba(43,42,37,0.1);
+  }
+  .video-embed iframe{position:absolute; top:0; left:0; width:100%; height:100%; border:0;}
+
+  .instr-grid{display:grid; grid-template-columns:1fr; gap:24px;}
+  @media(min-width:760px){.instr-grid{grid-template-columns:280px 1fr;}}
+
+  .deck-card{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:0; box-shadow:4px 4px 0 rgba(43,42,37,0.08); text-decoration:none; color:inherit;
+    overflow:hidden; display:flex; flex-direction:column; transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .deck-card:hover{transform:translate(-2px,-2px); box-shadow:6px 6px 0 rgba(43,42,37,0.14);}
+  .deck-thumb{
+    height:110px; background:linear-gradient(135deg, var(--navy), #3d5f73);
+    display:flex; align-items:center; justify-content:center; position:relative;
+  }
+  .deck-thumb svg{width:34px; height:34px; stroke:white; opacity:0.9;}
+  .deck-thumb .ext{
+    position:absolute; bottom:8px; right:10px; font-family:'Courier Prime', monospace;
+    font-size:0.62rem; color:white; opacity:0.85; letter-spacing:0.05em;
+  }
+  .deck-body{padding:16px 18px;}
+  .deck-body h3{margin:0 0 5px; font-size:0.95rem;}
+  .deck-body p{margin:0; color:var(--ink-soft); font-size:0.8rem; line-height:1.5;}
+  .deck-body .dl-hint{
+    display:inline-flex; align-items:center; gap:5px; margin-top:10px;
+    font-family:'Courier Prime', monospace; font-size:0.68rem; text-transform:uppercase;
+    letter-spacing:0.05em; color:var(--navy); font-weight:700;
+  }
+
+  .card-grid{display:grid; grid-template-columns:1fr; gap:18px;}
+  @media(min-width:700px){.card-grid{grid-template-columns:1fr 1fr;}}
+  @media(min-width:980px){.card-grid.three{grid-template-columns:repeat(3,1fr);}}
+  .card{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:20px; box-shadow:4px 4px 0 rgba(43,42,37,0.08); text-decoration:none; color:inherit;
+    display:block; transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .card:hover{transform:translate(-2px,-2px); box-shadow:6px 6px 0 rgba(43,42,37,0.14);}
+  .card h3{margin:0 0 6px; font-size:1.02rem;}
+  .card p{margin:0; color:var(--ink-soft); font-size:0.85rem; line-height:1.5;}
+  .card .tag{
+    display:inline-block; font-family:'Courier Prime', monospace; font-size:0.66rem; text-transform:uppercase;
+    letter-spacing:0.05em; background:var(--sage); color:white; padding:3px 10px; border-radius:12px;
+    margin-bottom:10px; font-weight:700;
+  }
+  .card .tag.locked{background:var(--red);}
+  .card .tag.try-now{background:var(--navy);}
+  .card .format-note{
+    display:inline-block; font-family:'Courier Prime', monospace; font-size:0.62rem; text-transform:uppercase;
+    letter-spacing:0.04em; color:var(--ink-soft); margin-top:8px;
+  }
+
+  .apply-box{
+    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
+    padding:26px; box-shadow:4px 4px 0 rgba(43,42,37,0.08);
+  }
+  .apply-box .task-prompt{font-size:0.95rem; line-height:1.7; color:var(--ink); margin:0 0 18px;}
+  .apply-box .task-prompt strong{color:var(--navy);}
+  .apply-box textarea{
+    width:100%; min-height:120px; font-family:'Space Grotesk', sans-serif; font-size:0.92rem;
+    border:1px solid var(--line); border-radius:6px; padding:12px 14px; resize:vertical;
+    background:var(--paper); color:var(--ink); box-sizing:border-box;
+  }
+  .apply-box .apply-actions{display:flex; justify-content:flex-end; margin-top:12px;}
+  .apply-box .apply-actions button{
+    font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:0.88rem;
+    background:var(--navy); color:var(--white-card); border:none; border-radius:7px;
+    padding:11px 22px; cursor:pointer; box-shadow:3px 3px 0 rgba(43,42,37,0.3);
+    transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .apply-box .apply-actions button:hover{transform:translate(-2px,-2px); box-shadow:5px 5px 0 rgba(43,42,37,0.4);}
+  .apply-saved-note{font-family:'Courier Prime', monospace; font-size:0.74rem; color:var(--sage); margin-top:10px; display:none;}
+
+  .lesson-pager{
+    display:flex; justify-content:space-between; gap:16px; margin:50px 0 0; padding-top:20px;
+    border-top:1px dashed var(--line);
+  }
+  .lesson-pager a{
+    font-family:'Courier Prime', monospace; font-size:0.78rem; color:var(--ink-soft); text-decoration:none;
+    max-width:46%;
+  }
+  .lesson-pager a:hover{color:var(--ink);}
+  .lesson-pager .dir{display:block; font-size:0.66rem; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:3px;}
+  .lesson-pager .next{text-align:right; margin-left:auto;}
+
+  footer{
+    text-align:center; padding:34px 20px; color:var(--ink-soft);
+    font-family:'Courier Prime', monospace; font-size:0.78rem; border-top:1px dashed var(--line);
+    max-width:1100px; margin:0 auto;
+  }
+</style>
+</head>
+<body>
+
+<nav class="topnav" id="siteNav">
+    <a href="index.html">Home</a>
+    <div class="nav-item" data-nav="psychology">
+      <button class="nav-tab" type="button">Psychology <span class="chev">▾</span></button>
+      <div class="nav-panel">
+        <p class="panel-eyebrow">General Psychology Units</p>
+        <span class="panel-link-disabled">Coming soon <span class="status">Soon</span></span>
+      </div>
+    </div>
+    <div class="nav-item open" data-nav="ib">
+      <button class="nav-tab" type="button">IB Psychology <span class="chev">▾</span></button>
+      <div class="nav-panel">
+        <p class="panel-eyebrow">IB Psychology Units</p>
+        <a href="unit-health-wellbeing.html" class="panel-link">Health and Well-Being <span class="status progress">In Progress</span></a>
+        <span class="panel-link-disabled">History of Psychology <span class="status">Soon</span></span>
+        <span class="panel-link-disabled">Human Relationships <span class="status">Soon</span></span>
+        <div class="panel-footer"><a href="ib-psychology.html">See all IB Psychology units →</a></div>
+      </div>
+    </div>
+    <div class="nav-item" data-nav="crim">
+      <button class="nav-tab" type="button">Criminology <span class="chev">▾</span></button>
+      <div class="nav-panel">
+        <p class="panel-eyebrow">Criminology Units</p>
+        <span class="panel-link-disabled">Coming soon <span class="status">Soon</span></span>
+      </div>
+    </div>
+    <div class="nav-item" data-nav="soc">
+      <button class="nav-tab" type="button">Sociology <span class="chev">▾</span></button>
+      <div class="nav-panel">
+        <p class="panel-eyebrow">Sociology Units</p>
+        <span class="panel-link-disabled">Coming soon <span class="status">Soon</span></span>
+      </div>
+    </div>
+    <a href="index.html#activities">Activity Library</a>
+    <a href="teacher-login.html">Teacher Login</a>
+  </nav>
+
+  <button class="sidebar-mobile-toggle" id="sidebarMobileToggle" type="button">Browse Units <span>▾</span></button>
+
+  <div class="subject-layout">
+    <aside class="subject-sidebar" id="subjectSidebar">
+      <p class="sidebar-label">IB Psychology</p>
+      <div class="sidebar-unit expanded">
+        <button class="sidebar-unit-toggle" type="button">Health and Well-Being <span class="chev">▾</span></button>
+        <div class="sidebar-topic-list">
+          <a href="unit-health-wellbeing.html#topic-01" class="current">01 Biological Basis of Behavior</a>
+          <a href="unit-health-wellbeing.html#topic-02">02 Mental Health Disorders</a>
+          <a href="unit-health-wellbeing.html#topic-03">03 Treatment and Prevention</a>
+          <a href="unit-health-wellbeing.html#topic-04">04 Health Problems</a>
+          <a href="unit-health-wellbeing.html#topic-05">05 The Practical</a>
+        </div>
+      </div>
+      <div class="sidebar-unit">
+        <span class="sidebar-unit-toggle disabled">History of Psychology <span class="sidebar-status">Soon</span></span>
+      </div>
+      <div class="sidebar-unit">
+        <span class="sidebar-unit-toggle disabled">Human Relationships <span class="sidebar-status">Soon</span></span>
+      </div>
+    </aside>
+
+    <div class="subject-main">
+      <p class="breadcrumb">
+        <a href="ib-psychology.html">IB Psychology</a> /
+        <a href="unit-health-wellbeing.html">Health and Well-Being</a> /
+        <a href="unit-health-wellbeing.html#topic-01">Biological Basis of Behavior</a> /
+        The Stress Response
+      </p>
+
+      <div class="lesson-toolbar">
+        <button type="button" onclick="window.print()">🖶 Print</button>
+        <button type="button" onclick="navigator.clipboard && navigator.clipboard.writeText(window.location.href)">🔗 Copy link</button>
+      </div>
+
+      <div class="lesson-hero">
+        <p class="eyebrow">Health and Well-Being · Biological Basis of Behavior · Lesson 4</p>
+        <h1>The Stress Response</h1>
+        <p>The sympathetic nervous system and the HPA axis — the fast and slow halves of your body's stress response.</p>
+      </div>
+
+      <!-- SECTION 1 -->
+      <div class="lesson-section">
+        <div class="lesson-section-head">
+          <span class="sec-label">01</span>
+          <h2>Hook</h2>
+        </div>
+        <div class="hook-box"><p>Fight, flight, freeze, or fawn — your body already picked one of these the last time something startled you, faster than you could consciously decide. Which one tends to be your default?</p></div>
+      </div>
+
+      <!-- SECTION 2 -->
+      <div class="lesson-section">
+        <div class="lesson-section-head">
+          <span class="sec-label">02</span>
+          <h2>Direct Instruction</h2>
+        </div>
+        <p class="intro">No deck built yet — these two videos cover the fast (sympathetic) and slow (HPA axis) halves of the response.</p>
+        <div class="instr-grid">
+          <div class="card coming-soon" style="max-width:280px;">
+            <span class="tag">Coming Soon</span>
+            <h3>The Stress Response — Deck</h3>
+          </div>
+          <div>
+            <div>
+            <div class="video-embed">
+              <iframe src="https://www.youtube.com/embed/0IDgBlCHVsA" title="Sympathetic Nervous System — Crash Course A&amp;P #14" allowfullscreen loading="lazy"></iframe>
+            </div>
+            <p style="color:var(--ink-soft); font-size:0.85rem; margin:10px 0 0; max-width:520px;">Sympathetic Nervous System — Crash Course A&amp;P #14</p>
+          </div>
+            <div>
+            <div class="video-embed">
+              <iframe src="https://www.youtube.com/embed/iVpoN0v47hc" title="The HPA Axis in Stress Physiology" allowfullscreen loading="lazy"></iframe>
+            </div>
+            <p style="color:var(--ink-soft); font-size:0.85rem; margin:10px 0 0; max-width:520px;">The HPA Axis in Stress Physiology</p>
+          </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 3 -->
+      <div class="lesson-section">
+        <div class="lesson-section-head">
+          <span class="sec-label">03</span>
+          <h2>Explore</h2>
+        </div>
+        <p class="intro">A self-reflection on how you cope with stress, grouped into mature, neurotic, and immature defense styles.</p>
+        <div class="card-grid">
+          <a href="defense-style-reflection.html" class="card">
+            <span class="tag locked">Requires Teacher Link</span>
+            <h3>Defense Style Reflection</h3>
+            <p>A self-reflection on how you cope with stress, grouped into mature, neurotic, and immature defense styles.</p>
+          </a>
+        </div>
+      </div>
+
+      <!-- SECTION 4 -->
+      <div class="lesson-section">
+        <div class="lesson-section-head">
+          <span class="sec-label">04</span>
+          <h2>Apply</h2>
+        </div>
+        <div class="apply-box">
+          <p class="task-prompt">Trace a stressful event through both systems: how does the sympathetic nervous system respond in the first few seconds, and how does the HPA axis take over if the stress continues?</p>
+          <textarea id="applyAnswer" placeholder="Type your answer here…"></textarea>
+          <div class="apply-actions">
+            <button type="button" id="saveApplyBtn">↓ Save my answer</button>
+          </div>
+          <p class="apply-saved-note" id="applySavedNote">Saved — check your downloads.</p>
+        </div>
+      </div>
+
+      <div class="lesson-pager">
+        <a href="lesson-bio-hormones.html">
+          <span class="dir">← Back to</span>
+          Lesson 3: Hormones
+        </a>
+        <a href="lesson-mh-overview.html" class="next">
+          <span class="dir">Next lesson →</span>
+          Mental Health Disorders — Overview
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>Built for classroom use &middot; not a diagnostic tool</footer>
+
+<script>
+  // top nav dropdown panels
+  (function(){
+    const items = document.querySelectorAll('#siteNav .nav-item');
+    items.forEach(item => {
+      const btn = item.querySelector('.nav-tab');
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = item.classList.contains('open');
+        items.forEach(i => i.classList.remove('open'));
+        if(!isOpen) item.classList.add('open');
+      });
+    });
+    document.addEventListener('click', () => items.forEach(i => i.classList.remove('open')));
+  })();
+
+  // left sidebar accordion + mobile toggle
+  (function(){
+    document.querySelectorAll('.sidebar-unit-toggle:not(.disabled)').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.closest('.sidebar-unit').classList.toggle('expanded');
+      });
+    });
+    const mobileToggle = document.getElementById('sidebarMobileToggle');
+    const sidebar = document.getElementById('subjectSidebar');
+    if(mobileToggle && sidebar){
+      mobileToggle.addEventListener('click', () => sidebar.classList.toggle('mobile-open'));
+    }
+  })();
+
+  // apply task: save answer as a downloadable .txt, client-side only
+  (function(){
+    const btn = document.getElementById('saveApplyBtn');
+    const note = document.getElementById('applySavedNote');
+    if(!btn) return;
+    btn.addEventListener('click', () => {
+      const text = document.getElementById('applyAnswer').value.trim();
+      if(!text) return;
+      const blob = new Blob([text], {type:'text/plain'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'stress-response-reflection.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      note.style.display = 'block';
+    });
+  })();
+</script>
+
+</body>
+</html>
