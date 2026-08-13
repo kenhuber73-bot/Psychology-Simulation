@@ -161,6 +161,31 @@
   .puzzle-complete-banner h3{margin:0 0 6px; color:var(--sage);}
   .puzzle-complete-banner p{margin:0; color:var(--ink-soft); font-size:0.9rem; line-height:1.6;}
 
+  .match-columns{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media(max-width:560px){.match-columns{grid-template-columns:1fr;}}
+  .match-col-label{
+    font-family:'Courier Prime', monospace; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--ink-soft); margin:0 0 10px;
+  }
+  .match-item{
+    display:block; width:100%; text-align:left; font-family:'Space Grotesk', sans-serif; font-size:0.86rem;
+    background:var(--paper); border:1px solid var(--line); border-radius:7px; padding:12px 14px;
+    margin-bottom:10px; cursor:pointer; color:var(--ink); line-height:1.45; transition:border-color 0.12s ease, background 0.12s ease;
+  }
+  .match-item:last-child{margin-bottom:0;}
+  .match-item:hover:not(.matched){border-color:var(--ink);}
+  .match-item.selected{border-color:var(--navy); background:var(--paper-dark); box-shadow:2px 2px 0 rgba(43,42,37,0.15);}
+  .match-item.matched{background:var(--sage); border-color:var(--sage); color:white; cursor:default; opacity:0.85;}
+  .match-item.wrong{border-color:var(--red); background:#f3dcdc;}
+
+  .match-complete-banner{
+    display:none; background:var(--white-card); border:1px solid var(--sage); border-left:4px solid var(--sage);
+    border-radius:0 8px 8px 0; padding:20px 24px; box-shadow:4px 4px 0 rgba(43,42,37,0.08); margin:20px 0 0;
+  }
+  .match-complete-banner.show{display:block;}
+  .match-complete-banner h3{margin:0 0 6px; color:var(--sage);}
+  .match-complete-banner p{margin:0; color:var(--ink-soft); font-size:0.9rem; line-height:1.6;}
+
   footer{
     text-align:center; padding:30px 20px; color:var(--ink-soft);
     font-family:'Courier Prime', monospace; font-size:0.78rem; border-top:1px dashed var(--line);
@@ -230,6 +255,40 @@
     <div class="puzzle-complete-banner" id="puzzleCompleteBanner">
       <h3 id="puzzleCompleteTitle">Solved!</h3>
       <p id="puzzleCompleteText"></p>
+    </div>
+
+    <div class="part-divider">
+      <span class="num">Part 3</span>
+      <span class="rule"></span>
+    </div>
+
+    <div class="card-header">
+      <p class="eyebrow">Biological Basis of Behavior · Lesson 1 · Try It Now — No Login</p>
+      <h1>Match the Function to the Structure</h1>
+      <p>Click a description on the left, then click the structure on the right you think it belongs to. A correct match locks in green — an incorrect one flashes red so you can try again.</p>
+    </div>
+
+    <div class="progress-row">
+      <span class="progress-label">Matched: <span class="progress-count" id="matchProgressCount">0 / 6</span></span>
+      <button class="reset-btn" type="button" id="matchResetBtn">↺ Reset</button>
+    </div>
+
+    <div class="diagram-card">
+      <div class="match-columns">
+        <div>
+          <p class="match-col-label">What it does</p>
+          <div id="matchDescCol"></div>
+        </div>
+        <div>
+          <p class="match-col-label">Structure</p>
+          <div id="matchNameCol"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="match-complete-banner" id="matchCompleteBanner">
+      <h3>All six matched!</h3>
+      <p>You've labeled it, rebuilt it, and matched every structure to what it actually does. Nice work.</p>
     </div>
   </div>
 
@@ -497,6 +556,115 @@
   buildGrid();
   board = Array.from({length: GRID_SIZE * GRID_SIZE}, (_, i) => i);
   renderBoard();
+
+  // ---------- Part 3: match description to structure ----------
+  const descriptions = [
+    { id:'frontal',    text:'Controls decision-making, planning, and voluntary movement.' },
+    { id:'parietal',   text:'Processes touch, spatial awareness, and body position.' },
+    { id:'occipital',  text:'Processes visual information from the eyes.' },
+    { id:'temporal',   text:'Involved in hearing, memory, and language comprehension.' },
+    { id:'cerebellum', text:'Coordinates balance, posture, and fine motor movement.' },
+    { id:'spinal',     text:'Relays signals between the brain and the rest of the body.' },
+  ];
+
+  const matchDescCol = document.getElementById('matchDescCol');
+  const matchNameCol = document.getElementById('matchNameCol');
+  const matchProgressCount = document.getElementById('matchProgressCount');
+  const matchResetBtn = document.getElementById('matchResetBtn');
+  const matchCompleteBanner = document.getElementById('matchCompleteBanner');
+
+  let matchedIds = {};
+  let selectedDesc = null; // {id, el}
+  let selectedName = null; // {id, el}
+
+  function shuffleArr(arr){
+    const a = arr.slice();
+    for(let i = a.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function updateMatchProgress(){
+    const n = Object.values(matchedIds).filter(Boolean).length;
+    matchProgressCount.textContent = n + ' / 6';
+    matchCompleteBanner.classList.toggle('show', n === 6);
+  }
+
+  function tryMatch(){
+    if(!selectedDesc || !selectedName) return;
+    if(selectedDesc.id === selectedName.id){
+      selectedDesc.el.classList.remove('selected');
+      selectedName.el.classList.remove('selected');
+      selectedDesc.el.classList.add('matched');
+      selectedName.el.classList.add('matched');
+      matchedIds[selectedDesc.id] = true;
+      updateMatchProgress();
+    } else {
+      const dEl = selectedDesc.el, nEl = selectedName.el;
+      dEl.classList.add('wrong'); nEl.classList.add('wrong');
+      setTimeout(() => {
+        dEl.classList.remove('wrong', 'selected');
+        nEl.classList.remove('wrong', 'selected');
+      }, 700);
+    }
+    selectedDesc = null;
+    selectedName = null;
+  }
+
+  function buildMatchColumns(){
+    matchDescCol.innerHTML = '';
+    matchNameCol.innerHTML = '';
+    matchedIds = {};
+    selectedDesc = null;
+    selectedName = null;
+
+    shuffleArr(descriptions).forEach(d => {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'match-item';
+      el.textContent = d.text;
+      el.addEventListener('click', () => {
+        if(el.classList.contains('matched')) return;
+        if(selectedDesc && selectedDesc.el === el){
+          el.classList.remove('selected');
+          selectedDesc = null;
+          return;
+        }
+        if(selectedDesc) selectedDesc.el.classList.remove('selected');
+        selectedDesc = { id: d.id, el };
+        el.classList.add('selected');
+        tryMatch();
+      });
+      matchDescCol.appendChild(el);
+    });
+
+    shuffleArr(structures).forEach(s => {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'match-item';
+      el.textContent = s.label;
+      el.addEventListener('click', () => {
+        if(el.classList.contains('matched')) return;
+        if(selectedName && selectedName.el === el){
+          el.classList.remove('selected');
+          selectedName = null;
+          return;
+        }
+        if(selectedName) selectedName.el.classList.remove('selected');
+        selectedName = { id: s.id, el };
+        el.classList.add('selected');
+        tryMatch();
+      });
+      matchNameCol.appendChild(el);
+    });
+
+    updateMatchProgress();
+  }
+
+  matchResetBtn.addEventListener('click', buildMatchColumns);
+  buildMatchColumns();
 </script>
 
 </body>
