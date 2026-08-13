@@ -19,16 +19,41 @@
   a{color:inherit;}
 
   /* folder-tab nav, echoing the simulation's own tab bar */
-  .topnav{
-    display:flex; gap:6px; padding:18px 24px 0; max-width:1100px; margin:0 auto;
-  }
-  .topnav a{
+  .topnav{display:flex; gap:6px; padding:18px 24px 0; max-width:1100px; margin:0 auto; flex-wrap:wrap; position:relative;}
+  .topnav a, .topnav button.nav-tab{
     font-family:'Courier Prime', monospace; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em;
     padding:9px 18px; border:1px solid var(--line); border-bottom:none; background:var(--paper-dark);
     color:var(--ink-soft); border-radius:7px 7px 0 0; text-decoration:none; opacity:0.6;
+    cursor:pointer; display:inline-flex; align-items:center; gap:5px; font-weight:400;
   }
-  .topnav a.active{background:var(--white-card); color:var(--ink); opacity:1; font-weight:700; border-color:var(--ink);}
-  .topnav a:hover:not(.active){opacity:0.85;}
+  .topnav a.active, .topnav .nav-item.open button.nav-tab{background:var(--white-card); color:var(--ink); opacity:1; font-weight:700; border-color:var(--ink);}
+  .topnav a:hover:not(.active), .topnav button.nav-tab:hover{opacity:0.85;}
+  .topnav .nav-item{position:relative;}
+  .topnav .chev{font-size:0.6rem; transition:transform .12s ease;}
+  .topnav .nav-item.open .chev{transform:rotate(180deg);}
+
+  .nav-panel{
+    display:none; position:absolute; top:100%; left:0; min-width:260px; z-index:40;
+    background:var(--white-card); border:1px solid var(--ink); border-radius:0 8px 8px 8px;
+    box-shadow:5px 5px 0 rgba(43,42,37,0.12); padding:14px;
+  }
+  .nav-item.open .nav-panel{display:block;}
+  .nav-panel .panel-eyebrow{font-family:'Courier Prime', monospace; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft); margin:0 0 10px;}
+  .nav-panel a.panel-link, .nav-panel .panel-link-disabled{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:8px 10px; border-radius:6px; text-decoration:none; color:var(--ink); font-size:0.86rem;
+    border-top:1px dashed var(--line);
+  }
+  .nav-panel .panel-link-disabled{color:var(--ink-soft); cursor:default;}
+  .nav-panel a.panel-link:first-of-type, .nav-panel .panel-link-disabled:first-of-type{border-top:none;}
+  .nav-panel a.panel-link:hover{background:var(--paper);}
+  .nav-panel .status{
+    font-family:'Courier Prime', monospace; font-size:0.58rem; text-transform:uppercase; letter-spacing:0.04em;
+    padding:2px 7px; border-radius:10px; white-space:nowrap; font-weight:700; color:white; background:var(--ink-soft);
+  }
+  .nav-panel .status.progress{background:var(--navy);}
+  .nav-panel .panel-footer{margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);}
+  .nav-panel .panel-footer a{font-family:'Courier Prime', monospace; font-size:0.74rem; text-decoration:underline; color:var(--ink);}
 
   /* hero, styled like an intake case file */
   .hero-wrap{max-width:1100px; margin:0 auto; padding:0 24px;}
@@ -151,10 +176,40 @@
 </head>
 <body>
 
-  <nav class="topnav">
+  <nav class="topnav" id="siteNav">
     <a href="index.html" class="active">Home</a>
-    <a href="#activities">Activities</a>
-    <a href="units.html">Units</a>
+    <div class="nav-item" data-nav="psychology">
+      <button class="nav-tab" type="button">Psychology <span class="chev">▾</span></button>
+      <div class="nav-panel">
+        <p class="panel-eyebrow">General Psychology Units</p>
+        <span class="panel-link-disabled">Coming soon <span class="status">Soon</span></span>
+      </div>
+    </div>
+    <div class="nav-item" data-nav="ib">
+      <button class="nav-tab" type="button">IB Psychology <span class="chev">▾</span></button>
+      <div class="nav-panel">
+        <p class="panel-eyebrow">IB Psychology Units</p>
+        <a href="unit-health-wellbeing.html" class="panel-link">Health and Well-Being <span class="status progress">In Progress</span></a>
+        <span class="panel-link-disabled">History of Psychology <span class="status">Soon</span></span>
+        <span class="panel-link-disabled">Human Relationships <span class="status">Soon</span></span>
+        <div class="panel-footer"><a href="ib-psychology.html">See all IB Psychology units →</a></div>
+      </div>
+    </div>
+    <div class="nav-item" data-nav="crim">
+      <button class="nav-tab" type="button">Criminology <span class="chev">▾</span></button>
+      <div class="nav-panel">
+        <p class="panel-eyebrow">Criminology Units</p>
+        <span class="panel-link-disabled">Coming soon <span class="status">Soon</span></span>
+      </div>
+    </div>
+    <div class="nav-item" data-nav="soc">
+      <button class="nav-tab" type="button">Sociology <span class="chev">▾</span></button>
+      <div class="nav-panel">
+        <p class="panel-eyebrow">Sociology Units</p>
+        <span class="panel-link-disabled">Coming soon <span class="status">Soon</span></span>
+      </div>
+    </div>
+    <a href="#activities">Activity Library</a>
     <a href="teacher-login.html">Teacher Login</a>
   </nav>
 
@@ -347,6 +402,21 @@
   <footer>Built for classroom use &middot; not a diagnostic tool</footer>
 
   <script>
+    // top nav dropdown panels
+    (function(){
+      const items = document.querySelectorAll('#siteNav .nav-item');
+      items.forEach(item => {
+        const btn = item.querySelector('.nav-tab');
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isOpen = item.classList.contains('open');
+          items.forEach(i => i.classList.remove('open'));
+          if(!isOpen) item.classList.add('open');
+        });
+      });
+      document.addEventListener('click', () => items.forEach(i => i.classList.remove('open')));
+    })();
+
     const catNavBtn = document.getElementById('catNavBtn');
     const catNavMenu = document.getElementById('catNavMenu');
 
