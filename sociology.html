@@ -23,7 +23,7 @@
     color:var(--ink-soft); border-radius:7px 7px 0 0; text-decoration:none; opacity:0.6;
     cursor:pointer; display:inline-flex; align-items:center; gap:5px; font-weight:400;
   }
-  .topnav a.active, .topnav .nav-item.open button.nav-tab{background:var(--white-card); color:var(--ink); opacity:1; font-weight:700; border-color:var(--ink);}
+  .topnav a.active, .topnav .nav-item.open button.nav-tab, .topnav .nav-item.current button.nav-tab{background:var(--white-card); color:var(--ink); opacity:1; font-weight:700; border-color:var(--ink);}
   .topnav a:hover:not(.active), .topnav button.nav-tab:hover{opacity:0.85;}
   .topnav .nav-item{position:relative;}
   .topnav .chev{font-size:0.6rem; transition:transform .12s ease;}
@@ -175,7 +175,7 @@
         <span class="panel-link-disabled">Coming soon <span class="status">Soon</span></span>
       </div>
     </div>
-    <div class="nav-item open" data-nav="soc">
+    <div class="nav-item current" data-nav="soc">
       <button class="nav-tab" type="button">Sociology <span class="chev">▾</span></button>
       <div class="nav-panel">
         <p class="panel-eyebrow">Sociology Units</p>

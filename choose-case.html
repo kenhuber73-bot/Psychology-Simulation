@@ -166,6 +166,11 @@
       <div class="case-desc">Label six brain structures by their leader lines, race the clock reassembling the same diagram, then match each structure to what it actually does.</div>
     </div>
 
+    <div class="case-card" id="limbic-labeling-card" style="border-style:dashed;">
+      <div class="case-title">The Limbic System — Labeling Activity</div>
+      <div class="case-desc">Label six limbic structures — hippocampus, amygdala, thalamus, hypothalamus, cingulate gyrus, and corpus callosum — by their leader lines on a real anatomy diagram.</div>
+    </div>
+
     <div class="case-card" id="neurotransmitters-card" style="border-style:dashed;">
       <div class="case-title">Inside the Synapse — SSRI vs. Benzodiazepine</div>
       <div class="case-desc">An interactive synapse diagram. Toggle the drug on and off to see how an SSRI blocks serotonin reuptake, or how a benzodiazepine changes GABA signaling.</div>
@@ -279,6 +284,10 @@
 
     document.getElementById('brain-labeling-card').addEventListener('click', () => {
       window.location.href = 'brain-labeling.html';
+    });
+
+    document.getElementById('limbic-labeling-card').addEventListener('click', () => {
+      window.location.href = 'limbic-labeling.html';
     });
 
     document.getElementById('neurotransmitters-card').addEventListener('click', () => {
