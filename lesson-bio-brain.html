@@ -207,6 +207,10 @@
     display:inline-block; font-family:'Courier Prime', monospace; font-size:0.62rem; text-transform:uppercase;
     letter-spacing:0.04em; color:var(--ink-soft); margin-top:8px;
   }
+  .card.has-thumb{padding:0; overflow:hidden; display:flex; flex-direction:column;}
+  .card-thumb{height:120px; overflow:hidden;}
+  .card-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .card-body{padding:16px 18px;}
 
   .apply-box{
     background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
@@ -373,10 +377,15 @@
         </div>
         <p class="intro">A pin-and-label review of key brain structures, three levels deep.</p>
         <div class="card-grid">
-          <a href="brain-labeling.html" class="card">
-            <span class="tag try-now">Try It Now — No Login</span>
-            <h3>The Brain — Labeling Activity</h3>
-            <p>Pin-and-label review of key brain structures, three levels deep.</p>
+          <a href="brain-labeling.html" class="card has-thumb">
+            <div class="card-thumb">
+              <img src="images/brain-labeling.jpg" alt="Labeled diagram of the human brain used in the pin-and-label activity" loading="lazy">
+            </div>
+            <div class="card-body">
+              <span class="tag try-now">Try It Now — No Login</span>
+              <h3>The Brain — Labeling Activity</h3>
+              <p>Pin-and-label review of key brain structures, three levels deep.</p>
+            </div>
           </a>
         </div>
       </div>
