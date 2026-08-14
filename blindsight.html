@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blindsight: The Case of Patient D.B.</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --teal-950: #062825;
+    --teal-900: #0a3833;
+    --teal-800: #114a43;
+    --teal-700: #185f56;
+    --teal-500: #2a8a7c;
+    --teal-300: #7fc4b8;
+    --teal-100: #dcf0ec;
+    --cream: #faf7f0;
+    --ink: #1c2624;
+    --paper: #ffffff;
+    --gold: #c99a4b;
+    --gold-dim: #e9d4a7;
+    --serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.65;
+  }
+
+  .masthead {
+    background: linear-gradient(160deg, var(--teal-950), var(--teal-800) 70%);
+    color: var(--teal-100);
+    padding: 64px 24px 56px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .masthead::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 20% 30%, rgba(127,196,184,0.12), transparent 45%),
+                       radial-gradient(circle at 80% 70%, rgba(201,154,75,0.10), transparent 45%);
+    pointer-events: none;
+  }
+
+  .eyebrow {
+    font-family: var(--sans);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 12px;
+    color: var(--gold-dim);
+    font-weight: 600;
+    margin-bottom: 18px;
+  }
+
+  .masthead h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(32px, 5vw, 52px);
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+
+  .masthead .subtitle {
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--teal-300);
+    font-size: 18px;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  .frame {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 24px 100px;
+  }
+
+  .intro-note {
+    background: var(--paper);
+    border-left: 4px solid var(--gold);
+    padding: 20px 24px;
+    margin: -28px 0 48px;
+    font-size: 14.5px;
+    color: #4a5754;
+    box-shadow: 0 6px 24px rgba(6,40,37,0.08);
+    position: relative;
+    z-index: 2;
+  }
+
+  .installment {
+    margin-bottom: 8px;
+  }
+
+  .installment-label {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 56px 0 20px;
+  }
+
+  .installment-number {
+    font-family: var(--serif);
+    font-size: 15px;
+    color: var(--teal-700);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .installment-rule {
+    height: 1px;
+    background: var(--teal-300);
+    flex: 1;
+    opacity: 0.5;
+  }
+
+  .installment h2 {
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--teal-950);
+    margin: 0 0 20px;
+  }
+
+  .installment p {
+    font-size: 16.5px;
+    color: #2c3634;
+    margin: 0 0 18px;
+  }
+
+  .installment ul {
+    margin: 0 0 18px;
+    padding-left: 22px;
+  }
+
+  .installment li {
+    margin-bottom: 10px;
+    font-size: 16px;
+  }
+
+  .quote-block {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 19px;
+    color: var(--teal-900);
+    background: var(--teal-100);
+    border-radius: 10px;
+    padding: 22px 26px;
+    margin: 24px 0;
+  }
+
+  .questions-box {
+    background: var(--paper);
+    border: 1px solid #e4ddca;
+    border-radius: 12px;
+    padding: 22px 26px;
+    margin: 32px 0 20px;
+  }
+
+  .questions-box h3 {
+    font-family: var(--sans);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--teal-700);
+    margin: 0 0 14px;
+    font-weight: 700;
+  }
+
+  .questions-box ol {
+    margin: 0;
+    padding-left: 20px;
+  }
+
+  .questions-box li {
+    margin-bottom: 10px;
+    font-size: 15.5px;
+    color: #2c3634;
+  }
+
+  .questions-box li:last-child { margin-bottom: 0; }
+
+  .response-area {
+    width: 100%;
+    min-height: 90px;
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 1px solid #d8d0ba;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 14.5px;
+    color: var(--ink);
+    resize: vertical;
+    background: var(--cream);
+  }
+  .response-area:focus {
+    outline: 2px solid var(--teal-500);
+    outline-offset: 1px;
+  }
+
+  .pause-trigger {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 28px 0 8px;
+    padding: 16px 22px;
+    background: var(--teal-950);
+    color: var(--teal-100);
+    border-radius: 10px;
+    border: none;
+    width: 100%;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 600;
+    text-align: left;
+    transition: background 0.15s ease;
+  }
+  .pause-trigger:hover { background: var(--teal-800); }
+  .pause-trigger:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  .pause-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .continue-btn {
+    display: inline-block;
+    margin-top: 24px;
+    padding: 13px 28px;
+    background: var(--teal-700);
+    color: var(--cream);
+    border: none;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .continue-btn:hover { background: var(--teal-500); }
+  .continue-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  .locked .installment-body { display: none; }
+
+  .checkpoint-label {
+    font-family: var(--sans);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .reveal-installment {
+    background: linear-gradient(180deg, var(--teal-950), var(--teal-900));
+    color: var(--teal-100);
+    border-radius: 16px;
+    padding: 40px 36px;
+    margin: 56px 0 8px;
+  }
+  .reveal-installment h2 { color: var(--cream); }
+  .reveal-installment p, .reveal-installment li { color: var(--teal-100); }
+  .reveal-installment .installment-number { color: var(--gold-dim); }
+  .reveal-installment .questions-box {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.15);
+  }
+  .reveal-installment .questions-box li { color: var(--teal-100); }
+  .reveal-installment .questions-box h3 { color: var(--gold-dim); }
+  .reveal-installment .response-area {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.2);
+    color: var(--cream);
+  }
+
+  .pathway-diagram {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 24px 0;
+  }
+  .pathway-diagram svg { width: 100%; height: auto; display: block; }
+  .pathway-caption {
+    font-size: 13px;
+    color: var(--teal-300);
+    text-align: center;
+    margin-top: 10px;
+    font-style: italic;
+  }
+
+  .task-section {
+    background: var(--paper);
+    border: 2px solid var(--teal-700);
+    border-radius: 16px;
+    padding: 36px;
+    margin-top: 48px;
+  }
+  .task-section h2 {
+    font-family: var(--serif);
+    font-size: 26px;
+    color: var(--teal-950);
+    margin: 0 0 8px;
+  }
+  .task-question {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 19px;
+    color: var(--teal-800);
+    margin: 0 0 24px;
+  }
+
+  .region-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 24px 0 28px;
+  }
+  @media (max-width: 560px) {
+    .region-grid { grid-template-columns: 1fr; }
+  }
+  .region-card {
+    background: var(--teal-100);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .region-card h4 {
+    margin: 0 0 6px;
+    font-size: 14px;
+    color: var(--teal-900);
+    font-family: var(--sans);
+  }
+  .region-card p {
+    margin: 0;
+    font-size: 13.5px;
+    color: #3a4a46;
+  }
+
+  .final-response {
+    width: 100%;
+    min-height: 220px;
+    margin-top: 8px;
+    padding: 16px 18px;
+    border: 1px solid #d8d0ba;
+    border-radius: 10px;
+    font-family: var(--sans);
+    font-size: 15.5px;
+    line-height: 1.6;
+    color: var(--ink);
+    resize: vertical;
+    background: var(--cream);
+  }
+  .final-response:focus {
+    outline: 2px solid var(--teal-500);
+    outline-offset: 1px;
+  }
+
+  .submit-btn {
+    margin-top: 20px;
+    padding: 14px 32px;
+    background: var(--gold);
+    color: var(--teal-950);
+    border: none;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 15.5px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .submit-btn:hover { background: #d9ab5f; }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(6,40,37,0.72);
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 100;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal-box {
+    background: var(--cream);
+    border-radius: 16px;
+    max-width: 460px;
+    width: 100%;
+    padding: 36px 32px 30px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    animation: pop-in 0.18s ease;
+  }
+  @keyframes pop-in {
+    from { transform: scale(0.94); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .modal-icon { font-size: 34px; margin-bottom: 14px; }
+
+  .modal-box h3 {
+    font-family: var(--serif);
+    font-size: 22px;
+    color: var(--teal-950);
+    margin: 0 0 12px;
+  }
+
+  .modal-box p {
+    font-size: 15px;
+    color: #4a5754;
+    margin: 0 0 26px;
+    line-height: 1.55;
+  }
+
+  .modal-close {
+    padding: 12px 30px;
+    background: var(--teal-700);
+    color: var(--cream);
+    border: none;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .modal-close:hover { background: var(--teal-500); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .modal-box { animation: none; }
+    .pause-trigger, .continue-btn, .modal-close { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="activity-locked" style="max-width:480px; margin:80px auto; padding:0 24px; text-align:center; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif; color:#2c3634;">
+  <p style="font-size:16px;">This activity requires a link from your teacher.</p>
+</div>
+
+<div id="activity-content" style="display:none;">
+
+<div class="masthead">
+  <div class="eyebrow">Psychology Simulations · Health and Well-Being · Biological Basis of Behavior</div>
+  <h1>Blindsight</h1>
+  <p class="subtitle">The case of Patient D.B., told in four parts</p>
+</div>
+
+<div class="frame">
+
+  <div class="intro-note">
+    A retelling of research first published by neuropsychologist Lawrence Weiskrantz at Oxford in the late 1970s, and studied for decades after. "D.B." is the initials used in the published case literature to protect the patient's identity — this is standard practice in neuropsychology. Read each part in order, answer the questions, and discuss with your group when prompted before moving on.
+  </div>
+
+  <!-- INSTALLMENT 1 -->
+  <div class="installment" id="inst-1">
+    <div class="installment-label">
+      <span class="installment-number">PART ONE</span>
+      <span class="installment-rule"></span>
+    </div>
+    <h2>The Operation</h2>
+    <p>D.B. is a man in his mid-thirties, otherwise healthy, who has spent years suffering severe headaches and disturbances in his vision — flickering lights, brief blank patches, occasional waves of distortion. Scans reveal the cause: a tangle of abnormal blood vessels, an arteriovenous malformation, pressing into the back-right of his brain and at real risk of rupturing.</p>
+    <p>Surgeons decide to remove the affected tissue before it bleeds. The operation is a success in the sense that matters most — the danger is gone, and D.B. recovers well. But afterward, doctors testing his vision find something they expect: a permanent blind patch, a scotoma, covering a large part of his left visual field. Show him anything in that patch — a hand, a light, a face — and he insists there is nothing there. Not blurry. Not dim. Nothing.</p>
+    <p>By every standard clinical measure, this part of his vision is simply gone.</p>
+
+    <div class="questions-box">
+      <h3>Thinking Questions</h3>
+      <ol>
+        <li>The surgery removed tissue from the occipital lobe. Based on what you know about that region, why would this specifically cause a blind patch rather than, say, a memory problem or a movement problem?</li>
+        <li>D.B. says there's "nothing there" when something is shown in his blind patch. What would you expect to happen if researchers tested him further on that same patch?</li>
+      </ol>
+      <textarea class="response-area" placeholder="Jot your thoughts here..."></textarea>
+    </div>
+
+    <button class="pause-trigger" data-modal="pause-1">
+      <span class="pause-icon">⏸</span>
+      <span>Pause here — discuss with a partner or group</span>
+    </button>
+
+    <div class="questions-box" style="margin-top:20px;">
+      <div class="checkpoint-label">Working Theory Checkpoint</div>
+      <p style="margin:0 0 10px; font-size:14.5px;">Before reading on: do you think D.B.'s blind patch is truly "blind" in every sense, or could there be more going on than the standard test shows? Write your first guess.</p>
+      <textarea class="response-area" placeholder="My working theory..."></textarea>
+    </div>
+
+    <button class="continue-btn" data-reveal="inst-2">Continue to Part Two →</button>
+  </div>
+
+  <!-- INSTALLMENT 2 -->
+  <div class="installment locked" id="inst-2">
+    <div class="installment-body">
+    <div class="installment-label">
+      <span class="installment-number">PART TWO</span>
+      <span class="installment-rule"></span>
+    </div>
+    <h2>The Strange Request</h2>
+    <p>Most researchers would have accepted the diagnosis and moved on: D.B. is blind in that patch, full stop. But neuropsychologist Lawrence Weiskrantz has a different question in mind. If the pathway that produces <em>conscious</em> vision is damaged, does that necessarily mean <em>no</em> visual information is reaching the brain at all?</p>
+    <p>He asks D.B. to do something that seems almost unfair. A light is flashed somewhere in his blind patch. D.B. is told to point at where it appeared — to just guess, even though he insists he can't see anything there at all.</p>
+    <div class="quote-block">"You want me to point at something I can't see? I don't understand how I'm supposed to do that — I'm not seeing a damn thing."</div>
+    <p>D.B. agrees to try anyway, mostly to humor the researchers. Point after point, trial after trial, his guesses are recorded.</p>
+    <p>When the results come back, they aren't random. D.B.'s "guesses" land on the correct location far more often than chance would predict — accurate enough that by pure luck alone, this result would be extraordinarily unlikely.</p>
+
+    <div class="questions-box">
+      <h3>Thinking Questions</h3>
+      <ol>
+        <li>D.B. genuinely believes he is guessing. He isn't lying or performing. How can someone be accurate at a task while being completely unaware of how they're doing it?</li>
+        <li>Does this result change how you'd define "blind"? Is D.B. blind, or is something else going on?</li>
+      </ol>
+      <textarea class="response-area" placeholder="Jot your thoughts here..."></textarea>
+    </div>
+
+    <button class="pause-trigger" data-modal="pause-2">
+      <span class="pause-icon">⏸</span>
+      <span>Pause here — discuss with a partner or group</span>
+    </button>
+
+    <div class="questions-box" style="margin-top:20px;">
+      <div class="checkpoint-label">Checkpoint</div>
+      <p style="margin:0 0 10px; font-size:14.5px;">Update your theory. What do you think is happening inside D.B.'s brain to make this possible?</p>
+      <textarea class="response-area" placeholder="My updated theory..."></textarea>
+    </div>
+
+    <button class="continue-btn" data-reveal="inst-3">Continue to Part Three →</button>
+    </div>
+  </div>
+
+  <!-- INSTALLMENT 3 -->
+  <div class="installment locked" id="inst-3">
+    <div class="installment-body">
+    <div class="installment-label">
+      <span class="installment-number">PART THREE</span>
+      <span class="installment-rule"></span>
+    </div>
+    <h2>Testing the Limits</h2>
+    <p>The pointing result is striking enough on its own, but Weiskrantz and later researchers push further. Over months of testing, a much stranger picture emerges of what D.B.'s "blind" side can actually do:</p>
+    <ul>
+      <li>Shown a line tilted horizontally or vertically in his blind patch, he can correctly guess its orientation well above chance.</li>
+      <li>Shown a shape moving left or right, he can correctly guess the direction of motion.</li>
+      <li>Asked to reach out and grasp an object placed in his blind patch, his hand shapes itself correctly for the object's size before contact — as if some part of him already knew what he was reaching for.</li>
+      <li>Walking down a cluttered hallway with obstacles placed in his blind field, he weaves around them smoothly — without ever reporting that he saw them, and often without realizing he'd avoided anything at all.</li>
+    </ul>
+    <p>Every single time, D.B.'s honest, sincere answer is the same: he sees nothing. He is not being modest or cautious. As far as his conscious experience is concerned, that part of the world simply does not exist for him. Researchers eventually give this phenomenon a name: <strong>blindsight</strong> — behaviorally guided vision without any conscious visual experience at all.</p>
+
+    <div class="questions-box">
+      <h3>Thinking Questions</h3>
+      <ol>
+        <li>D.B.'s hand shapes itself correctly for an object he says he can't see. What does this suggest about how much of "seeing" actually requires conscious awareness?</li>
+        <li>Can you think of anything in your own life — even something much less dramatic — where your body seems to respond to information "before" you're consciously aware of it?</li>
+      </ol>
+      <textarea class="response-area" placeholder="Jot your thoughts here..."></textarea>
+    </div>
+
+    <button class="pause-trigger" data-modal="pause-3">
+      <span class="pause-icon">⏸</span>
+      <span>Pause here — discuss with a partner or group</span>
+    </button>
+
+    <button class="continue-btn" data-reveal="inst-4">Continue to Part Four →</button>
+    </div>
+  </div>
+
+  <!-- INSTALLMENT 4 - REVEAL -->
+  <div class="installment locked" id="inst-4">
+    <div class="installment-body">
+    <div class="reveal-installment">
+      <div class="installment-label">
+        <span class="installment-number">PART FOUR</span>
+        <span class="installment-rule"></span>
+      </div>
+      <h2>Two Pathways</h2>
+      <p>Blindsight seemed impossible for a simple reason: for a long time, scientists assumed there was really only one route from eye to conscious sight, roughly: <strong>retina → thalamus (LGN) → primary visual cortex (V1, in the occipital lobe)</strong>. Damage that route, and vision should simply be gone. D.B.'s results didn't fit.</p>
+      <p>The explanation that emerged is that this isn't the only visual pathway in the brain. A second, evolutionarily much older route also exists: <strong>retina → superior colliculus (a small structure in the midbrain) → other visual areas</strong>, largely bypassing V1 entirely. This older pathway is thought to be involved in orienting toward movement and location — useful for a very old evolutionary problem, like noticing something lunging at you from the side before you've "seen" it in any conscious sense.</p>
+
+      <div class="pathway-diagram">
+        <svg viewBox="0 0 640 220" xmlns="http://www.w3.org/2000/svg">
+          <text x="20" y="28" fill="#dcf0ec" font-family="-apple-system,sans-serif" font-size="12" font-weight="700" letter-spacing="0.06em">PRIMARY PATHWAY (DAMAGED IN D.B.)</text>
+          <rect x="20" y="42" width="120" height="36" rx="6" fill="rgba(255,255,255,0.1)" stroke="#7fc4b8"/>
+          <text x="80" y="65" fill="#dcf0ec" font-family="-apple-system,sans-serif" font-size="12" text-anchor="middle">Retina</text>
+          <line x1="140" y1="60" x2="200" y2="60" stroke="#7fc4b8" stroke-width="2"/>
+          <polygon points="200,60 190,55 190,65" fill="#7fc4b8"/>
+          <rect x="200" y="42" width="120" height="36" rx="6" fill="rgba(255,255,255,0.1)" stroke="#7fc4b8"/>
+          <text x="260" y="65" fill="#dcf0ec" font-family="-apple-system,sans-serif" font-size="12" text-anchor="middle">Thalamus (LGN)</text>
+          <line x1="320" y1="60" x2="380" y2="60" stroke="#7fc4b8" stroke-width="2" stroke-dasharray="4,4"/>
+          <rect x="380" y="38" width="150" height="44" rx="6" fill="rgba(201,154,75,0.18)" stroke="#c99a4b" stroke-width="2"/>
+          <text x="455" y="58" fill="#e9d4a7" font-family="-apple-system,sans-serif" font-size="12" text-anchor="middle" font-weight="700">V1 — removed</text>
+          <text x="455" y="72" fill="#e9d4a7" font-family="-apple-system,sans-serif" font-size="10" text-anchor="middle">(occipital lobe)</text>
+          <text x="560" y="65" fill="#7fc4b8" font-family="-apple-system,sans-serif" font-size="16">✕</text>
+          <line x1="530" y1="60" x2="600" y2="60" stroke="#7fc4b8" stroke-width="2" stroke-dasharray="2,4" opacity="0.5"/>
+          <text x="600" y="30" fill="#7fc4b8" font-family="-apple-system,sans-serif" font-size="11" text-anchor="end">→ conscious sight</text>
+
+          <text x="20" y="128" fill="#dcf0ec" font-family="-apple-system,sans-serif" font-size="12" font-weight="700" letter-spacing="0.06em">SECONDARY PATHWAY (STILL INTACT)</text>
+          <rect x="20" y="142" width="120" height="36" rx="6" fill="rgba(255,255,255,0.1)" stroke="#7fc4b8"/>
+          <text x="80" y="165" fill="#dcf0ec" font-family="-apple-system,sans-serif" font-size="12" text-anchor="middle">Retina</text>
+          <line x1="140" y1="160" x2="200" y2="160" stroke="#c99a4b" stroke-width="2"/>
+          <polygon points="200,160 190,155 190,165" fill="#c99a4b"/>
+          <rect x="200" y="142" width="150" height="36" rx="6" fill="rgba(201,154,75,0.18)" stroke="#c99a4b" stroke-width="2"/>
+          <text x="275" y="165" fill="#e9d4a7" font-family="-apple-system,sans-serif" font-size="12" text-anchor="middle">Superior colliculus</text>
+          <line x1="350" y1="160" x2="440" y2="160" stroke="#c99a4b" stroke-width="2"/>
+          <polygon points="440,160 430,155 430,165" fill="#c99a4b"/>
+          <rect x="440" y="142" width="150" height="36" rx="6" fill="rgba(255,255,255,0.1)" stroke="#7fc4b8"/>
+          <text x="515" y="165" fill="#dcf0ec" font-family="-apple-system,sans-serif" font-size="12" text-anchor="middle">Other visual areas</text>
+          <text x="605" y="165" fill="#c99a4b" font-family="-apple-system,sans-serif" font-size="16">→</text>
+          <text x="605" y="185" fill="#c99a4b" font-family="-apple-system,sans-serif" font-size="10" text-anchor="middle">guided</text>
+          <text x="605" y="197" fill="#c99a4b" font-family="-apple-system,sans-serif" font-size="10" text-anchor="middle">behavior</text>
+        </svg>
+        <p class="pathway-caption">The conscious pathway (top) is cut off after V1 is removed. The older, subconscious pathway (bottom) still reaches the brain — just without ever producing the experience of "seeing."</p>
+      </div>
+
+      <p>This is why D.B. can point, grasp, and dodge accurately while sincerely reporting that he sees nothing: the information is arriving and being used, but never by the route that produces conscious experience. Blindsight became one of the most-cited pieces of evidence that "vision" is not one single process in the brain — it's several, running in parallel, and only some of them are hooked up to consciousness.</p>
+
+      <div class="questions-box">
+        <h3>Thinking Questions</h3>
+        <ol>
+          <li>Before this, you might have assumed "seeing something" and "using visual information" were the same thing. Are they?</li>
+          <li>If consciousness isn't required for the brain to use visual information, what do you think consciousness is actually <em>for</em>?</li>
+        </ol>
+        <textarea class="response-area" placeholder="Jot your thoughts here..."></textarea>
+      </div>
+
+      <button class="pause-trigger" data-modal="pause-4">
+        <span class="pause-icon">⏸</span>
+        <span>Pause here — discuss with a partner or group</span>
+      </button>
+    </div>
+
+    <button class="continue-btn" data-reveal="task">Continue to Your Task →</button>
+    </div>
+  </div>
+
+  <!-- TASK -->
+  <div class="installment locked" id="task">
+    <div class="installment-body">
+    <div class="task-section">
+      <h2>Your Task</h2>
+      <p class="task-question">If occipital lobe damage can strip away conscious sight while some visual processing survives elsewhere — could something similar happen with the other regions you've labeled?</p>
+      <p style="font-size:15px; color:#4a5754;">Pick <strong>one</strong> of the other five regions from the labeling activity below, and think it through:</p>
+
+      <div class="region-grid">
+        <div class="region-card">
+          <h4>Frontal Lobe</h4>
+          <p>Involved in planning, decision-making, and impulse control. Could someone "know" the right decision without being consciously aware of weighing it?</p>
+        </div>
+        <div class="region-card">
+          <h4>Parietal Lobe</h4>
+          <p>Involved in spatial awareness and integrating sensory information. Could someone respond to something in space they insist they can't perceive?</p>
+        </div>
+        <div class="region-card">
+          <h4>Temporal Lobe</h4>
+          <p>Involved in memory and auditory/language processing. Could someone act on a memory or a sound they don't consciously recall or hear?</p>
+        </div>
+        <div class="region-card">
+          <h4>Cerebellum</h4>
+          <p>Involved in movement coordination and timing. Could the body execute a coordinated movement correctly without conscious awareness of doing so?</p>
+        </div>
+        <div class="region-card full-width" style="grid-column:1/-1;">
+          <h4>Spinal Cord</h4>
+          <p>Carries signals between the brain and body, and handles some reflexes on its own. Could the body respond to something before the brain — and therefore consciousness — is even involved at all?</p>
+        </div>
+      </div>
+
+      <p style="font-size:15px; color:#2c3634;">Write a short response (aim for one strong paragraph, or more if you want) that:</p>
+      <ol style="font-size:15px; color:#2c3634;">
+        <li style="margin-bottom:10px;">Names the region you picked and briefly explains its normal function, using what you learned in the labeling activity.</li>
+        <li style="margin-bottom:10px;">Describes what an "unconscious but functional" phenomenon might look like if that region were damaged — what would the person be unaware of, but still able to do?</li>
+        <li>Explains what kind of evidence would convince a researcher that some processing was still happening, even though the person reports no awareness of it — think about how Weiskrantz proved this for D.B.</li>
+      </ol>
+      <p style="font-size:14px; color:#6a7674; font-style:italic;">This is a genuine open question in neuroscience — researchers have found evidence of similar "unconscious but functional" effects in some of these regions, and not in others. There's no single correct answer here, but your reasoning should connect clearly back to what that region actually does.</p>
+
+      <textarea class="final-response" id="final-response-text" placeholder="Write your response here..."></textarea>
+      <br>
+      <button class="submit-btn" id="download-btn">Download My Response</button>
+      <span id="download-status" style="margin-left:14px; font-size:13.5px; color:#4a5754;"></span>
+    </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="pause-1">
+  <div class="modal-box">
+    <div class="modal-icon">💬</div>
+    <h3>Discuss with your group</h3>
+    <p>Compare your first theories. Did anyone predict that further testing might reveal something unexpected?</p>
+    <button class="modal-close">Resume Reading</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pause-2">
+  <div class="modal-box">
+    <div class="modal-icon">💬</div>
+    <h3>Discuss with your group</h3>
+    <p>Share your updated theories. Has anyone changed their mind based on the pointing results?</p>
+    <button class="modal-close">Resume Reading</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pause-3">
+  <div class="modal-box">
+    <div class="modal-icon">💬</div>
+    <h3>Discuss with your group</h3>
+    <p>Talk through the hallway and grasping results. Does anyone in your group have a physical example of their own body reacting before they were consciously aware of something?</p>
+    <button class="modal-close">Resume Reading</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pause-4">
+  <div class="modal-box">
+    <div class="modal-icon">💬</div>
+    <h3>Discuss with your group</h3>
+    <p>Before writing your final response individually, discuss the two-pathway explanation as a group. Does it fully satisfy your original question about how D.B. could be accurate while seeing nothing?</p>
+    <button class="modal-close">Resume Reading</button>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.pause-trigger').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const modal = document.getElementById(btn.dataset.modal);
+      if (modal) modal.classList.add('open');
+    });
+  });
+
+  document.querySelectorAll('.modal-close').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.closest('.modal-overlay').classList.remove('open');
+    });
+  });
+
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.classList.remove('open');
+    });
+  });
+
+  document.getElementById('download-btn').addEventListener('click', () => {
+    const text = document.getElementById('final-response-text').value.trim();
+    const statusEl = document.getElementById('download-status');
+    if (!text) {
+      statusEl.textContent = 'Write a response before downloading.';
+      return;
+    }
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'blindsight-response.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    statusEl.textContent = 'Downloaded.';
+  });
+
+  document.querySelectorAll('.continue-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = document.getElementById(btn.dataset.reveal);
+      if (target) {
+        target.classList.remove('locked');
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+</script>
+
+</div>
+
+<script src="../../js/supabase-config.js"></script>
+<script src="../../js/activity-gate.js"></script>
+<script>initActivityGate('narrative-cases/blindsight/blindsight.html');</script>
+
+</body>
+</html>

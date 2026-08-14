@@ -112,6 +112,11 @@
       <div class="case-desc">Freud's 1909 case history, told in six parts. Read the evidence, form your own theory, then see Freud's actual interpretation — and decide if you agree.</div>
     </div>
 
+    <div class="case-card" id="blindsight-card" style="border-style:dashed;">
+      <div class="case-title">Blindsight — The Case of Patient D.B.</div>
+      <div class="case-desc">A patient with occipital lobe damage who insists he can't see — yet points, grasps, and dodges accurately anyway. Told in four parts, ending with your own theory of consciousness.</div>
+    </div>
+
     <div class="section-header" id="cat-experiments">Experiments</div>
 
     <div class="case-card" id="stroop-card" style="border-style:dashed;">
@@ -234,6 +239,10 @@
 
     document.getElementById('little-hans-card').addEventListener('click', () => {
       window.location.href = 'narrative-cases/little-hans/little-hans.html';
+    });
+
+    document.getElementById('blindsight-card').addEventListener('click', () => {
+      window.location.href = 'narrative-cases/blindsight/blindsight.html';
     });
 
     document.getElementById('stroop-card').addEventListener('click', () => {
