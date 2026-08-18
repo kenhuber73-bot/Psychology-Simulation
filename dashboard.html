@@ -3,123 +3,269 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard — Psychology Case Simulations</title>
+<title>Dashboard — Psych Sims</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="site-theme.css">
 <style>
-  body{min-height:100vh; padding:36px 20px 60px;}
-  .wrap{max-width:760px; margin:0 auto;}
-  .back-link{display:inline-flex; align-items:center; gap:6px; margin-bottom:18px; color:var(--ink-soft); font-size:0.88rem; font-weight:500;}
-  .back-link:hover{color:var(--indigo-600);}
-  .dash-card{
-    background:#fff; border:1px solid var(--line); border-radius:15px;
-    padding:28px 30px; box-shadow:var(--shadow-card); margin-bottom:18px;
+  body{min-height:100vh; padding-bottom:60px;}
+
+  /* app bar */
+  .app-bar{
+    position:sticky; top:0; z-index:40; background:rgba(255,255,255,.94); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line); padding:14px 24px;
   }
-  .dash-card h1{font-size:1.25rem; font-weight:800; margin:0 0 8px;}
-  .dash-card h2{font-size:1.05rem; font-weight:800; margin:0 0 4px;}
-  .dash-card p{color:var(--ink-soft); line-height:1.55; font-size:0.9rem; margin:0 0 6px;}
-  input, select{
-    width:100%; padding:11px 13px; margin:8px 0 14px; border:1px solid var(--line);
-    border-radius:9px; font-size:0.92rem; box-sizing:border-box; background:#fff; font-family:'Inter', sans-serif; color:var(--ink);
+  .app-bar-inner{max-width:1180px; margin:0 auto; display:flex; align-items:center; gap:16px;}
+  .app-bar .logo{margin-right:auto;}
+  .app-bar .who{font-size:0.85rem; color:var(--ink-soft); font-weight:500;}
+  .logout-btn{background:none; color:var(--ink-soft); border:1px solid var(--line); padding:9px 16px; border-radius:9px; font-size:0.86rem; font-weight:600; cursor:pointer;}
+  .logout-btn:hover{background:var(--lavender-50); color:var(--ink);}
+
+  .dash-wrap{max-width:1180px; margin:0 auto; padding:28px 24px 0;}
+  .welcome-row{margin-bottom:22px;}
+  .welcome-row h1{font-size:1.4rem; font-weight:800; margin:0 0 4px;}
+  .welcome-row p{color:var(--ink-soft); font-size:0.92rem; margin:0;}
+
+  /* generic card */
+  .panel{background:#fff; border:1px solid var(--line); border-radius:15px; padding:22px 24px; box-shadow:var(--shadow-card);}
+  .panel h2{font-size:1rem; font-weight:800; margin:0 0 2px;}
+  .panel .panel-sub{font-size:0.82rem; color:var(--ink-faint); margin:0 0 16px;}
+  .panel-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:4px;}
+  .panel-head a{font-size:0.8rem; font-weight:600; color:var(--indigo-600);}
+
+  /* stat cards */
+  .stat-grid{display:grid; grid-template-columns:1fr; gap:16px; margin-bottom:20px;}
+  @media(min-width:700px){.stat-grid{grid-template-columns:repeat(4,1fr);}}
+  .stat-card{background:#fff; border:1px solid var(--line); border-radius:15px; padding:20px; box-shadow:var(--shadow-card); display:flex; gap:14px; align-items:center;}
+  .stat-icon{width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .stat-icon svg{width:22px; height:22px;}
+  .stat-icon.indigo{background:var(--indigo-100); color:var(--indigo-700);}
+  .stat-icon.blue{background:var(--blue-bg); color:var(--blue);}
+  .stat-icon.green{background:var(--green-bg); color:var(--green);}
+  .stat-icon.amber{background:var(--amber-bg); color:var(--amber);}
+  .stat-num{font-size:1.5rem; font-weight:800; line-height:1.1;}
+  .stat-label{font-size:0.8rem; color:var(--ink-soft); font-weight:500;}
+
+  /* two-col row */
+  .row-2col{display:grid; grid-template-columns:1fr; gap:16px; margin-bottom:20px;}
+  @media(min-width:900px){.row-2col{grid-template-columns:2fr 1fr;}}
+
+  /* chart */
+  .chart-empty{color:var(--ink-faint); font-size:0.86rem; font-style:italic; padding:30px 0; text-align:center;}
+  .chart-wrap svg{width:100%; height:auto; display:block;}
+  .chart-caption{display:flex; justify-content:space-between; font-size:0.72rem; color:var(--ink-faint); margin-top:6px;}
+
+  /* recent activity */
+  .feed-item{display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--line);}
+  .feed-item:last-child{border-bottom:none;}
+  .feed-dot{width:8px; height:8px; border-radius:50%; background:var(--indigo-600); margin-top:6px; flex-shrink:0;}
+  .feed-item.reflection .feed-dot{background:var(--indigo-500);}
+  .feed-text{font-size:0.85rem; line-height:1.4;}
+  .feed-text b{font-weight:700;}
+  .feed-time{font-size:0.72rem; color:var(--ink-faint); white-space:nowrap; margin-left:auto; padding-top:2px;}
+
+  /* three-col row */
+  .row-3col{display:grid; grid-template-columns:1fr; gap:16px; margin-bottom:20px;}
+  @media(min-width:1040px){.row-3col{grid-template-columns:1.5fr 1.1fr 0.9fr;}}
+
+  /* classes table */
+  table.dtable{width:100%; border-collapse:collapse; font-size:0.85rem;}
+  table.dtable th{text-align:left; color:var(--ink-faint); font-weight:700; padding:8px 8px; border-bottom:2px solid var(--line); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.03em;}
+  table.dtable td{padding:10px 8px; border-bottom:1px solid var(--line); color:var(--ink); vertical-align:middle;}
+  table.dtable tr:last-child td{border-bottom:none;}
+  .mini-bar{width:70px; height:6px; border-radius:4px; background:var(--line); overflow:hidden; display:inline-block; vertical-align:middle; margin-right:6px;}
+  .mini-bar-fill{height:100%; background:var(--green);}
+  .row-actions button{padding:6px 11px; font-size:0.74rem;}
+
+  /* top activities */
+  .top-activity-item{display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line);}
+  .top-activity-item:last-child{border-bottom:none;}
+  .top-activity-rank{width:22px; height:22px; border-radius:50%; background:var(--indigo-100); color:var(--indigo-700); font-size:0.72rem; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .top-activity-name{font-size:0.85rem; font-weight:600; line-height:1.3;}
+  .top-activity-meta{font-size:0.74rem; color:var(--ink-faint);}
+  .top-activity-pct{font-size:0.85rem; font-weight:700; color:var(--green); margin-left:auto;}
+
+  /* quick actions */
+  .qa-btn{display:flex; align-items:center; gap:9px; width:100%; padding:11px 14px; border-radius:9px; font-weight:600; font-size:0.86rem; margin-bottom:9px; border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; text-align:left;}
+  .qa-btn:last-child{margin-bottom:0;}
+  .qa-btn.filled{background:var(--indigo-600); color:#fff; border-color:var(--indigo-600);}
+  .qa-btn.filled:hover{background:var(--indigo-700);}
+  .qa-btn:not(.filled):hover{border-color:var(--indigo-500); color:var(--indigo-600);}
+  .qa-btn svg{width:16px; height:16px; flex-shrink:0;}
+
+  /* student management */
+  .sm-toolbar{display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap;}
+  .sm-search{flex:1; min-width:200px; display:flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--line); border-radius:9px; padding:9px 13px;}
+  .sm-search svg{width:15px; height:15px; color:var(--ink-faint); flex-shrink:0;}
+  .sm-search input{border:none; outline:none; background:transparent; font-family:'Inter'; font-size:0.88rem; width:100%; color:var(--ink);}
+  .sm-row{cursor:pointer;}
+  .sm-row:hover{background:var(--lavender-50);}
+  .sm-expand{background:var(--surface);}
+  .sm-expand td{padding:14px 16px;}
+
+  input, select, textarea{
+    padding:10px 13px; border:1px solid var(--line); border-radius:9px; font-size:0.9rem; box-sizing:border-box;
+    background:#fff; font-family:'Inter', sans-serif; color:var(--ink);
   }
   input:focus, select:focus{outline:2px solid var(--indigo-500); outline-offset:1px; border-color:var(--indigo-500);}
+  select{width:100%; margin:8px 0 12px;}
   button{
     padding:10px 18px; background:var(--indigo-600); color:white; border:none;
     border-radius:9px; font-size:0.88rem; cursor:pointer; font-weight:600; font-family:'Inter', sans-serif;
   }
   button:hover{background:var(--indigo-700);}
   button:disabled{opacity:0.5; cursor:default;}
-  .logout-btn{background:none; color:var(--ink-soft); border:1px solid var(--line); margin-top:14px;}
-  .logout-btn:hover{background:var(--lavender-50); color:var(--ink);}
-  .class-item{
-    display:flex; justify-content:space-between; align-items:center;
-    padding:13px 4px; border-bottom:1px solid var(--line); cursor:pointer; border-radius:9px;
-  }
-  .class-item:last-child{border-bottom:none;}
-  .class-item:hover{background:var(--lavender-50);}
-  .class-name{font-weight:700; cursor:pointer; font-size:0.94rem;}
-  .join-code{
-    font-family:'JetBrains Mono', monospace; background:var(--indigo-100); color:var(--indigo-700);
-    padding:4px 10px; border-radius:6px; font-size:0.85rem; cursor:pointer; font-weight:600;
-  }
-  .display-btn{
-    background:var(--indigo-600); color:white; border:none; border-radius:7px;
-    padding:6px 12px; font-size:0.78rem; cursor:pointer; font-weight:600;
-  }
-  .display-btn:hover{background:var(--indigo-700);}
   .message{margin-top:10px; font-size:0.86rem; padding:10px 12px; border-radius:9px; font-weight:500;}
   .message.error{background:var(--rose-bg); color:var(--rose);}
   .empty{color:var(--ink-faint); font-style:italic; font-size:0.88rem;}
-  .close-results{background:none; color:var(--ink-soft); border:1px solid var(--line); font-size:0.8rem; padding:8px 14px; margin-bottom:16px;}
-  .close-results:hover{background:var(--lavender-50); color:var(--ink);}
-  table{width:100%; border-collapse:collapse; font-size:0.86rem;}
-  th{text-align:left; color:var(--ink-faint); font-weight:700; padding:9px 8px; border-bottom:2px solid var(--line); font-size:0.76rem; text-transform:uppercase; letter-spacing:0.03em;}
-  td{padding:10px 8px; border-bottom:1px solid var(--line); color:var(--ink);}
   .correct-tag{background:var(--green-bg); color:var(--green); padding:3px 9px; border-radius:20px; font-size:0.76rem; font-weight:700;}
   .incorrect-tag{background:var(--rose-bg); color:var(--rose); padding:3px 9px; border-radius:20px; font-size:0.76rem; font-weight:700;}
-  .reflection-tag{background:var(--indigo-100); color:var(--indigo-700); padding:3px 9px; border-radius:20px; font-size:0.76rem; font-weight:700;}
-  .paragraph-preview{cursor:pointer; text-decoration:underline dotted; text-underline-offset:2px; color:var(--indigo-600);}
-  .paragraph-full{white-space:pre-wrap; max-width:340px;}
-  .link-row{
-    display:flex; justify-content:space-between; align-items:center; gap:10px;
-    padding:13px 0; border-bottom:1px solid var(--line);
-  }
+  .link-row{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:13px 0; border-bottom:1px solid var(--line);}
   .link-row:last-child{border-bottom:none;}
   .link-info{flex:1; min-width:0;}
   .link-label{font-weight:700; font-size:0.9rem;}
-  .link-url{
-    font-family:'JetBrains Mono', monospace; font-size:0.75rem; color:var(--ink-faint);
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:3px;
-  }
+  .link-url{font-family:'JetBrains Mono', monospace; font-size:0.75rem; color:var(--ink-faint); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:3px;}
   .link-actions{display:flex; gap:6px; flex-shrink:0;}
   .link-actions button{padding:7px 13px; font-size:0.76rem;}
   .revoke-btn{background:var(--rose);}
   .revoke-btn:hover{background:#B62E52;}
   .copy-btn{background:var(--green);}
   .copy-btn:hover{background:#128A3E;}
+
+  .section-gap{margin-bottom:20px;}
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <a href="index.html" class="back-link">← Back to Psych Sims</a>
-    <div class="dash-card">
-      <h1>Welcome</h1>
-      <p id="status">Checking your session...</p>
+
+  <div class="app-bar">
+    <div class="app-bar-inner">
+      <a href="index.html" class="logo">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="7" fill="#5B4FE5"/><path d="M12 6.5c-1.8 0-3 1.2-3.1 2.6-.9.3-1.5 1.2-1.5 2.1 0 .5.2 1 .5 1.4-.3.4-.5.9-.5 1.4 0 1.1.9 2 2 2.1.2.9 1 1.5 1.9 1.5.4 0 .8-.1 1.1-.4.3.3.7.4 1.1.4.9 0 1.7-.6 1.9-1.5 1.1-.1 2-1 2-2.1 0-.5-.2-1-.5-1.4.3-.4.5-.9.5-1.4 0-.9-.6-1.8-1.5-2.1-.1-1.4-1.3-2.6-3-2.6z" stroke="#fff" stroke-width="1.1" stroke-linejoin="round"/><path d="M12 6.5v10.6M9.4 10.4c.7.3 1.6.3 2.6.1M14.6 10.4c-.7.3-1.6.3-2.6.1M9 13.6c.9.4 2 .4 3 .1M15 13.6c-.9.4-2 .4-3 .1" stroke="#fff" stroke-width="0.9" stroke-linecap="round"/></svg>
+        <span>Psych Sims<span class="sub">Simulation Lab</span></span>
+      </a>
+      <span class="who" id="who-status">Checking your session…</span>
       <button id="logout-btn" class="logout-btn" style="display:none;">Log out</button>
     </div>
+  </div>
 
-    <div class="dash-card" id="classes-card" style="display:none;">
-      <h2>Your Classes</h2>
-      <p style="margin-bottom:14px;">Click a class to see student results.</p>
-      <div id="classes-list"></div>
+  <div class="dash-wrap" id="dash-content" style="display:none;">
+    <div class="welcome-row">
+      <h1>Welcome back</h1>
+      <p>Here's what's happening across your classes.</p>
     </div>
 
-    <div class="dash-card" id="activity-links-card" style="display:none;">
-      <h2>Activity Links</h2>
-      <p>Generate a link for a specific activity — anyone with the link can access it, no student login needed.</p>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-icon indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div><div class="stat-num" id="stat-students">—</div><div class="stat-label">Students Joined</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+        <div><div class="stat-num" id="stat-classes">—</div><div class="stat-label">Active Classes</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+        <div><div class="stat-num" id="stat-attempts">—</div><div class="stat-label">Activities Completed</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div><div class="stat-num" id="stat-correct">—</div><div class="stat-label">Avg. Correct Rate</div></div>
+      </div>
+    </div>
+
+    <div class="row-2col">
+      <div class="panel">
+        <div class="panel-head"><h2>Activity Over Time</h2></div>
+        <p class="panel-sub">Completed attempts across all classes — last 30 days</p>
+        <div class="chart-wrap" id="chart-wrap"><div class="chart-empty">Loading…</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Recent Activity</h2></div>
+        <p class="panel-sub">Latest completed attempts</p>
+        <div id="recent-feed"><p class="empty">Loading…</p></div>
+      </div>
+    </div>
+
+    <div class="row-3col">
+      <div class="panel">
+        <div class="panel-head"><h2>My Classes</h2></div>
+        <p class="panel-sub">Click a row to view detailed results</p>
+        <div id="classes-table-wrap"><p class="empty">Loading…</p></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Top Activities</h2></div>
+        <p class="panel-sub">Most completed across your classes</p>
+        <div id="top-activities"><p class="empty">Loading…</p></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Quick Actions</h2></div>
+        <p class="panel-sub">&nbsp;</p>
+        <button class="qa-btn filled" id="qa-generate-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          Generate Activity Link
+        </button>
+        <button class="qa-btn" id="qa-export">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Results (CSV)
+        </button>
+        <button class="qa-btn" id="qa-students">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Jump to Student Management
+        </button>
+      </div>
+    </div>
+
+    <div class="panel section-gap" id="results-detail-panel" style="display:none;">
+      <button id="close-results-btn" class="logout-btn" style="margin-bottom:14px;">← Back</button>
+      <h2 id="results-title">Results</h2>
+      <div id="results-content"></div>
+    </div>
+
+    <div class="panel section-gap">
+      <div class="panel-head"><h2>Activity &amp; Lesson Links</h2></div>
+      <p class="panel-sub">Generate a link for a specific activity or lesson — anyone with the link can access it, no student login needed.</p>
       <select id="activity-select"></select>
       <button id="generate-link-btn">Generate Link</button>
       <div id="link-message"></div>
       <div id="activity-links-list" style="margin-top:16px;"></div>
     </div>
 
-    <div class="dash-card" id="results-card" style="display:none;">
-      <button id="close-results-btn" class="close-results">← Back to classes</button>
-      <h2 id="results-title">Results</h2>
-      <div id="results-content"></div>
+    <div class="panel section-gap" id="student-mgmt-panel">
+      <div class="panel-head"><h2>Student Management</h2></div>
+      <p class="panel-sub">Nickname-only — no names, emails, or accounts are ever stored.</p>
+      <div class="sm-toolbar">
+        <div class="sm-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" id="student-search" placeholder="Search by nickname…">
+        </div>
+      </div>
+      <div id="students-table-wrap"><p class="empty">Loading…</p></div>
     </div>
   </div>
 
   <script src="js/supabase-config.js"></script>
   <script>
     let currentUser = null;
+    let allClasses = [];
+    let allStudents = [];
+    let allAttempts = [];
 
     function escapeHtml(str){
       const div = document.createElement('div');
       div.textContent = str;
       return div.innerHTML;
+    }
+
+    function timeAgo(dateStr){
+      const diffMs = Date.now() - new Date(dateStr).getTime();
+      const mins = Math.floor(diffMs / 60000);
+      if(mins < 1) return 'just now';
+      if(mins < 60) return mins + 'm ago';
+      const hrs = Math.floor(mins / 60);
+      if(hrs < 24) return hrs + 'h ago';
+      const days = Math.floor(hrs / 24);
+      return days + 'd ago';
     }
 
     // Activities that can have a share link generated for them.
@@ -164,7 +310,7 @@
     };
 
     // Activities that are a written reflection, not a graded diagnosis —
-    // rendered differently in the results table (no Correct/Incorrect tag).
+    // excluded from correct/incorrect stats, rendered differently in tables.
     const reflectionActivities = new Set(['conditioning_social_anxiety_v1', 'antipsychotics_reflection_v1', 'bandit_task_reflection_v1']);
 
     async function init(){
@@ -176,74 +322,308 @@
       }
 
       currentUser = session.user;
-
       const { error } = await sb.from('teachers').upsert({ id: currentUser.id });
 
-      const statusEl = document.getElementById('status');
+      const whoEl = document.getElementById('who-status');
       if(error){
-        statusEl.textContent = 'Logged in as ' + currentUser.email + ', but there was an issue setting up your profile: ' + error.message;
+        whoEl.textContent = currentUser.email + ' — profile issue: ' + error.message;
       } else {
-        statusEl.textContent = 'Logged in as ' + currentUser.email + '.';
-        document.getElementById('classes-card').style.display = 'block';
-        document.getElementById('activity-links-card').style.display = 'block';
+        whoEl.textContent = currentUser.email;
+        document.getElementById('dash-content').style.display = 'block';
         populateActivitySelect();
-        loadClasses();
+        await loadDashboard();
         loadActivityLinks();
       }
-
       document.getElementById('logout-btn').style.display = 'inline-block';
     }
 
-    async function loadClasses(){
-      const { data, error } = await sb
+    async function loadDashboard(){
+      const { data: classes, error: classErr } = await sb
         .from('classes')
         .select('*')
         .eq('teacher_id', currentUser.id)
         .order('created_at', { ascending: false });
 
-      const listEl = document.getElementById('classes-list');
-      listEl.innerHTML = '';
+      allClasses = classes || [];
+      const classIds = allClasses.map(c => c.id);
 
-      if(error){
-        listEl.innerHTML = '<p class="empty">Could not load classes: ' + error.message + '</p>';
+      document.getElementById('stat-classes').textContent = allClasses.length;
+
+      if(classErr || classIds.length === 0){
+        document.getElementById('stat-students').textContent = '0';
+        document.getElementById('stat-attempts').textContent = '0';
+        document.getElementById('stat-correct').textContent = '—';
+        document.getElementById('chart-wrap').innerHTML = '<p class="chart-empty">No classes yet.</p>';
+        document.getElementById('recent-feed').innerHTML = '<p class="empty">No classes yet.</p>';
+        document.getElementById('classes-table-wrap').innerHTML = '<p class="empty">No classes yet — create one to get started.</p>';
+        document.getElementById('top-activities').innerHTML = '<p class="empty">No activity yet.</p>';
+        document.getElementById('students-table-wrap').innerHTML = '<p class="empty">No students yet.</p>';
         return;
       }
 
-      if(!data || data.length === 0){
-        listEl.innerHTML = '<p class="empty">No classes yet — create one above.</p>';
+      const [{ data: students }, { data: attempts }] = await Promise.all([
+        sb.from('student_sessions').select('id, nickname, class_id, created_at').in('class_id', classIds),
+        sb.from('case_attempts')
+          .select('id, case_id, diagnosis, was_correct, reasoning_paragraph, completed_at, student_sessions!inner(nickname, class_id)')
+          .in('student_sessions.class_id', classIds)
+          .order('completed_at', { ascending: false })
+      ]);
+
+      allStudents = students || [];
+      allAttempts = attempts || [];
+
+      renderStats();
+      renderChart();
+      renderRecentFeed();
+      renderClassesTable();
+      renderTopActivities();
+      renderStudentsTable();
+    }
+
+    function gradedAttempts(list){
+      return list.filter(a => !reflectionActivities.has(a.case_id));
+    }
+
+    function renderStats(){
+      document.getElementById('stat-students').textContent = allStudents.length;
+      document.getElementById('stat-attempts').textContent = allAttempts.length;
+      const graded = gradedAttempts(allAttempts);
+      if(graded.length === 0){
+        document.getElementById('stat-correct').textContent = '—';
+      } else {
+        const pct = Math.round(100 * graded.filter(a => a.was_correct).length / graded.length);
+        document.getElementById('stat-correct').textContent = pct + '%';
+      }
+    }
+
+    function renderChart(){
+      const wrap = document.getElementById('chart-wrap');
+      if(allAttempts.length === 0){
+        wrap.innerHTML = '<p class="chart-empty">No completed activity yet — this fills in once students start finishing activities.</p>';
         return;
       }
 
-      data.forEach(cls => {
-        const row = document.createElement('div');
-        row.className = 'class-item';
-        row.innerHTML = `
-          <span class="class-name">${cls.name}</span>
-          <span style="display:flex; align-items:center; gap:10px;">
-            <span class="join-code">${cls.join_code}</span>
-            <button class="display-btn" data-code="${cls.join_code}" data-name="${cls.name}">Display</button>
-            <button class="display-btn" data-id="${cls.id}" data-name="${cls.name}" style="background:var(--green);">Stroop</button>
-          </span>
+      const days = 30;
+      const buckets = [];
+      const now = new Date();
+      now.setHours(0,0,0,0);
+      for(let i = days - 1; i >= 0; i--){
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        buckets.push({ date: d, count: 0 });
+      }
+      allAttempts.forEach(a => {
+        const d = new Date(a.completed_at);
+        d.setHours(0,0,0,0);
+        const bucket = buckets.find(b => b.date.getTime() === d.getTime());
+        if(bucket) bucket.count++;
+      });
+
+      const max = Math.max(1, ...buckets.map(b => b.count));
+      const w = 700, h = 200, pad = 10;
+      const stepX = (w - pad * 2) / (buckets.length - 1);
+      const points = buckets.map((b, i) => {
+        const x = pad + i * stepX;
+        const y = h - pad - (b.count / max) * (h - pad * 2);
+        return [x, y];
+      });
+      const linePath = points.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+      const areaPath = linePath + ` L${points[points.length-1][0].toFixed(1)},${h-pad} L${points[0][0].toFixed(1)},${h-pad} Z`;
+
+      wrap.innerHTML = `
+        <svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#5B4FE5" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="#5B4FE5" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="${areaPath}" fill="url(#chartFill)"/>
+          <path d="${linePath}" fill="none" stroke="#5B4FE5" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+        </svg>
+      `;
+      const fmt = d => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      wrap.insertAdjacentHTML('afterend', `<div class="chart-caption"><span>${fmt(buckets[0].date)}</span><span>${fmt(buckets[buckets.length-1].date)}</span></div>`);
+    }
+
+    function renderRecentFeed(){
+      const feedEl = document.getElementById('recent-feed');
+      if(allAttempts.length === 0){
+        feedEl.innerHTML = '<p class="empty">No completed activity yet.</p>';
+        return;
+      }
+      const recent = allAttempts.slice(0, 6);
+      feedEl.innerHTML = recent.map(a => {
+        const cls = allClasses.find(c => c.id === a.student_sessions.class_id);
+        const label = activityLabels[a.case_id] || a.case_id;
+        const isRefl = reflectionActivities.has(a.case_id);
+        return `
+          <div class="feed-item ${isRefl ? 'reflection' : ''}">
+            <span class="feed-dot"></span>
+            <div class="feed-text">
+              <b>${escapeHtml(a.student_sessions.nickname)}</b> completed <b>${escapeHtml(label)}</b>
+              <div style="color:var(--ink-faint); font-size:0.76rem;">${cls ? escapeHtml(cls.name) : 'Unknown class'}</div>
+            </div>
+            <span class="feed-time">${timeAgo(a.completed_at)}</span>
+          </div>
         `;
-        row.querySelector('.class-name').addEventListener('click', () => showResults(cls));
-        row.querySelector('.join-code').addEventListener('click', () => showResults(cls));
-        row.querySelectorAll('.display-btn')[0].addEventListener('click', (e) => {
+      }).join('');
+    }
+
+    function renderClassesTable(){
+      const wrap = document.getElementById('classes-table-wrap');
+      if(allClasses.length === 0){
+        wrap.innerHTML = '<p class="empty">No classes yet — create one to get started.</p>';
+        return;
+      }
+      const rows = allClasses.map(cls => {
+        const clsAttempts = allAttempts.filter(a => a.student_sessions.class_id === cls.id);
+        const clsStudents = allStudents.filter(s => s.class_id === cls.id);
+        const graded = gradedAttempts(clsAttempts);
+        const pct = graded.length ? Math.round(100 * graded.filter(a => a.was_correct).length / graded.length) : null;
+        return `
+          <tr class="sm-row" data-class-id="${cls.id}">
+            <td><b>${escapeHtml(cls.name)}</b><div style="font-family:'JetBrains Mono',monospace; font-size:0.74rem; color:var(--ink-faint);">${escapeHtml(cls.join_code)}</div></td>
+            <td>${clsStudents.length}</td>
+            <td>${clsAttempts.length}</td>
+            <td>${pct === null ? '<span class="empty">—</span>' : `<span class="mini-bar"><span class="mini-bar-fill" style="width:${pct}%;"></span></span>${pct}%`}</td>
+            <td class="row-actions">
+              <button class="display-open-btn" data-code="${escapeHtml(cls.join_code)}" data-name="${escapeHtml(cls.name)}" type="button">Display</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      wrap.innerHTML = `
+        <table class="dtable">
+          <thead><tr><th>Class</th><th>Students</th><th>Completed</th><th>Correct %</th><th></th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+      wrap.querySelectorAll('tr.sm-row').forEach(row => {
+        row.addEventListener('click', (e) => {
+          if(e.target.closest('.display-open-btn')) return;
+          const cls = allClasses.find(c => c.id === row.dataset.classId);
+          if(cls) showResults(cls);
+        });
+      });
+      wrap.querySelectorAll('.display-open-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
           e.stopPropagation();
-          const url = 'display.html?code=' + encodeURIComponent(cls.join_code) + '&name=' + encodeURIComponent(cls.name);
+          const url = 'display.html?code=' + encodeURIComponent(btn.dataset.code) + '&name=' + encodeURIComponent(btn.dataset.name);
           window.open(url, '_blank');
         });
-        row.querySelectorAll('.display-btn')[1].addEventListener('click', (e) => {
-          e.stopPropagation();
-          const url = 'stroop-display.html?class=' + encodeURIComponent(cls.id) + '&name=' + encodeURIComponent(cls.name);
-          window.open(url, '_blank');
-        });
-        listEl.appendChild(row);
       });
     }
 
+    function renderTopActivities(){
+      const wrap = document.getElementById('top-activities');
+      if(allAttempts.length === 0){
+        wrap.innerHTML = '<p class="empty">No activity yet.</p>';
+        return;
+      }
+      const counts = {};
+      allAttempts.forEach(a => {
+        counts[a.case_id] = counts[a.case_id] || { count: 0, correct: 0, graded: 0 };
+        counts[a.case_id].count++;
+        if(!reflectionActivities.has(a.case_id)){
+          counts[a.case_id].graded++;
+          if(a.was_correct) counts[a.case_id].correct++;
+        }
+      });
+      const sorted = Object.entries(counts).sort((a, b) => b[1].count - a[1].count).slice(0, 5);
+      wrap.innerHTML = sorted.map(([caseId, stat], i) => {
+        const label = activityLabels[caseId] || caseId;
+        const pct = stat.graded ? Math.round(100 * stat.correct / stat.graded) : null;
+        return `
+          <div class="top-activity-item">
+            <span class="top-activity-rank">${i + 1}</span>
+            <div>
+              <div class="top-activity-name">${escapeHtml(label)}</div>
+              <div class="top-activity-meta">Completed by ${stat.count} student${stat.count === 1 ? '' : 's'}</div>
+            </div>
+            ${pct === null ? '' : `<span class="top-activity-pct">${pct}%</span>`}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderStudentsTable(filterText){
+      const wrap = document.getElementById('students-table-wrap');
+      if(allStudents.length === 0){
+        wrap.innerHTML = '<p class="empty">No students have joined a class yet.</p>';
+        return;
+      }
+      const q = (filterText || '').trim().toLowerCase();
+      const rows = allStudents
+        .map(s => {
+          const cls = allClasses.find(c => c.id === s.class_id);
+          const studentAttempts = allAttempts.filter(a =>
+            a.student_sessions.nickname === s.nickname && a.student_sessions.class_id === s.class_id
+          );
+          const lastActive = studentAttempts.length ? studentAttempts[0].completed_at : s.created_at;
+          return { s, cls, studentAttempts, lastActive };
+        })
+        .filter(r => !q || r.s.nickname.toLowerCase().includes(q))
+        .sort((a, b) => new Date(b.lastActive) - new Date(a.lastActive));
+
+      if(rows.length === 0){
+        wrap.innerHTML = '<p class="empty">No students match that search.</p>';
+        return;
+      }
+
+      wrap.innerHTML = `
+        <table class="dtable">
+          <thead><tr><th>Nickname</th><th>Class</th><th>Completed</th><th>Last Active</th></tr></thead>
+          <tbody>
+            ${rows.map((r, i) => `
+              <tr class="sm-row" data-idx="${i}">
+                <td><b>${escapeHtml(r.s.nickname)}</b></td>
+                <td>${r.cls ? escapeHtml(r.cls.name) : '<span class="empty">—</span>'}</td>
+                <td>${r.studentAttempts.length}</td>
+                <td>${timeAgo(r.lastActive)}</td>
+              </tr>
+              <tr class="sm-expand" id="expand-${i}" style="display:none;"><td colspan="4"></td></tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+
+      wrap.querySelectorAll('tr.sm-row').forEach(row => {
+        row.addEventListener('click', () => {
+          const i = row.dataset.idx;
+          const expandRow = document.getElementById('expand-' + i);
+          const isOpen = expandRow.style.display !== 'none';
+          wrap.querySelectorAll('.sm-expand').forEach(r => r.style.display = 'none');
+          if(!isOpen){
+            const r = rows[i];
+            const cell = expandRow.querySelector('td');
+            if(r.studentAttempts.length === 0){
+              cell.innerHTML = '<p class="empty" style="margin:0;">No completed attempts yet.</p>';
+            } else {
+              cell.innerHTML = r.studentAttempts.map(a => {
+                const label = activityLabels[a.case_id] || a.case_id;
+                const dateStr = new Date(a.completed_at).toLocaleDateString() + ' ' + new Date(a.completed_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                if(reflectionActivities.has(a.case_id)){
+                  const p = a.reasoning_paragraph || '';
+                  return `<div style="margin-bottom:8px; font-size:0.84rem;"><b>${escapeHtml(label)}</b> — ${dateStr}<div style="color:var(--ink-soft); margin-top:2px;">${escapeHtml(p) || '(no response)'}</div></div>`;
+                }
+                const tag = a.was_correct ? '<span class="correct-tag">Correct</span>' : '<span class="incorrect-tag">Incorrect</span>';
+                return `<div style="margin-bottom:8px; font-size:0.84rem;"><b>${escapeHtml(label)}</b> — ${dateStr} — diagnosis: ${escapeHtml(a.diagnosis || '—')} ${tag}</div>`;
+              }).join('');
+            }
+            expandRow.style.display = 'table-row';
+          }
+        });
+      });
+    }
+
+    document.getElementById('student-search').addEventListener('input', (e) => {
+      renderStudentsTable(e.target.value);
+    });
+
     async function showResults(cls){
-      document.getElementById('classes-card').style.display = 'none';
-      document.getElementById('results-card').style.display = 'block';
+      document.getElementById('results-detail-panel').style.display = 'block';
+      document.getElementById('results-detail-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
       document.getElementById('results-title').textContent = 'Results — ' + cls.name;
       const contentEl = document.getElementById('results-content');
       contentEl.innerHTML = '<p class="empty">Loading results...</p>';
@@ -260,7 +640,7 @@
       }
 
       if(!data || data.length === 0){
-        contentEl.innerHTML = '<p class="empty">No completed attempts yet for this class. Once students finish the case, their results will show up here.</p>';
+        contentEl.innerHTML = '<p class="empty">No completed attempts yet for this class.</p>';
         return;
       }
 
@@ -276,11 +656,11 @@
           const preview = paragraph.length > 70 ? paragraph.slice(0, 70) + '…' : paragraph;
           return `
             <tr>
-              <td>${attempt.student_sessions.nickname}</td>
-              <td>${caseLabel}</td>
+              <td>${escapeHtml(attempt.student_sessions.nickname)}</td>
+              <td>${escapeHtml(caseLabel)}</td>
               <td colspan="2">
-                <span class="paragraph-preview" id="${rowId}-preview" onclick="document.getElementById('${rowId}-preview').style.display='none'; document.getElementById('${rowId}-full').style.display='block';">${escapeHtml(preview) || '(no response)'}</span>
-                <span class="paragraph-full" id="${rowId}-full" style="display:none;">${escapeHtml(paragraph)}</span>
+                <span class="paragraph-preview" style="cursor:pointer; text-decoration:underline dotted; color:var(--indigo-600);" id="${rowId}-preview" onclick="document.getElementById('${rowId}-preview').style.display='none'; document.getElementById('${rowId}-full').style.display='block';">${escapeHtml(preview) || '(no response)'}</span>
+                <span class="paragraph-full" id="${rowId}-full" style="display:none; white-space:pre-wrap;">${escapeHtml(paragraph)}</span>
               </td>
               <td>${dateStr}</td>
             </tr>
@@ -292,9 +672,9 @@
           : '<span class="incorrect-tag">Incorrect</span>';
         return `
           <tr>
-            <td>${attempt.student_sessions.nickname}</td>
-            <td>${caseLabel}</td>
-            <td>${attempt.diagnosis}</td>
+            <td>${escapeHtml(attempt.student_sessions.nickname)}</td>
+            <td>${escapeHtml(caseLabel)}</td>
+            <td>${escapeHtml(attempt.diagnosis || '')}</td>
             <td>${tag}</td>
             <td>${dateStr}</td>
           </tr>
@@ -302,24 +682,62 @@
       }).join('');
 
       contentEl.innerHTML = `
-        <p style="font-size:0.85rem;">${data.length} completed attempt${data.length === 1 ? '' : 's'}</p>
-        <table>
-          <thead>
-            <tr><th>Student</th><th>Case</th><th>Diagnosis Given</th><th>Result</th><th>Completed</th></tr>
-          </thead>
+        <p style="font-size:0.85rem; color:var(--ink-soft);">${data.length} completed attempt${data.length === 1 ? '' : 's'}</p>
+        <table class="dtable">
+          <thead><tr><th>Student</th><th>Case</th><th>Diagnosis Given</th><th>Result</th><th>Completed</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       `;
     }
 
     document.getElementById('close-results-btn').addEventListener('click', () => {
-      document.getElementById('results-card').style.display = 'none';
-      document.getElementById('classes-card').style.display = 'block';
+      document.getElementById('results-detail-panel').style.display = 'none';
     });
 
     document.getElementById('logout-btn').addEventListener('click', async () => {
       await sb.auth.signOut();
       window.location.href = 'teacher-login.html';
+    });
+
+    document.getElementById('qa-generate-link').addEventListener('click', () => {
+      document.getElementById('activity-select').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById('activity-select').focus();
+    });
+    document.getElementById('qa-students').addEventListener('click', () => {
+      document.getElementById('student-mgmt-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    document.getElementById('qa-export').addEventListener('click', () => {
+      if(allAttempts.length === 0){
+        alert('No completed attempts to export yet.');
+        return;
+      }
+      const header = ['Nickname', 'Class', 'Activity', 'Diagnosis or Response', 'Result', 'Completed At'];
+      const lines = [header.join(',')];
+      allAttempts.forEach(a => {
+        const cls = allClasses.find(c => c.id === a.student_sessions.class_id);
+        const label = activityLabels[a.case_id] || a.case_id;
+        const isRefl = reflectionActivities.has(a.case_id);
+        const resultText = isRefl ? (a.reasoning_paragraph || '') : (a.diagnosis || '');
+        const outcome = isRefl ? 'reflection' : (a.was_correct ? 'correct' : 'incorrect');
+        const csvEscape = (v) => '"' + String(v || '').replace(/"/g, '""').replace(/\n/g, ' ') + '"';
+        lines.push([
+          csvEscape(a.student_sessions.nickname),
+          csvEscape(cls ? cls.name : ''),
+          csvEscape(label),
+          csvEscape(resultText),
+          csvEscape(outcome),
+          csvEscape(a.completed_at)
+        ].join(','));
+      });
+      const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'psych-sims-results.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     });
 
     async function loadActivityLinks(){
@@ -336,7 +754,6 @@
         listEl.innerHTML = '<p class="empty">Could not load links: ' + error.message + '</p>';
         return;
       }
-
       if(!data || data.length === 0){
         listEl.innerHTML = '<p class="empty">No links generated yet.</p>';
         return;
@@ -349,11 +766,11 @@
         row.className = 'link-row';
         row.innerHTML = `
           <div class="link-info">
-            <div class="link-label">${link.activity_label}</div>
-            <div class="link-url">${fullUrl}</div>
+            <div class="link-label">${escapeHtml(link.activity_label)}</div>
+            <div class="link-url">${escapeHtml(fullUrl)}</div>
           </div>
           <div class="link-actions">
-            <button class="copy-btn" data-url="${fullUrl}">Copy</button>
+            <button class="copy-btn" data-url="${escapeHtml(fullUrl)}">Copy</button>
             <button class="revoke-btn" data-id="${link.id}">Revoke</button>
           </div>
         `;
