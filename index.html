@@ -6,54 +6,9 @@
 <title>Psych Sims — Interactive Psychology Classroom Resources</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site-theme.css">
 <style>
-  :root{
-    --indigo-700:#4838C7; --indigo-600:#5B4FE5; --indigo-500:#7468F0; --indigo-100:#ECE9FE; --lavender-50:#F6F4FF;
-    --ink:#1F2233; --ink-soft:#5B5F76; --ink-faint:#8A8DA3; --line:#E7E5F5; --white:#FFFFFF; --surface:#FBFAFF;
-    --green:#16A34A; --green-bg:#E9F9EF; --amber:#B45309; --amber-bg:#FDF3E3; --gray:#6B7280; --gray-bg:#F1F1F5;
-    --shadow-sm:0 1px 2px rgba(31,34,51,.06); --shadow-md:0 6px 20px rgba(75,56,199,.08); --shadow-card:0 2px 10px rgba(31,34,51,.06);
-  }
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
-  body{background:var(--surface); color:var(--ink); font-family:'Inter', sans-serif; -webkit-font-smoothing:antialiased;}
-  a{color:inherit; text-decoration:none;}
-  h1,h2,h3,h4{font-family:'Inter', sans-serif; margin:0;}
   .wrap{max-width:1180px; margin:0 auto; padding:0 24px;}
-  .eyebrow{font-family:'JetBrains Mono', monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--indigo-600); font-weight:500;}
-
-  /* header */
-  header.site-header{position:sticky; top:0; z-index:50; background:rgba(255,255,255,.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--line);}
-  .header-inner{max-width:1180px; margin:0 auto; padding:14px 24px; display:flex; align-items:center; gap:28px;}
-  .logo{display:flex; align-items:center; gap:9px; font-weight:800; font-size:1.12rem; color:var(--ink); margin-right:auto;}
-  .logo svg{width:30px; height:30px; flex-shrink:0;}
-  .logo .sub{display:block; font-family:'JetBrains Mono', monospace; font-size:0.58rem; letter-spacing:0.1em; color:var(--ink-faint); font-weight:500; text-transform:uppercase; margin-top:-2px;}
-  nav.mainnav{display:flex; align-items:center; gap:2px;}
-  nav.mainnav > a, nav.mainnav .nav-item > button{
-    font-size:0.92rem; font-weight:600; color:var(--ink-soft); padding:9px 14px; border-radius:8px;
-    background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:5px; font-family:'Inter',sans-serif;
-  }
-  nav.mainnav > a.active{color:var(--indigo-600);}
-  nav.mainnav > a:hover, nav.mainnav .nav-item > button:hover{color:var(--ink); background:var(--lavender-50);}
-  nav.mainnav .chev{font-size:0.6rem; transition:transform .12s ease; color:var(--ink-faint);}
-  nav.mainnav .nav-item.open .chev{transform:rotate(180deg);}
-  nav.mainnav .nav-item{position:relative;}
-  .nav-panel{
-    display:none; position:absolute; top:calc(100% + 6px); left:0; min-width:250px; z-index:40;
-    background:var(--white); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow-md); padding:10px;
-  }
-  .nav-item.open .nav-panel{display:block;}
-  .nav-panel .panel-eyebrow{font-family:'JetBrains Mono', monospace; font-size:0.64rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-faint); margin:4px 8px 8px;}
-  .nav-panel a.panel-link, .nav-panel .panel-link-disabled{
-    display:flex; align-items:center; justify-content:space-between; gap:10px;
-    padding:9px 10px; border-radius:8px; font-size:0.86rem; color:var(--ink); font-weight:500;
-  }
-  .nav-panel .panel-link-disabled{color:var(--ink-faint); cursor:default;}
-  .nav-panel a.panel-link:hover{background:var(--lavender-50);}
-  .nav-panel .status{font-family:'JetBrains Mono', monospace; font-size:0.58rem; text-transform:uppercase; padding:2px 7px; border-radius:10px; font-weight:600; color:var(--indigo-700); background:var(--indigo-100);}
-  .nav-panel .panel-footer{margin-top:4px; padding:8px 10px 4px; border-top:1px solid var(--line);}
-  .nav-panel .panel-footer a{font-size:0.8rem; font-weight:600; color:var(--indigo-600);}
-  .btn-teacher{background:var(--indigo-600); color:#fff !important; padding:9px 18px; border-radius:9px; font-weight:600; font-size:0.9rem; box-shadow:var(--shadow-sm);}
-  .btn-teacher:hover{background:var(--indigo-700);}
 
   /* hero + sidebar grid */
   .hero-grid{max-width:1180px; margin:28px auto 0; padding:0 24px; display:grid; grid-template-columns:1fr; gap:22px;}
