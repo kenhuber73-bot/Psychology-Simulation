@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Woman With No Fear: A Case Study</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+<style>
+  :root {
+    --teal-950: #062825;
+    --teal-900: #0a3833;
+    --teal-800: #114a43;
+    --teal-700: #185f56;
+    --teal-500: #2a8a7c;
+    --teal-300: #7fc4b8;
+    --teal-100: #dcf0ec;
+    --cream: #faf7f0;
+    --ink: #1c2624;
+    --paper: #ffffff;
+    --gold: #c99a4b;
+    --gold-dim: #e9d4a7;
+    --serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.65;
+  }
+
+  .masthead {
+    background: linear-gradient(160deg, var(--teal-950), var(--teal-800) 70%);
+    color: var(--teal-100);
+    padding: 64px 24px 56px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .masthead::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 20% 30%, rgba(127,196,184,0.12), transparent 45%),
+                       radial-gradient(circle at 80% 70%, rgba(201,154,75,0.10), transparent 45%);
+    pointer-events: none;
+  }
+
+  .eyebrow {
+    font-family: var(--sans);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 12px;
+    color: var(--gold-dim);
+    font-weight: 600;
+    margin-bottom: 18px;
+  }
+
+  .masthead h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(32px, 5vw, 52px);
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+
+  .masthead .subtitle {
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--teal-300);
+    font-size: 18px;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  .frame {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 24px 100px;
+  }
+
+  .intro-note {
+    background: var(--paper);
+    border-left: 4px solid var(--gold);
+    padding: 20px 24px;
+    margin: -28px 0 48px;
+    font-size: 14.5px;
+    color: #4a5754;
+    box-shadow: 0 6px 24px rgba(6,40,37,0.08);
+    position: relative;
+    z-index: 2;
+  }
+
+  .installment {
+    margin-bottom: 8px;
+  }
+
+  .installment-label {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 56px 0 20px;
+  }
+
+  .installment-number {
+    font-family: var(--serif);
+    font-size: 15px;
+    color: var(--teal-700);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .installment-rule {
+    height: 1px;
+    background: var(--teal-300);
+    flex: 1;
+    opacity: 0.5;
+  }
+
+  .installment h2 {
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--teal-950);
+    margin: 0 0 20px;
+  }
+
+  .installment p {
+    font-size: 16.5px;
+    color: #2c3634;
+    margin: 0 0 18px;
+  }
+
+  .installment ul {
+    margin: 0 0 18px;
+    padding-left: 22px;
+  }
+
+  .installment li {
+    margin-bottom: 10px;
+    font-size: 16px;
+  }
+
+  .quote-block {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 19px;
+    color: var(--teal-900);
+    background: var(--teal-100);
+    border-radius: 10px;
+    padding: 22px 26px;
+    margin: 24px 0;
+  }
+
+  .dream-block {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 18px;
+    color: var(--teal-900);
+    background: var(--paper);
+    border: 1px solid var(--teal-300);
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin: 24px 0;
+  }
+
+  .questions-box {
+    background: var(--paper);
+    border: 1px solid #e4ddca;
+    border-radius: 12px;
+    padding: 22px 26px;
+    margin: 32px 0 20px;
+  }
+
+  .questions-box h3 {
+    font-family: var(--sans);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--teal-700);
+    margin: 0 0 14px;
+    font-weight: 700;
+  }
+
+  .questions-box ol {
+    margin: 0;
+    padding-left: 20px;
+  }
+
+  .questions-box li {
+    margin-bottom: 10px;
+    font-size: 15.5px;
+    color: #2c3634;
+  }
+
+  .questions-box li:last-child { margin-bottom: 0; }
+
+  .response-area {
+    width: 100%;
+    min-height: 90px;
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 1px solid #d8d0ba;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 14.5px;
+    color: var(--ink);
+    resize: vertical;
+    background: var(--cream);
+  }
+  .response-area:focus {
+    outline: 2px solid var(--teal-500);
+    outline-offset: 1px;
+  }
+
+  .pause-trigger {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 28px 0 8px;
+    padding: 16px 22px;
+    background: var(--teal-950);
+    color: var(--teal-100);
+    border-radius: 10px;
+    border: none;
+    width: 100%;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 600;
+    text-align: left;
+    transition: background 0.15s ease;
+  }
+  .pause-trigger:hover { background: var(--teal-800); }
+  .pause-trigger:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  .pause-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .continue-btn {
+    display: inline-block;
+    margin-top: 24px;
+    padding: 13px 28px;
+    background: var(--teal-700);
+    color: var(--cream);
+    border: none;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .continue-btn:hover { background: var(--teal-500); }
+  .continue-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  .locked .installment-body { display: none; }
+
+  .checkpoint-label {
+    font-family: var(--sans);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .freud-installment {
+    background: linear-gradient(180deg, var(--teal-950), var(--teal-900));
+    color: var(--teal-100);
+    border-radius: 16px;
+    padding: 40px 36px;
+    margin: 56px 0 8px;
+  }
+  .freud-installment h2 { color: var(--cream); }
+  .freud-installment p, .freud-installment li { color: var(--teal-100); }
+  .freud-installment .installment-number { color: var(--gold-dim); }
+  .freud-installment .questions-box {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.15);
+  }
+  .freud-installment .questions-box li { color: var(--teal-100); }
+  .freud-installment .questions-box h3 { color: var(--gold-dim); }
+  .freud-installment .response-area {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.2);
+    color: var(--cream);
+  }
+
+  .freud-points {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 18px;
+  }
+  .freud-points li {
+    padding-left: 28px;
+    position: relative;
+    margin-bottom: 16px;
+  }
+  .freud-points li::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    color: var(--gold-dim);
+  }
+
+  .task-section {
+    background: var(--paper);
+    border: 2px solid var(--teal-700);
+    border-radius: 16px;
+    padding: 36px;
+    margin-top: 48px;
+  }
+  .task-section h2 {
+    font-family: var(--serif);
+    font-size: 26px;
+    color: var(--teal-950);
+    margin: 0 0 8px;
+  }
+  .task-question {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 19px;
+    color: var(--teal-800);
+    margin: 0 0 24px;
+  }
+
+  .lens-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 24px 0 28px;
+  }
+  @media (max-width: 560px) {
+    .lens-grid { grid-template-columns: 1fr; }
+  }
+  .lens-card {
+    background: var(--teal-100);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .lens-card h4 {
+    margin: 0 0 6px;
+    font-size: 14px;
+    color: var(--teal-900);
+    font-family: var(--sans);
+  }
+  .lens-card p {
+    margin: 0;
+    font-size: 13.5px;
+    color: #3a4a46;
+  }
+  .lens-card.full-width { grid-column: 1 / -1; }
+
+  .final-response {
+    width: 100%;
+    min-height: 220px;
+    margin-top: 8px;
+    padding: 16px 18px;
+    border: 1px solid #d8d0ba;
+    border-radius: 10px;
+    font-family: var(--sans);
+    font-size: 15.5px;
+    line-height: 1.6;
+    color: var(--ink);
+    resize: vertical;
+    background: var(--cream);
+  }
+  .final-response:focus {
+    outline: 2px solid var(--teal-500);
+    outline-offset: 1px;
+  }
+
+  .submit-btn {
+    margin-top: 20px;
+    padding: 14px 32px;
+    background: var(--gold);
+    color: var(--teal-950);
+    border: none;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 15.5px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .submit-btn:hover { background: #d9ab5f; }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(6,40,37,0.72);
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 100;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal-box {
+    background: var(--cream);
+    border-radius: 16px;
+    max-width: 460px;
+    width: 100%;
+    padding: 36px 32px 30px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    animation: pop-in 0.18s ease;
+  }
+  @keyframes pop-in {
+    from { transform: scale(0.94); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .modal-icon { font-size: 34px; margin-bottom: 14px; }
+
+  .modal-box h3 {
+    font-family: var(--serif);
+    font-size: 22px;
+    color: var(--teal-950);
+    margin: 0 0 12px;
+  }
+
+  .modal-box p {
+    font-size: 15px;
+    color: #4a5754;
+    margin: 0 0 26px;
+    line-height: 1.55;
+  }
+
+  .modal-close {
+    padding: 12px 30px;
+    background: var(--teal-700);
+    color: var(--cream);
+    border: none;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .modal-close:hover { background: var(--teal-500); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .modal-box { animation: none; }
+    .pause-trigger, .continue-btn, .modal-close { transition: none; }
+  }
+</style>
+</style>
+</head>
+<body>
+
+<div id="activity-locked" style="max-width:480px; margin:80px auto; padding:0 24px; text-align:center; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif; color:#2c3634;">
+  <p style="font-size:16px;">This activity requires a link from your teacher.</p>
+</div>
+
+<div id="activity-content" style="display:none;">
+
+<div class="masthead">
+  <div class="eyebrow">Psychology Simulations · Biological Basis of Behavior · The Amygdala</div>
+  <h1>The Woman With No Fear</h1>
+  <p class="subtitle">A case study in interpretation, told in five parts</p>
+</div>
+
+<div class="frame">
+
+  <div class="intro-note">
+    A retelling of the real, published case of S.M. (also called SM-046), the most extensively studied patient in the neuroscience of fear. All events described are drawn from decades of published research on her case. Read each part in order, answer the questions, and discuss with your group when prompted before moving on.
+  </div>
+
+  <!-- INSTALLMENT 1 -->
+  <div class="installment" id="inst-1">
+    <div class="installment-label">
+      <span class="installment-number">PART ONE</span>
+      <span class="installment-rule"></span>
+    </div>
+    <h2>The Patient Known as S.M.</h2>
+    <p>S.M. is an American woman first described in the scientific literature in 1994. As a young child, she was diagnosed with an extremely rare genetic condition called Urbach-Wiethe disease. In most patients, the disease mainly affects the skin and vocal cords — but in S.M., it did something else: it slowly calcified and destroyed a small, almond-shaped structure deep in each side of her brain, called the amygdala. By late childhood, both her left and right amygdalae were completely gone.</p>
+    <p>Everything else about her brain — memory, language, reasoning, movement — developed normally. She grew up, went to school, made friends, had a family. There was only one thing consistently, strikingly different about her, something researchers would spend the next three decades documenting in extraordinary detail.</p>
+    <p>The media eventually gave her a nickname:</p>
+    <div class="quote-block">"The Woman With No Fear."</div>
+
+    <div class="questions-box">
+      <h3>Thinking Questions</h3>
+      <ol>
+        <li>Based on what you already know about the brain, what do you predict the amygdala's main function might be?</li>
+        <li>What might it actually look like, day to day, for someone to have "no fear"? Is that necessarily a good thing?</li>
+      </ol>
+      <textarea class="response-area" placeholder="Jot your thoughts here..."></textarea>
+    </div>
+
+    <button class="pause-trigger" data-modal="pause-1">
+      <span class="pause-icon">⏸</span>
+      <span>Pause here — discuss with a partner or group</span>
+    </button>
+
+    <div class="questions-box" style="margin-top:20px;">
+      <div class="checkpoint-label">Working Theory Checkpoint</div>
+      <p style="margin:0 0 10px; font-size:14.5px;">Before reading on, write your first hypothesis about what losing both amygdalae would actually do to a person's behavior and daily life.</p>
+      <textarea class="response-area" placeholder="My working theory..."></textarea>
+    </div>
+
+    <button class="continue-btn" data-reveal="inst-2">Continue to Part Two →</button>
+  </div>
+
+  <!-- INSTALLMENT 2 -->
+  <div class="installment locked" id="inst-2">
+    <div class="installment-body">
+    <div class="installment-label">
+      <span class="installment-number">PART TWO</span>
+      <span class="installment-rule"></span>
+    </div>
+    <h2>Testing the Limits</h2>
+    <p>Researchers didn't just ask S.M. whether she felt afraid — they tried to actually scare her, using some of the most reliable fear-inducing stimuli known to psychology:</p>
+    <ul>
+      <li>She was taken to an exotic pet store and asked to handle <strong>live snakes and spiders</strong>, including large tarantulas — animals that trigger near-universal disgust and fear responses in humans, even those who've never been bitten.</li>
+      <li>She was walked through <strong>Waverly Hills Sanatorium</strong>, a real abandoned tuberculosis hospital used as a haunted house attraction, complete with actors jumping out at visitors.</li>
+      <li>She was shown clips from some of the most fear-inducing films ever made — <em>The Blair Witch Project</em>, <em>The Shining</em>, and <em>The Silence of the Lambs</em>.</li>
+    </ul>
+    <p>Across all three tests, S.M. showed no fear whatsoever. Not suppressed fear, not bravery in the face of fear — genuine absence of it. Instead, she reported <strong>interest, curiosity, and excitement</strong>. She reached out to touch the tarantula. She wanted to know more about the "monsters" jumping out at her in the haunted house.</p>
+    <p>But here's the detail researchers found just as interesting: when she was shown film clips that weren't about fear — ones designed to trigger happiness, or disgust — she reacted completely normally, with appropriate emotional expressions matching the content.</p>
+
+    <div class="questions-box">
+      <h3>Thinking Questions</h3>
+      <ol>
+        <li>Why do you think S.M.'s emotional reactions were normal for happiness and disgust, but completely absent for fear specifically?</li>
+        <li>What does her curiosity and excitement — rather than blankness — suggest about what's actually missing?</li>
+      </ol>
+      <textarea class="response-area" placeholder="Jot your thoughts here..."></textarea>
+    </div>
+
+    <button class="pause-trigger" data-modal="pause-2">
+      <span class="pause-icon">⏸</span>
+      <span>Pause here — discuss with a partner or group</span>
+    </button>
+
+    <div class="questions-box" style="margin-top:20px;">
+      <div class="checkpoint-label">Checkpoint</div>
+      <p style="margin:0 0 10px; font-size:14.5px;">Update your theory based on these new details.</p>
+      <textarea class="response-area" placeholder="My updated theory..."></textarea>
+    </div>
+
+    <button class="continue-btn" data-reveal="inst-3">Continue to Part Three →</button>
+    </div>
+  </div>
+  <!-- INSTALLMENT 3 -->
+  <div class="installment locked" id="inst-3">
+    <div class="installment-body">
+    <div class="installment-label">
+      <span class="installment-number">PART THREE</span>
+      <span class="installment-rule"></span>
+    </div>
+    <h2>A Life Without Fear</h2>
+    <p>Outside the lab, S.M.'s fearlessness shapes almost everything about how she moves through the world. She's described as extremely outgoing, warm, and uninhibited — she has an unusually strong pull toward approaching and physically engaging with other people, even complete strangers.</p>
+    <p>She also has almost no sense of personal space. She's comfortable standing nose-to-nose with a stranger, maintaining direct eye contact, in a way most people would find intensely uncomfortable. Interestingly, she does understand the concept of personal space intellectually — she just doesn't feel the discomfort that would normally regulate it for herself.</p>
+    <p>Researchers also found she has real trouble with something specific: reading negative social cues. She's markedly impaired at recognizing <strong>fear</strong> in other people's facial expressions, and struggles to judge how trustworthy or approachable a stranger's face is, even when the face is showing clear warning signs.</p>
+    <p>This combination — indiscriminate approach, no personal-space discomfort, and difficulty reading danger in faces — has had serious real-world consequences. Over her lifetime, S.M. has been held up at both knifepoint and gunpoint, was nearly killed in a domestic violence incident, and has received explicit death threats on multiple occasions.</p>
+    <p>In each case, witnesses and researchers noted the same thing: she showed none of the urgency, desperation, or self-protective behavior that would normally accompany a life-threatening situation.</p>
+
+    <div class="questions-box">
+      <h3>Thinking Questions</h3>
+      <ol>
+        <li>Do you think S.M.'s history of dangerous encounters is mostly bad luck, or a direct consequence of her condition? Explain your reasoning.</li>
+        <li>She understands the concept of personal space but doesn't feel it. What does that tell you about the difference between knowing a social rule and having an emotional reaction that enforces it?</li>
+      </ol>
+      <textarea class="response-area" placeholder="Jot your thoughts here..."></textarea>
+    </div>
+
+    <button class="pause-trigger" data-modal="pause-3">
+      <span class="pause-icon">⏸</span>
+      <span>Pause here — discuss with a partner or group</span>
+    </button>
+
+    <div class="questions-box" style="margin-top:20px;">
+      <div class="checkpoint-label">Checkpoint</div>
+      <p style="margin:0 0 10px; font-size:14.5px;">Update your theory. Does the amygdala just process fear, or does it do something broader?</p>
+      <textarea class="response-area" placeholder="My updated theory..."></textarea>
+    </div>
+
+    <button class="continue-btn" data-reveal="inst-4">Continue to Part Four →</button>
+    </div>
+  </div>
+
+  <!-- INSTALLMENT 4 -->
+  <div class="installment locked" id="inst-4">
+    <div class="installment-body">
+    <div class="installment-label">
+      <span class="installment-number">PART FOUR</span>
+      <span class="installment-rule"></span>
+    </div>
+    <h2>The Twist</h2>
+    <p>For years, S.M.'s case seemed to tell a clean story: the amygdala is the brain's "fear center," and without it, fear simply doesn't happen. Then, in a later study, researchers tried one more thing.</p>
+    <p>Instead of showing her something frightening to look at, they had her breathe in a mixture of air with a higher-than-normal concentration of carbon dioxide — a safe, temporary manipulation that produces the physical sensation of suffocating, even though the person is in no real danger.</p>
+    <div class="dream-block">S.M. — and other patients with the same rare bilateral amygdala damage — didn't just react. They experienced fear and panic attacks that were <em>more intense</em> than those of neurologically healthy people breathing the exact same mixture.</div>
+    <p>S.M. described the feeling as completely novel to her — something she had never experienced before, not in the haunted house, not with the tarantula, not watching <em>The Shining</em>.</p>
+    <p>Researchers also found something else notable about her memory. Normally, emotionally intense experiences get "tagged" for stronger long-term memory storage — a process that depends on the amygdala. In S.M., this enhancement doesn't happen: she remembers emotional and non-emotional information at the same, ordinary strength. Her memory for neutral information works completely normally.</p>
+
+    <div class="questions-box">
+      <h3>Thinking Questions</h3>
+      <ol>
+        <li>This seems to contradict everything from Parts Two and Three. How could someone with no amygdala feel intense panic from suffocation, but zero fear from a tarantula or a horror movie?</li>
+        <li>What might this suggest about whether "fear" is really just one single system in the brain?</li>
+      </ol>
+      <textarea class="response-area" placeholder="Jot your thoughts here..."></textarea>
+    </div>
+
+    <button class="pause-trigger" data-modal="pause-4">
+      <span class="pause-icon">⏸</span>
+      <span>Pause here — discuss with a partner or group</span>
+    </button>
+
+    <div class="questions-box" style="margin-top:20px;">
+      <div class="checkpoint-label">Final Checkpoint — Before the Reveal</div>
+      <p style="margin:0 0 10px; font-size:14.5px;">Write your best full theory of what the amygdala actually does, using everything you've read so far — the external threats she doesn't fear, her social/approach behavior, her memory differences, and the suffocation panic finding.</p>
+      <textarea class="response-area" placeholder="My full theory..." style="min-height:120px;"></textarea>
+    </div>
+
+    <button class="continue-btn" data-reveal="inst-5">Reveal the Scientific Interpretation →</button>
+    </div>
+  </div>
+  <!-- INSTALLMENT 5 -->
+  <div class="installment locked" id="inst-5">
+    <div class="installment-body">
+    <div class="freud-installment">
+      <div class="installment-label">
+        <span class="installment-number">PART FIVE</span>
+        <span class="installment-rule"></span>
+      </div>
+      <h2>The Scientific Interpretation</h2>
+      <p>S.M.'s case ended up doing more than confirming the amygdala matters for fear — it helped researchers realize fear itself isn't one single system.</p>
+      <ul class="freud-points">
+        <li>The amygdala appears essential for processing <strong>external, learned threat cues</strong> — things you perceive with your senses and have to recognize as dangerous: a spider, a threatening face, a horror movie, a knife pulled on you in the street. This matches decades of research on amygdala-dependent <strong>fear conditioning</strong>, where the amygdala links a cue (like a tone or an image) to a threat response.</li>
+        <li>Her impaired ability to read <strong>fear in other people's faces</strong>, and to judge trustworthiness, fits this same system: recognizing danger signals from the outside world is exactly what her damaged structure would normally support.</li>
+        <li>Her lack of personal-space discomfort and indiscriminate social approach reflect the same gap — normally, the amygdala helps generate the felt sense of "this is too close, this is risky," which shapes behavior even when you consciously know the social rule.</li>
+        <li>Her memory differences fit too: the amygdala normally helps <strong>tag emotionally arousing experiences</strong> for stronger memory consolidation. Without it, emotional and neutral experiences get remembered at the same ordinary strength.</li>
+        <li>But the suffocation finding pointed to something the amygdala <strong>doesn't</strong> control: <strong>interoceptive</strong> threat — danger signals that come from inside the body itself, like rising CO2 levels signaling suffocation. That kind of panic appears to run through a different, older pathway, involving structures like the brainstem, that doesn't require the amygdala at all — and may even normally be partly regulated <em>by</em> the amygdala, which could explain why S.M. and other amygdala-damaged patients panicked <em>more</em> intensely, not less.</li>
+      </ul>
+      <p>The current scientific interpretation, in short: the amygdala isn't a single "fear center" for all fear everywhere. It's specifically critical for detecting and learning from <strong>external</strong> threat cues in the environment — while a separate, more primitive system handles <strong>internal</strong> bodily threat signals like suffocation, and that system may not need the amygdala's involvement at all.</p>
+
+      <div class="questions-box">
+        <h3>Thinking Questions</h3>
+        <ol>
+          <li>Which part of this interpretation do you find most convincing? Which part feels like it needs more evidence?</li>
+          <li>Does splitting "fear" into an external-threat system and an internal-threat system change how you'd define fear as a psychological concept?</li>
+        </ol>
+        <textarea class="response-area" placeholder="Jot your thoughts here..."></textarea>
+      </div>
+
+      <button class="pause-trigger" data-modal="pause-5">
+        <span class="pause-icon">⏸</span>
+        <span>Pause here — discuss with a partner or group</span>
+      </button>
+    </div>
+
+    <button class="continue-btn" data-reveal="task">Continue to Your Task →</button>
+    </div>
+  </div>
+
+  <!-- TASK -->
+  <div class="installment locked" id="task">
+    <div class="installment-body">
+    <div class="task-section">
+      <h2>Your Task</h2>
+      <p class="task-question">Is the amygdala really the brain's "fear center" — or does S.M.'s case suggest something more complicated?</p>
+      <p style="font-size:15px; color:#4a5754;">Consider these angles as you write:</p>
+
+      <div class="lens-grid">
+        <div class="lens-card">
+          <h4>Two-Systems View</h4>
+          <p>LeDoux's model of amygdala-dependent "learned" fear vs. Panksepp's separate brainstem-based panic/suffocation system. Does treating "fear" as two different systems, rather than one, better explain S.M.'s pattern of results?</p>
+        </div>
+        <div class="lens-card">
+          <h4>Learning History</h4>
+          <p>Could some of S.M.'s behavior reflect a learning deficit rather than a feeling deficit? If she can't detect threat cues in the first place, she'd never get the chance to learn caution around them — regardless of whether she's capable of "feeling" fear internally.</p>
+        </div>
+        <div class="lens-card">
+          <h4>Modularity of Emotion</h4>
+          <p>Does this case support the idea that emotions are built from separate, specialized brain modules rather than one unified "emotion center"? What would that mean for other emotions like disgust or happiness?</p>
+        </div>
+        <div class="lens-card">
+          <h4>Real-World Implications</h4>
+          <p>Given her repeated history of victimization, should S.M.'s case change how we think about the adaptive function of fear — not as an unpleasant feeling to avoid, but as a system that actively keeps people safe?</p>
+        </div>
+      </div>
+
+      <p style="font-size:15px; color:#2c3634;">Write a short response (aim for one strong paragraph, or more if you want) that either:</p>
+      <ol style="font-size:15px; color:#2c3634;">
+        <li style="margin-bottom:10px;"><strong>Defends the "amygdala = fear center" model</strong> — explain which pieces of evidence you find most convincing and why a single-system view still holds up, OR</li>
+        <li><strong>Argues for a more complicated picture</strong> — pick one angle above (or combine more than one) and explain how it accounts for the evidence, addressing at least one detail from the case (the suffocation panic, the impaired face-reading, or the memory differences).</li>
+      </ol>
+      <p style="font-size:14px; color:#6a7674; font-style:italic;">There's no single correct answer here — this is an active area of ongoing research. What matters is how well your interpretation fits the evidence you were given.</p>
+
+      <textarea class="final-response" id="final-response-text" placeholder="Write your response here..."></textarea>
+      <br>
+      <button class="submit-btn" id="download-btn">Download My Response</button>
+      <span id="download-status" style="margin-left:14px; font-size:13.5px; color:#4a5754;"></span>
+    </div>
+    </div>
+  </div>
+
+</div>
+<!-- MODALS -->
+<div class="modal-overlay" id="pause-1">
+  <div class="modal-box">
+    <div class="modal-icon">💬</div>
+    <h3>Discuss with your group</h3>
+    <p>Compare your initial hypotheses about the amygdala's function. Did anyone predict something you hadn't considered?</p>
+    <button class="modal-close">Resume Reading</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pause-2">
+  <div class="modal-box">
+    <div class="modal-icon">💬</div>
+    <h3>Discuss with your group</h3>
+    <p>Share your updated theories. Does anyone in your group have a different explanation for why happiness and disgust stayed normal?</p>
+    <button class="modal-close">Resume Reading</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pause-3">
+  <div class="modal-box">
+    <div class="modal-icon">💬</div>
+    <h3>Discuss with your group</h3>
+    <p>Debate whether her dangerous encounters were bad luck or a direct consequence of her condition. Try to find someone who disagrees with you.</p>
+    <button class="modal-close">Resume Reading</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pause-4">
+  <div class="modal-box">
+    <div class="modal-icon">💬</div>
+    <h3>Discuss with your group</h3>
+    <p>Before writing your final theory individually, talk through the suffocation-panic finding with your group. Does anyone have a way to reconcile it with everything else?</p>
+    <button class="modal-close">Resume Reading</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pause-5">
+  <div class="modal-box">
+    <div class="modal-icon">💬</div>
+    <h3>Discuss with your group</h3>
+    <p>Before writing your final individual response, discuss the scientific interpretation as a group. Try to have at least one person defend the simple "fear center" model and one person challenge it.</p>
+    <button class="modal-close">Resume Reading</button>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.pause-trigger').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const modal = document.getElementById(btn.dataset.modal);
+      if (modal) modal.classList.add('open');
+    });
+  });
+
+  document.querySelectorAll('.modal-close').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.closest('.modal-overlay').classList.remove('open');
+    });
+  });
+
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.classList.remove('open');
+    });
+  });
+
+  document.getElementById('download-btn').addEventListener('click', () => {
+    const text = document.getElementById('final-response-text').value.trim();
+    const statusEl = document.getElementById('download-status');
+    if (!text) {
+      statusEl.textContent = 'Write a response before downloading.';
+      return;
+    }
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'no-fear-response.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    statusEl.textContent = 'Downloaded.';
+  });
+
+  document.querySelectorAll('.continue-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = document.getElementById(btn.dataset.reveal);
+      if (target) {
+        target.classList.remove('locked');
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+</script>
+
+</div>
+
+<script src="../../js/supabase-config.js"></script>
+<script src="../../js/activity-gate.js"></script>
+<script>initActivityGate('narrative-cases/no-fear/no-fear.html');</script>
+
+</body>
+</html>
