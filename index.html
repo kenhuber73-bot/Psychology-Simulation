@@ -5,418 +5,542 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Psych Sims — Interactive Psychology Classroom Resources</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#F1E9D2; --paper-dark:#E3D5AE; --folder:#D8C393; --ink:#2B2A25; --ink-soft:#5C5648;
-    --navy:#2F4858; --red:#A13D3D; --sage:#5E7A52; --line:#C7B78E; --white-card:#FBF7EC;
+    --indigo-700:#4838C7; --indigo-600:#5B4FE5; --indigo-500:#7468F0; --indigo-100:#ECE9FE; --lavender-50:#F6F4FF;
+    --ink:#1F2233; --ink-soft:#5B5F76; --ink-faint:#8A8DA3; --line:#E7E5F5; --white:#FFFFFF; --surface:#FBFAFF;
+    --green:#16A34A; --green-bg:#E9F9EF; --amber:#B45309; --amber-bg:#FDF3E3; --gray:#6B7280; --gray-bg:#F1F1F5;
+    --shadow-sm:0 1px 2px rgba(31,34,51,.06); --shadow-md:0 6px 20px rgba(75,56,199,.08); --shadow-card:0 2px 10px rgba(31,34,51,.06);
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
-  body{
-    background:var(--paper); color:var(--ink); font-family:'Space Grotesk', sans-serif;
-  }
-  a{color:inherit;}
+  body{background:var(--surface); color:var(--ink); font-family:'Inter', sans-serif; -webkit-font-smoothing:antialiased;}
+  a{color:inherit; text-decoration:none;}
+  h1,h2,h3,h4{font-family:'Inter', sans-serif; margin:0;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 24px;}
+  .eyebrow{font-family:'JetBrains Mono', monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--indigo-600); font-weight:500;}
 
-  /* folder-tab nav, echoing the simulation's own tab bar */
-  .topnav{display:flex; gap:6px; padding:18px 24px 0; max-width:1100px; margin:0 auto; flex-wrap:wrap; position:relative;}
-  .topnav a, .topnav button.nav-tab{
-    font-family:'Courier Prime', monospace; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em;
-    padding:9px 18px; border:1px solid var(--line); border-bottom:none; background:var(--paper-dark);
-    color:var(--ink-soft); border-radius:7px 7px 0 0; text-decoration:none; opacity:0.6;
-    cursor:pointer; display:inline-flex; align-items:center; gap:5px; font-weight:400;
+  /* header */
+  header.site-header{position:sticky; top:0; z-index:50; background:rgba(255,255,255,.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--line);}
+  .header-inner{max-width:1180px; margin:0 auto; padding:14px 24px; display:flex; align-items:center; gap:28px;}
+  .logo{display:flex; align-items:center; gap:9px; font-weight:800; font-size:1.12rem; color:var(--ink); margin-right:auto;}
+  .logo svg{width:30px; height:30px; flex-shrink:0;}
+  .logo .sub{display:block; font-family:'JetBrains Mono', monospace; font-size:0.58rem; letter-spacing:0.1em; color:var(--ink-faint); font-weight:500; text-transform:uppercase; margin-top:-2px;}
+  nav.mainnav{display:flex; align-items:center; gap:2px;}
+  nav.mainnav > a, nav.mainnav .nav-item > button{
+    font-size:0.92rem; font-weight:600; color:var(--ink-soft); padding:9px 14px; border-radius:8px;
+    background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:5px; font-family:'Inter',sans-serif;
   }
-  .topnav a.active, .topnav .nav-item.open button.nav-tab{background:var(--white-card); color:var(--ink); opacity:1; font-weight:700; border-color:var(--ink);}
-  .topnav a:hover:not(.active), .topnav button.nav-tab:hover{opacity:0.85;}
-  .topnav .nav-item{position:relative;}
-  .topnav .chev{font-size:0.6rem; transition:transform .12s ease;}
-  .topnav .nav-item.open .chev{transform:rotate(180deg);}
-
+  nav.mainnav > a.active{color:var(--indigo-600);}
+  nav.mainnav > a:hover, nav.mainnav .nav-item > button:hover{color:var(--ink); background:var(--lavender-50);}
+  nav.mainnav .chev{font-size:0.6rem; transition:transform .12s ease; color:var(--ink-faint);}
+  nav.mainnav .nav-item.open .chev{transform:rotate(180deg);}
+  nav.mainnav .nav-item{position:relative;}
   .nav-panel{
-    display:none; position:absolute; top:100%; left:0; min-width:260px; z-index:40;
-    background:var(--white-card); border:1px solid var(--ink); border-radius:0 8px 8px 8px;
-    box-shadow:5px 5px 0 rgba(43,42,37,0.12); padding:14px;
+    display:none; position:absolute; top:calc(100% + 6px); left:0; min-width:250px; z-index:40;
+    background:var(--white); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow-md); padding:10px;
   }
   .nav-item.open .nav-panel{display:block;}
-  .nav-panel .panel-eyebrow{font-family:'Courier Prime', monospace; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft); margin:0 0 10px;}
+  .nav-panel .panel-eyebrow{font-family:'JetBrains Mono', monospace; font-size:0.64rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-faint); margin:4px 8px 8px;}
   .nav-panel a.panel-link, .nav-panel .panel-link-disabled{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
-    padding:8px 10px; border-radius:6px; text-decoration:none; color:var(--ink); font-size:0.86rem;
-    border-top:1px dashed var(--line);
+    padding:9px 10px; border-radius:8px; font-size:0.86rem; color:var(--ink); font-weight:500;
   }
-  .nav-panel .panel-link-disabled{color:var(--ink-soft); cursor:default;}
-  .nav-panel a.panel-link:first-of-type, .nav-panel .panel-link-disabled:first-of-type{border-top:none;}
-  .nav-panel a.panel-link:hover{background:var(--paper);}
-  .nav-panel .status{
-    font-family:'Courier Prime', monospace; font-size:0.58rem; text-transform:uppercase; letter-spacing:0.04em;
-    padding:2px 7px; border-radius:10px; white-space:nowrap; font-weight:700; color:white; background:var(--ink-soft);
-  }
-  .nav-panel .status.progress{background:var(--navy);}
-  .nav-panel .panel-footer{margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);}
-  .nav-panel .panel-footer a{font-family:'Courier Prime', monospace; font-size:0.74rem; text-decoration:underline; color:var(--ink);}
+  .nav-panel .panel-link-disabled{color:var(--ink-faint); cursor:default;}
+  .nav-panel a.panel-link:hover{background:var(--lavender-50);}
+  .nav-panel .status{font-family:'JetBrains Mono', monospace; font-size:0.58rem; text-transform:uppercase; padding:2px 7px; border-radius:10px; font-weight:600; color:var(--indigo-700); background:var(--indigo-100);}
+  .nav-panel .panel-footer{margin-top:4px; padding:8px 10px 4px; border-top:1px solid var(--line);}
+  .nav-panel .panel-footer a{font-size:0.8rem; font-weight:600; color:var(--indigo-600);}
+  .btn-teacher{background:var(--indigo-600); color:#fff !important; padding:9px 18px; border-radius:9px; font-weight:600; font-size:0.9rem; box-shadow:var(--shadow-sm);}
+  .btn-teacher:hover{background:var(--indigo-700);}
 
-  /* hero, styled like an intake case file */
-  .hero-wrap{max-width:1100px; margin:0 auto; padding:0 24px;}
+  /* hero + sidebar grid */
+  .hero-grid{max-width:1180px; margin:28px auto 0; padding:0 24px; display:grid; grid-template-columns:1fr; gap:22px;}
+  @media(min-width:980px){.hero-grid{grid-template-columns:2.15fr 1fr;}}
+
   .hero-card{
-    background:var(--white-card); border:1px solid var(--ink); border-radius:0 10px 10px 10px;
-    padding:56px 48px; box-shadow:6px 6px 0 rgba(43,42,37,0.08); margin-bottom:60px;
-    position:relative; overflow:hidden;
+    background:linear-gradient(135deg, var(--lavender-50) 0%, #EFEBFF 100%); border:1px solid var(--line);
+    border-radius:20px; padding:44px 40px; display:grid; grid-template-columns:1fr; gap:28px; align-items:center; overflow:hidden; position:relative;
   }
-  .hero-stamp{
-    display:inline-block; border:2.5px solid var(--red); color:var(--red);
-    font-family:'Courier Prime', monospace; font-weight:700; font-size:0.78rem;
-    text-transform:uppercase; letter-spacing:0.1em; padding:6px 14px; border-radius:4px;
-    transform:rotate(-4deg); margin-bottom:26px;
-  }
-  .wordmark{
-    font-size:clamp(2.4rem, 6vw, 4.2rem); font-weight:800; line-height:1; margin:0 0 18px; letter-spacing:-0.01em;
-  }
-  .wordmark .a{color:var(--sage);}
-  .wordmark .b{color:var(--ink);}
-  .tagline{
-    font-family:'Courier Prime', monospace; font-size:1.05rem; color:var(--ink-soft);
-    margin:0 0 28px; max-width:560px; line-height:1.6;
-  }
-  .hero-desc{font-size:1rem; color:var(--ink-soft); max-width:600px; line-height:1.65; margin:0 0 34px;}
-  .cta-btn{
-    display:inline-block; font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:1rem;
-    background:var(--navy); color:var(--white-card); border:none; border-radius:7px;
-    padding:16px 30px; cursor:pointer; text-decoration:none;
-    box-shadow:3px 3px 0 rgba(43,42,37,0.3); transition:transform 0.12s ease, box-shadow 0.12s ease;
-  }
-  .cta-btn:hover{transform:translate(-2px,-2px); box-shadow:5px 5px 0 rgba(43,42,37,0.4);}
-  .perforation{
-    position:absolute; left:0; right:0; bottom:0; height:1px;
-    background-image:linear-gradient(to right, var(--line) 60%, transparent 0%);
-    background-size:14px 1px; background-repeat:repeat-x;
-  }
+  @media(min-width:760px){.hero-card{grid-template-columns:1.15fr 0.85fr; padding:48px 44px;}}
+  .hero-h1{font-size:clamp(1.9rem, 3.4vw, 2.6rem); font-weight:800; line-height:1.14; letter-spacing:-0.01em; margin:0 0 14px;}
+  .hero-h1 .accent{color:var(--indigo-600);}
+  .hero-desc{font-size:1rem; color:var(--ink-soft); line-height:1.6; max-width:460px; margin:0 0 26px;}
+  .hero-ctas{display:flex; gap:12px; flex-wrap:wrap;}
+  .btn-primary{background:var(--indigo-600); color:#fff; padding:13px 22px; border-radius:10px; font-weight:600; font-size:0.94rem; box-shadow:var(--shadow-sm); display:inline-flex; align-items:center; gap:8px;}
+  .btn-primary:hover{background:var(--indigo-700);}
+  .btn-secondary{background:#fff; color:var(--ink); border:1px solid var(--line); padding:13px 22px; border-radius:10px; font-weight:600; font-size:0.94rem; display:inline-flex; align-items:center; gap:8px;}
+  .btn-secondary:hover{border-color:var(--indigo-500); color:var(--indigo-600);}
+  .hero-art{display:flex; align-items:center; justify-content:center; position:relative;}
+  .hero-art svg{width:100%; max-width:280px; height:auto;}
 
-  /* feature row */
-  .features{
-    max-width:1100px; margin:0 auto 70px; padding:0 24px;
-    display:grid; grid-template-columns:1fr; gap:34px;
-  }
-  @media(min-width:760px){.features{grid-template-columns:repeat(4,1fr);}}
-  .feature{text-align:left;}
-  .feature svg{width:34px; height:34px; margin-bottom:14px; stroke:var(--navy);}
-  .feature h4{
-    font-size:0.82rem; text-transform:uppercase; letter-spacing:0.07em; margin:0 0 8px; color:var(--ink);
-  }
-  .feature p{font-size:0.88rem; color:var(--ink-soft); margin:0; line-height:1.55;}
+  aside.side-col{display:flex; flex-direction:column; gap:16px;}
+  .side-card{background:#fff; border:1px solid var(--line); border-radius:16px; padding:20px 20px 22px; box-shadow:var(--shadow-card);}
+  .side-card h3{font-size:1rem; font-weight:700; margin:0 0 6px;}
+  .side-card p{font-size:0.85rem; color:var(--ink-soft); line-height:1.55; margin:0 0 16px;}
+  .side-btn{display:flex; align-items:center; gap:9px; width:100%; padding:11px 14px; border-radius:9px; font-weight:600; font-size:0.88rem; margin-bottom:9px; border:1px solid var(--line); background:#fff; color:var(--ink);}
+  .side-btn:last-child{margin-bottom:0;}
+  .side-btn.filled{background:var(--indigo-600); color:#fff; border-color:var(--indigo-600);}
+  .side-btn.filled:hover{background:var(--indigo-700);}
+  .side-btn:not(.filled):hover{border-color:var(--indigo-500); color:var(--indigo-600);}
+  .side-btn svg{width:16px; height:16px; flex-shrink:0;}
+  .quicklink-row{display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-top:1px solid var(--line); font-size:0.86rem; font-weight:500;}
+  .quicklink-row:first-of-type{border-top:none;}
+  .quicklink-row:hover{color:var(--indigo-600);}
+  .side-card.about{background:linear-gradient(160deg,#fff, var(--lavender-50));}
 
-  /* activities grid */
-  .activities-wrap{max-width:1100px; margin:0 auto; padding:0 24px 70px;}
-  .activities-wrap h2{
-    font-family:'Courier Prime', monospace; font-size:0.8rem; text-transform:uppercase;
-    letter-spacing:0.08em; color:var(--ink-soft); margin:0 0 22px; padding-bottom:10px;
-    border-bottom:1px dashed var(--line);
-  }
-  .card-grid{display:grid; grid-template-columns:1fr; gap:20px;}
-  @media(min-width:700px){.card-grid{grid-template-columns:1fr 1fr;}}
-  .card{
-    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
-    padding:24px; box-shadow:4px 4px 0 rgba(43,42,37,0.08); text-decoration:none; color:inherit;
-    display:block; transition:transform 0.12s ease, box-shadow 0.12s ease;
-  }
-  .card:hover{transform:translate(-2px,-2px); box-shadow:6px 6px 0 rgba(43,42,37,0.14);}
-  .card h3{margin:0 0 8px; font-size:1.1rem;}
-  .card p{margin:0; color:var(--ink-soft); font-size:0.9rem; line-height:1.55;}
-  .card .tag{
-    display:inline-block; font-family:'Courier Prime', monospace; font-size:0.68rem; text-transform:uppercase;
-    letter-spacing:0.05em; background:var(--sage); color:white; padding:3px 10px; border-radius:12px;
-    margin-bottom:10px; font-weight:700;
-  }
-  .card.coming-soon{cursor:default; opacity:0.62;}
-  .card.coming-soon:hover{transform:none; box-shadow:4px 4px 0 rgba(43,42,37,0.08);}
-  .card.coming-soon .tag{background:var(--ink-soft);}
-  .card .tag.try-now{background:var(--navy);}
-  .card .tag.locked{background:var(--red);}
-  .subsection{
-    font-family:'Space Grotesk', sans-serif; font-size:1rem; font-weight:700;
-    margin:34px 0 14px; color:var(--ink);
-  }
-  .activities-wrap .card-grid + .subsection{margin-top:34px;}
-  .cat-nav{
-    position:sticky; top:12px; z-index:20;
-    background:var(--white-card); border:1px solid var(--ink); border-radius:8px;
-    padding:12px 16px; margin:0 0 26px;
-    box-shadow:4px 4px 0 rgba(43,42,37,0.08);
-    display:flex; align-items:center; gap:12px;
-  }
-  .cat-nav-label{font-family:'Courier Prime', monospace; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft); white-space:nowrap;}
-  .cat-nav-select-wrap{position:relative; flex:1; max-width:320px;}
-  .cat-nav-btn{
-    width:100%; text-align:left; font-family:'Space Grotesk', sans-serif; font-size:0.92rem;
-    background:var(--paper); border:1px solid var(--line); border-radius:6px;
-    padding:9px 32px 9px 12px; cursor:pointer; color:var(--ink);
-  }
-  .cat-nav-btn::after{
-    content:"▾"; position:absolute; right:14px; top:50%; transform:translateY(-50%);
-    pointer-events:none; color:var(--ink-soft);
-  }
-  .cat-nav-menu{
-    display:none; position:absolute; top:calc(100% + 4px); left:0; right:0;
-    background:var(--white-card); border:1px solid var(--ink); border-radius:6px;
-    box-shadow:4px 4px 0 rgba(43,42,37,0.1); overflow:hidden; z-index:21;
-  }
-  .cat-nav-menu button{
-    display:block; width:100%; text-align:left; font-family:'Space Grotesk', sans-serif;
-    font-size:0.88rem; background:none; border:none; padding:10px 12px; cursor:pointer;
-    color:var(--ink); border-bottom:1px dashed var(--line);
-  }
+  /* search row */
+  .search-row{max-width:1180px; margin:24px auto 0; padding:0 24px; display:flex; gap:12px; flex-wrap:wrap;}
+  .search-box{flex:1; min-width:240px; display:flex; align-items:center; gap:10px; background:#fff; border:1px solid var(--line); border-radius:11px; padding:12px 16px; box-shadow:var(--shadow-card);}
+  .search-box svg{width:17px; height:17px; color:var(--ink-faint); flex-shrink:0;}
+  .search-box input{border:none; outline:none; font-family:'Inter'; font-size:0.92rem; width:100%; background:transparent; color:var(--ink);}
+  .cat-nav-select-wrap{position:relative; min-width:230px;}
+  .cat-nav-btn{width:100%; text-align:left; font-family:'Inter'; font-size:0.9rem; font-weight:500; background:#fff; border:1px solid var(--line); border-radius:11px; padding:12px 34px 12px 16px; cursor:pointer; color:var(--ink); box-shadow:var(--shadow-card);}
+  .cat-nav-btn::after{content:"▾"; position:absolute; right:16px; top:50%; transform:translateY(-50%); pointer-events:none; color:var(--ink-faint);}
+  .cat-nav-menu{display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; background:#fff; border:1px solid var(--line); border-radius:11px; box-shadow:var(--shadow-md); overflow:hidden; z-index:21;}
+  .cat-nav-menu button{display:block; width:100%; text-align:left; font-family:'Inter'; font-size:0.87rem; background:none; border:none; padding:10px 14px; cursor:pointer; color:var(--ink); border-bottom:1px solid var(--line);}
   .cat-nav-menu button:last-child{border-bottom:none;}
-  .cat-nav-menu button:hover{background:var(--paper);}
+  .cat-nav-menu button:hover{background:var(--lavender-50); color:var(--indigo-600);}
 
-  footer{
-    text-align:center; padding:34px 20px; color:var(--ink-soft);
-    font-family:'Courier Prime', monospace; font-size:0.78rem; border-top:1px dashed var(--line);
-    max-width:1100px; margin:0 auto;
-  }
+  /* featured */
+  .section-head{max-width:1180px; margin:44px auto 18px; padding:0 24px; display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+  .section-head h2{font-size:1.2rem; font-weight:800;}
+  .section-head .see-all{font-size:0.86rem; font-weight:600; color:var(--indigo-600);}
+
+  .featured-grid{max-width:1180px; margin:0 auto; padding:0 24px; display:grid; grid-template-columns:1fr; gap:18px;}
+  @media(min-width:700px){.featured-grid{grid-template-columns:1fr 1fr;}}
+  @media(min-width:1040px){.featured-grid{grid-template-columns:repeat(4,1fr);}}
+
+  .fcard{background:#fff; border:1px solid var(--line); border-radius:15px; overflow:hidden; box-shadow:var(--shadow-card); transition:transform .12s ease, box-shadow .12s ease; display:flex; flex-direction:column;}
+  .fcard:hover{transform:translateY(-3px); box-shadow:0 10px 24px rgba(75,56,199,.14);}
+  .fcard .tile{height:108px; display:flex; align-items:center; justify-content:center; position:relative;}
+  .fcard .tile svg{width:38px; height:38px; color:#fff; opacity:.95;}
+  .fcard .body{padding:16px 17px 18px; display:flex; flex-direction:column; gap:8px; flex:1;}
+  .cat-badge{display:inline-block; align-self:flex-start; font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; padding:3px 10px; border-radius:20px;}
+  .fcard h3{font-size:1rem; font-weight:700; line-height:1.3;}
+  .fcard p{font-size:0.84rem; color:var(--ink-soft); line-height:1.5; margin:0; flex:1;}
+  .meta-row{display:flex; align-items:center; gap:6px; font-size:0.78rem; color:var(--ink-faint); margin-top:2px; font-weight:500;}
+  .meta-row svg{width:13px; height:13px; flex-shrink:0;}
+
+  /* category color tokens */
+  .tile.case-studies{background:linear-gradient(135deg,#6D5FF5,#4838C7);}
+  .tile.experiments{background:linear-gradient(135deg,#4F8CF7,#2354D6);}
+  .tile.neuroscience{background:linear-gradient(135deg,#A855F7,#7C24C9);}
+  .tile.biology{background:linear-gradient(135deg,#34B76A,#158A4A);}
+  .tile.psych-tests{background:linear-gradient(135deg,#F5A72E,#C7790A);}
+  .tile.research{background:linear-gradient(135deg,#FB6F92,#D63A64);}
+  .tile.coming-soon{background:linear-gradient(135deg,#A5A8BC,#787C93);}
+  .badge.case-studies{background:var(--indigo-100); color:var(--indigo-700);}
+  .badge.experiments{background:#E4EEFF; color:#2354D6;}
+  .badge.neuroscience{background:#F4E8FF; color:#7C24C9;}
+  .badge.biology{background:#E4F8EC; color:#158A4A;}
+  .badge.psych-tests{background:var(--amber-bg); color:var(--amber);}
+  .badge.research{background:#FFE6EC; color:#D63A64;}
+  .badge.coming-soon{background:var(--gray-bg); color:var(--gray);}
+
+  /* activity library */
+  .library-wrap{max-width:1180px; margin:0 auto; padding:0 24px 30px;}
+  .subsection{font-size:1.02rem; font-weight:800; margin:38px 0 14px; display:flex; align-items:center; gap:10px;}
+  .subsection .dot{width:9px; height:9px; border-radius:50%; flex-shrink:0;}
+  .dot.case-studies{background:var(--indigo-600);} .dot.experiments{background:#2354D6;} .dot.neuroscience{background:#7C24C9;}
+  .dot.biology{background:#158A4A;} .dot.psych-tests{background:var(--amber);} .dot.research{background:#D63A64;} .dot.coming-soon{background:var(--gray);}
+  .card-grid{display:grid; grid-template-columns:1fr; gap:16px;}
+  @media(min-width:700px){.card-grid{grid-template-columns:1fr 1fr;}}
+  .card{background:#fff; border:1px solid var(--line); border-radius:13px; padding:20px; box-shadow:var(--shadow-card); display:block; transition:transform .12s ease, box-shadow .12s ease;}
+  .card:hover{transform:translateY(-2px); box-shadow:0 8px 20px rgba(31,34,51,.09);}
+  .card h3{margin:0 0 6px; font-size:1rem; font-weight:700;}
+  .card p{margin:0 0 10px; color:var(--ink-soft); font-size:0.87rem; line-height:1.55;}
+  .card.coming-soon{cursor:default; opacity:.7;}
+  .card.coming-soon:hover{transform:none; box-shadow:var(--shadow-card);}
+
+  /* how it works */
+  .howitworks{max-width:1180px; margin:56px auto 0; padding:0 24px;}
+  .howitworks-card{background:#fff; border:1px solid var(--line); border-radius:20px; padding:36px 40px; box-shadow:var(--shadow-card);}
+  .howitworks-card > h2{font-size:1.15rem; font-weight:800; margin-bottom:26px;}
+  .steps{display:grid; grid-template-columns:1fr; gap:26px;}
+  @media(min-width:760px){.steps{grid-template-columns:repeat(4,1fr);}}
+  .step{display:flex; gap:14px; align-items:flex-start;}
+  .step-num{width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#fff;}
+  .step-num svg{width:20px; height:20px;}
+  .step h4{font-size:0.92rem; font-weight:700; margin-bottom:4px;}
+  .step p{font-size:0.83rem; color:var(--ink-soft); line-height:1.5; margin:0;}
+  .step:nth-child(1) .step-num{background:var(--indigo-600);}
+  .step:nth-child(2) .step-num{background:#2354D6;}
+  .step:nth-child(3) .step-num{background:#158A4A;}
+  .step:nth-child(4) .step-num{background:#C7790A;}
+
+  footer{margin-top:60px; border-top:1px solid var(--line); padding:26px 24px; background:#fff;}
+  .footer-inner{max-width:1180px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;}
+  .footer-inner .copy{font-size:0.82rem; color:var(--ink-faint);}
+  .footer-links{display:flex; gap:20px;}
+  .footer-links a{font-size:0.82rem; color:var(--ink-soft); font-weight:500;}
+  .footer-links a:hover{color:var(--indigo-600);}
 </style>
 </head>
 <body>
 
-  <nav class="topnav" id="siteNav">
-    <a href="index.html" class="active">Home</a>
-    <div class="nav-item" data-nav="psychology">
-      <button class="nav-tab" type="button">Psychology <span class="chev">▾</span></button>
-      <div class="nav-panel">
-        <p class="panel-eyebrow">General Psychology Units</p>
-        <span class="panel-link-disabled">Coming soon <span class="status">Soon</span></span>
-      </div>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="7" fill="#5B4FE5"/><path d="M12 6.5c-1.8 0-3 1.2-3.1 2.6-.9.3-1.5 1.2-1.5 2.1 0 .5.2 1 .5 1.4-.3.4-.5.9-.5 1.4 0 1.1.9 2 2 2.1.2.9 1 1.5 1.9 1.5.4 0 .8-.1 1.1-.4.3.3.7.4 1.1.4.9 0 1.7-.6 1.9-1.5 1.1-.1 2-1 2-2.1 0-.5-.2-1-.5-1.4.3-.4.5-.9.5-1.4 0-.9-.6-1.8-1.5-2.1-.1-1.4-1.3-2.6-3-2.6z" stroke="#fff" stroke-width="1.1" stroke-linejoin="round"/><path d="M12 6.5v10.6M9.4 10.4c.7.3 1.6.3 2.6.1M14.6 10.4c-.7.3-1.6.3-2.6.1M9 13.6c.9.4 2 .4 3 .1M15 13.6c-.9.4-2 .4-3 .1" stroke="#fff" stroke-width="0.9" stroke-linecap="round"/></svg>
+        <span>Psych Sims<span class="sub">Simulation Lab</span></span>
+      </a>
+      <nav class="mainnav" id="siteNav">
+        <a href="index.html" class="active">Home</a>
+        <div class="nav-item" data-nav="psychology">
+          <button type="button">Psychology <span class="chev">▾</span></button>
+          <div class="nav-panel">
+            <p class="panel-eyebrow">General Psychology Units</p>
+            <span class="panel-link-disabled">Coming soon <span class="status">Soon</span></span>
+          </div>
+        </div>
+        <div class="nav-item" data-nav="ib">
+          <button type="button">IB Psychology <span class="chev">▾</span></button>
+          <div class="nav-panel">
+            <p class="panel-eyebrow">IB Psychology Units</p>
+            <a href="unit-health-wellbeing.html" class="panel-link">Health and Well-Being <span class="status">In Progress</span></a>
+            <span class="panel-link-disabled">History of Psychology <span class="status">Soon</span></span>
+            <span class="panel-link-disabled">Human Relationships <span class="status">Soon</span></span>
+            <div class="panel-footer"><a href="ib-psychology.html">See all IB Psychology units →</a></div>
+          </div>
+        </div>
+        <div class="nav-item" data-nav="crim">
+          <button type="button">Criminology <span class="chev">▾</span></button>
+          <div class="nav-panel">
+            <p class="panel-eyebrow">Criminology Units</p>
+            <span class="panel-link-disabled">Coming soon <span class="status">Soon</span></span>
+          </div>
+        </div>
+        <div class="nav-item" data-nav="soc">
+          <button type="button">Sociology <span class="chev">▾</span></button>
+          <div class="nav-panel">
+            <p class="panel-eyebrow">Sociology Units</p>
+            <span class="panel-link-disabled">Coming soon <span class="status">Soon</span></span>
+          </div>
+        </div>
+        <a href="#activities">Activity Library</a>
+      </nav>
+      <a href="teacher-login.html" class="btn-teacher">Teacher Login</a>
     </div>
-    <div class="nav-item" data-nav="ib">
-      <button class="nav-tab" type="button">IB Psychology <span class="chev">▾</span></button>
-      <div class="nav-panel">
-        <p class="panel-eyebrow">IB Psychology Units</p>
-        <a href="unit-health-wellbeing.html" class="panel-link">Health and Well-Being <span class="status progress">In Progress</span></a>
-        <span class="panel-link-disabled">History of Psychology <span class="status">Soon</span></span>
-        <span class="panel-link-disabled">Human Relationships <span class="status">Soon</span></span>
-        <div class="panel-footer"><a href="ib-psychology.html">See all IB Psychology units →</a></div>
-      </div>
-    </div>
-    <div class="nav-item" data-nav="crim">
-      <button class="nav-tab" type="button">Criminology <span class="chev">▾</span></button>
-      <div class="nav-panel">
-        <p class="panel-eyebrow">Criminology Units</p>
-        <span class="panel-link-disabled">Coming soon <span class="status">Soon</span></span>
-      </div>
-    </div>
-    <div class="nav-item" data-nav="soc">
-      <button class="nav-tab" type="button">Sociology <span class="chev">▾</span></button>
-      <div class="nav-panel">
-        <p class="panel-eyebrow">Sociology Units</p>
-        <span class="panel-link-disabled">Coming soon <span class="status">Soon</span></span>
-      </div>
-    </div>
-    <a href="#activities">Activity Library</a>
-    <a href="teacher-login.html">Teacher Login</a>
-  </nav>
+  </header>
 
-  <div class="hero-wrap">
+  <div class="hero-grid">
     <div class="hero-card">
-      <span class="hero-stamp">Open for Enrollment</span>
-      <h1 class="wordmark"><span class="a">Psych</span><span class="b">Sims</span></h1>
-      <p class="tagline">Transform your psychology classroom.</p>
-      <p class="hero-desc">Interactive case simulations, lesson resources, and (soon) virtual experiments for the high school psychology classroom — built by a teacher, for teachers.</p>
-      <a href="#activities" class="cta-btn">Explore Activities →</a>
-      <div class="perforation"></div>
-    </div>
-  </div>
-
-  <div class="features">
-    <div class="feature">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-      <h4>Simulations</h4>
-      <p>Interview fictional clients, weigh evidence, and form a diagnostic impression.</p>
-    </div>
-    <div class="feature">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-      <h4>Lessons</h4>
-      <p>Ready-to-use plans and slides aligned to IB, HSP3U, and HSB4U curricula.</p>
-    </div>
-    <div class="feature">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6L3 21h18L15 8V2"/><path d="M9 2h6"/><path d="M8 16h8"/></svg>
-      <h4>Experiments</h4>
-      <p>Run simplified classic studies and analyze the data they generate.</p>
-    </div>
-    <div class="feature">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3a2 2 0 0 1-2 4"/><path d="M7 5H4a2 2 0 0 0 2 4"/></svg>
-      <h4>Review Games</h4>
-      <p>Fast, self-marking activities to reinforce unit content.</p>
-    </div>
-  </div>
-
-  <div class="activities-wrap" id="activities">
-    <h2>Case File 0001 — Available Activities</h2>
-
-    <p style="color:var(--ink-soft); font-size:0.92rem; margin:-8px 0 8px; max-width:600px; line-height:1.6;">Most of what's below you can try right now, no login required — the case studies and the conditioning and antipsychotics follow-ups are the only ones that need a class join code.</p>
-
-    <div class="cat-nav">
-      <span class="cat-nav-label">Jump to</span>
-      <div class="cat-nav-select-wrap">
-        <button class="cat-nav-btn" id="catNavBtn" type="button">All activities</button>
-        <div class="cat-nav-menu" id="catNavMenu">
-          <button data-target="activities" type="button">All activities</button>
-          <button data-target="cat-case-studies" type="button">Case Studies</button>
-          <button data-target="cat-experiments" type="button">Experiments</button>
-          <button data-target="cat-neuroscience" type="button">Neuroscience</button>
-          <button data-target="cat-biology" type="button">Biology</button>
-          <button data-target="cat-psych-tests" type="button">Psychological Tests</button>
-          <button data-target="cat-research" type="button">Research Studies</button>
-          <button data-target="cat-coming-soon" type="button">Coming Soon</button>
+      <div>
+        <h1 class="hero-h1">Experience Psychology.<br>Understand <span class="accent">Human Behavior.</span></h1>
+        <p class="hero-desc">Interactive case simulations, lesson resources, and virtual experiments for the high school psychology classroom — built by a teacher, for teachers.</p>
+        <div class="hero-ctas">
+          <a href="#activities" class="btn-primary">Explore Activities →</a>
+          <a href="#how-it-works" class="btn-secondary">How It Works</a>
         </div>
       </div>
+      <div class="hero-art">
+        <svg viewBox="0 0 260 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="130" cy="130" r="120" fill="#fff" fill-opacity="0.55"/>
+          <circle cx="130" cy="130" r="88" fill="#5B4FE5" fill-opacity="0.12"/>
+          <g transform="translate(60,58)">
+            <path d="M70 0C41 0 18 20 16 45 4 51-3 65-3 79c0 9 3 17 9 24-6 7-9 15-9 24 0 19 15 34 33 35 3 15 17 26 32 26 6 0 12-2 17-6 5 4 11 6 17 6 15 0 29-11 32-26 18-1 33-16 33-35 0-9-3-17-9-24 6-7 9-15 9-24 0-14-7-28-19-34C138 20 115 0 86 0z" fill="#5B4FE5"/>
+            <path d="M70 6v152" stroke="#EFEBFF" stroke-width="2.4" stroke-linecap="round"/>
+            <path d="M35 46c11 5 25 5 40 1M105 46c-11 5-25 5-40 1M27 78c15 6 33 6 48 1M113 78c-15 6-33 6-48 1M35 108c13 6 30 6 45 1M105 108c-13 6-30 6-45 1" stroke="#EFEBFF" stroke-width="2" stroke-linecap="round"/>
+          </g>
+          <rect x="30" y="150" width="72" height="56" rx="10" fill="#fff" stroke="#E7E5F5" stroke-width="1.5"/>
+          <rect x="42" y="164" width="8" height="28" rx="2" fill="#C9C4FB"/>
+          <rect x="54" y="172" width="8" height="20" rx="2" fill="#9C90F7"/>
+          <rect x="66" y="158" width="8" height="34" rx="2" fill="#5B4FE5"/>
+          <rect x="150" y="34" width="70" height="52" rx="10" fill="#fff" stroke="#E7E5F5" stroke-width="1.5"/>
+          <circle cx="168" cy="52" r="8" fill="#ECE9FE"/>
+          <rect cx="0" x="182" y="47" width="30" height="4" rx="2" fill="#E7E5F5"/>
+          <rect x="182" y="56" width="24" height="4" rx="2" fill="#E7E5F5"/>
+          <rect x="160" y="68" width="46" height="4" rx="2" fill="#F0EEFC"/>
+        </svg>
+      </div>
     </div>
 
-    <div class="subsection" id="cat-case-studies">Case Studies</div>
+    <aside class="side-col">
+      <div class="side-card">
+        <h3>Welcome Back</h3>
+        <p>Sign in to run simulations with your class and generate activity links for students.</p>
+        <a href="teacher-login.html" class="side-btn filled">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Teacher Login
+        </a>
+      </div>
+
+      <div class="side-card about">
+        <h3>Open for Enrollment</h3>
+        <p>New Health and Well-Being content is being added regularly — Narrative Cases, the Neuron Action Potential Simulator, and Brain Labeling are the latest additions.</p>
+        <a href="#activities" class="side-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          Browse what's new
+        </a>
+      </div>
+
+      <div class="side-card">
+        <h3>Quick Links</h3>
+        <a href="unit-health-wellbeing.html" class="quicklink-row">Health &amp; Well-Being Unit <span>›</span></a>
+        <a href="ib-psychology.html" class="quicklink-row">IB Psychology Units <span>›</span></a>
+        <a href="#activities" class="quicklink-row">Full Activity Library <span>›</span></a>
+      </div>
+    </aside>
+  </div>
+
+  <div class="search-row">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" id="activitySearch" placeholder="Search activities, topics, or keywords...">
+    </div>
+    <div class="cat-nav-select-wrap">
+      <button class="cat-nav-btn" id="catNavBtn" type="button">All Categories</button>
+      <div class="cat-nav-menu" id="catNavMenu">
+        <button data-target="activities" type="button">All Categories</button>
+        <button data-target="cat-case-studies" type="button">Case Studies</button>
+        <button data-target="cat-experiments" type="button">Experiments</button>
+        <button data-target="cat-neuroscience" type="button">Neuroscience</button>
+        <button data-target="cat-biology" type="button">Biology</button>
+        <button data-target="cat-psych-tests" type="button">Psychological Tests</button>
+        <button data-target="cat-research" type="button">Research Studies</button>
+        <button data-target="cat-coming-soon" type="button">Coming Soon</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <h2>Featured Activities</h2>
+    <a href="#activities" class="see-all">View All Activities →</a>
+  </div>
+  <div class="featured-grid">
+    <a href="neuron-action-potential.html" class="fcard">
+      <div class="tile neuroscience"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 0-5 5c0 1 .3 1.9.8 2.7A4 4 0 0 0 6 13a4 4 0 0 0 2 3.5V18a4 4 0 0 0 8 0v-1.5A4 4 0 0 0 18 13a4 4 0 0 0-1.8-3.3c.5-.8.8-1.7.8-2.7a5 5 0 0 0-5-5z"/><path d="M12 2v20"/></svg></div>
+      <div class="body">
+        <span class="cat-badge badge neuroscience">Neuroscience</span>
+        <h3>Neuron Action Potential Simulator</h3>
+        <p>Push a neuron to threshold and watch Na⁺/K⁺ channels, propagation, and refractory period in real time.</p>
+        <div class="meta-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22c5.5 0 10-4.5 10-10S17.5 2 12 2 2 6.5 2 12s4.5 10 10 10z"/></svg>
+          No login required
+        </div>
+      </div>
+    </a>
+    <a href="brain-labeling.html" class="fcard">
+      <div class="tile neuroscience"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+      <div class="body">
+        <span class="cat-badge badge neuroscience">Neuroscience</span>
+        <h3>The Brain — Labeling, Puzzle &amp; Matching</h3>
+        <p>Label six brain structures by their leader lines, race the clock reassembling the diagram, then match structure to function.</p>
+        <div class="meta-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22c5.5 0 10-4.5 10-10S17.5 2 12 2 2 6.5 2 12s4.5 10 10 10z"/></svg>
+          No login required
+        </div>
+      </div>
+    </a>
+    <a href="stroop.html" class="fcard">
+      <div class="tile experiments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6L3 21h18L15 8V2"/><path d="M9 2h6"/><path d="M8 16h8"/></svg></div>
+      <div class="body">
+        <span class="cat-badge badge experiments">Experiments</span>
+        <h3>Stroop Task</h3>
+        <p>Click the ink color, not the word. The classic demonstration of automatic processing — with class-wide live results.</p>
+        <div class="meta-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Requires teacher link
+        </div>
+      </div>
+    </a>
+    <a href="teacher-login.html" class="fcard">
+      <div class="tile case-studies"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+      <div class="body">
+        <span class="cat-badge badge case-studies">Case Study</span>
+        <h3>Jordan R. — Anxiety vs. Depression</h3>
+        <p>A 16-year-old referred for declining grades and withdrawal. Interview to distinguish GAD from MDD.</p>
+        <div class="meta-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Teacher login required
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="library-wrap" id="activities">
+
+    <div class="subsection" id="cat-case-studies"><span class="dot case-studies"></span>Case Studies</div>
     <div class="card-grid">
       <a href="teacher-login.html" class="card">
-        <span class="tag">Available Now</span>
+        <span class="cat-badge badge case-studies">Login required</span>
         <h3>Jordan R. — Anxiety vs. Depression</h3>
         <p>A 16-year-old referred for declining grades and withdrawal. Interview to distinguish Generalized Anxiety Disorder from Major Depressive Disorder.</p>
       </a>
       <a href="teacher-login.html" class="card">
-        <span class="tag">Available Now</span>
+        <span class="cat-badge badge case-studies">Login required</span>
         <h3>Alex M. — ADHD vs. Anxiety</h3>
         <p>A 15-year-old referred for inattention and disorganization. Interview to distinguish ADHD from Generalized Anxiety Disorder.</p>
       </a>
       <a href="teacher-login.html" class="card">
-        <span class="tag">Available Now</span>
+        <span class="cat-badge badge case-studies">Login required</span>
         <h3>Maya S. — Dysthymia vs. MDD vs. Bipolar</h3>
         <p>A 17-year-old referred for persistent low mood. Interview to distinguish Persistent Depressive Disorder from Major Depressive Disorder and Bipolar Disorder.</p>
       </a>
     </div>
 
-    <div class="subsection" id="cat-experiments">Experiments</div>
+    <div class="subsection" id="cat-experiments"><span class="dot experiments"></span>Experiments</div>
     <div class="card-grid">
       <a href="stroop.html" class="card">
-        <span class="tag locked">Requires Teacher Link</span>
+        <span class="cat-badge badge experiments">Teacher link</span>
         <h3>Stroop Task</h3>
         <p>Click the ink color, not the word. The classic demonstration of automatic processing — with class-wide live results available too.</p>
       </a>
       <a href="emotional-stroop.html" class="card">
-        <span class="tag locked">Requires Teacher Link</span>
+        <span class="cat-badge badge experiments">Teacher link</span>
         <h3>Emotional Stroop Task</h3>
         <p>Pick a category, then click through a set of words printed in colored ink — same rule as the classic Stroop task.</p>
       </a>
       <a href="social-anxiety-stroop.html" class="card">
-        <span class="tag locked">Requires Teacher Link</span>
+        <span class="cat-badge badge experiments">Teacher link</span>
         <h3>Social Anxiety Stroop Task</h3>
         <p>Same idea, applied to words about social situations. Click the ink color as fast as you can.</p>
       </a>
       <a href="pavlov-dog.html" class="card">
-        <span class="tag locked">Requires Teacher Link</span>
+        <span class="cat-badge badge experiments">Teacher link</span>
         <h3>Condition the Dog</h3>
         <p>Ring a bell, give food, and figure out the timing yourself. Train a real conditioned response into your own virtual dog.</p>
       </a>
       <a href="conditioning-key-concepts.html" class="card">
-        <span class="tag locked">Requires Teacher Link</span>
+        <span class="cat-badge badge experiments">Teacher link</span>
         <h3>Key Concepts: Conditioning</h3>
         <p>Learn UCS, UCR, CS, and CR, apply them to your own dog experiment, then explain how someone might develop social anxiety this way.</p>
       </a>
       <a href="jung-word-association.html" class="card">
-        <span class="tag locked">Requires Teacher Link</span>
+        <span class="cat-badge badge experiments">Teacher link</span>
         <h3>Word Association — A Case File</h3>
         <p>Respond to a series of words with the first thing that comes to mind — a recreation of a technique from the early 1900s. Full explanation comes after you finish.</p>
       </a>
     </div>
 
-    <div class="subsection" id="cat-neuroscience">Neuroscience</div>
+    <div class="subsection" id="cat-neuroscience"><span class="dot neuroscience"></span>Neuroscience</div>
     <div class="card-grid">
       <a href="neurotransmitter-mechanisms.html" class="card">
-        <span class="tag locked">Requires Teacher Link</span>
+        <span class="cat-badge badge neuroscience">Teacher link</span>
         <h3>Inside the Synapse — SSRI vs. Benzodiazepine</h3>
         <p>An interactive synapse diagram. Toggle the drug on and off to see how an SSRI blocks serotonin reuptake, or how a benzodiazepine changes GABA signaling.</p>
       </a>
       <a href="antipsychotics-key-concepts.html" class="card">
-        <span class="tag locked">Requires Teacher Link</span>
+        <span class="cat-badge badge neuroscience">Teacher link</span>
         <h3>Key Concepts: Antipsychotics</h3>
         <p>Watch how typical and atypical antipsychotics act differently at the synapse, test yourself on telling them apart, read about each, then explain the difference.</p>
       </a>
       <a href="neuron-action-potential.html" class="card">
-        <span class="tag try-now">Try It Now — No Login</span>
+        <span class="cat-badge badge neuroscience">No login</span>
         <h3>Neuron Action Potential Simulator</h3>
         <p>A full free-play neuron simulator. Push it to threshold and watch Na⁺ and K⁺ ions move, channels open and close, and the signal regenerate down the axon — with pause and adjustable speed.</p>
       </a>
       <a href="brain-labeling.html" class="card">
-        <span class="tag try-now">Try It Now — No Login</span>
+        <span class="cat-badge badge neuroscience">No login</span>
         <h3>The Brain — Labeling, Puzzle &amp; Matching</h3>
         <p>Label six brain structures by their leader lines, race the clock reassembling the same diagram, then match each structure to what it actually does.</p>
       </a>
     </div>
 
-    <div class="subsection" id="cat-biology">Biology</div>
+    <div class="subsection" id="cat-biology"><span class="dot biology"></span>Biology</div>
     <div class="card-grid">
       <a href="evolving-ecosystem.html" class="card">
-        <span class="tag locked">Requires Teacher Link</span>
+        <span class="cat-badge badge biology">Teacher link</span>
         <h3>Evolving Ecosystem — Natural Selection Simulator</h3>
         <p>Watch a population of digital organisms evolve over generations — no fitness score, no designed creatures. Just inherited genes, mutation, mate choice, and survival deciding who reproduces.</p>
       </a>
     </div>
 
-    <div class="subsection" id="cat-psych-tests">Psychological Tests</div>
+    <div class="subsection" id="cat-psych-tests"><span class="dot psych-tests"></span>Psychological Tests</div>
     <div class="card-grid">
       <a href="social-situations-reflection.html" class="card">
-        <span class="tag locked">Requires Teacher Link</span>
+        <span class="cat-badge badge psych-tests">Teacher link</span>
         <h3>Social Situations Reflection</h3>
         <p>A short original self-reflection scale on how you feel in social situations. Not a diagnostic tool.</p>
       </a>
       <a href="sias.html" class="card">
-        <span class="tag locked">Requires Teacher Link</span>
+        <span class="cat-badge badge psych-tests">Teacher link</span>
         <h3>Social Interaction Anxiety Scale</h3>
         <p>The actual, published SIAS used in research, reproduced from a public-domain screening toolkit. Not a diagnostic tool.</p>
       </a>
       <a href="defense-style-reflection.html" class="card">
-        <span class="tag locked">Requires Teacher Link</span>
+        <span class="cat-badge badge psych-tests">Teacher link</span>
         <h3>Defense Style Reflection</h3>
         <p>A short original self-reflection on how you cope with stress, grouped into mature, neurotic, and immature defense styles. Not a diagnostic tool.</p>
       </a>
     </div>
 
-    <div class="subsection" id="cat-research">Research Studies</div>
+    <div class="subsection" id="cat-research"><span class="dot research"></span>Research Studies</div>
     <div class="card-grid">
       <a href="thompson-2011-oxtr.html" class="card">
-        <span class="tag locked">Requires Teacher Link</span>
+        <span class="cat-badge badge research">Teacher link</span>
         <h3>Thompson et al. (2011) — Gene x Environment</h3>
         <p>A background write-up plus a predict-then-reveal activity on the OXTR gene x maternal depression study.</p>
       </a>
       <a href="loftus-1974-car-crash.html" class="card">
-        <span class="tag locked">Requires Teacher Link</span>
+        <span class="cat-badge badge research">Teacher link</span>
         <h3>Loftus &amp; Palmer (1974) — Eyewitness Memory</h3>
         <p>Watch an animated car crash, then answer a few quick questions about what you saw.</p>
       </a>
       <a href="scrambled-sentences-task.html" class="card">
-        <span class="tag locked">Requires Teacher Link</span>
+        <span class="cat-badge badge research">Teacher link</span>
         <h3>Scrambled Sentences — Interpretation Bias</h3>
         <p>Unscramble a series of sentences as quickly as you can, using 5 of the 6 words shown each time.</p>
       </a>
     </div>
 
-    <div class="subsection" id="cat-coming-soon">Coming Soon</div>
+    <div class="subsection" id="cat-coming-soon"><span class="dot coming-soon"></span>Coming Soon</div>
     <div class="card-grid">
       <div class="card coming-soon">
-        <span class="tag">Coming Soon</span>
+        <span class="cat-badge badge coming-soon">Coming Soon</span>
         <h3>Lesson Plans &amp; Slides</h3>
         <p>A growing library of lesson plans and presentation slides aligned to IB Psychology, HSP3U, and HSB4U.</p>
       </div>
       <div class="card coming-soon">
-        <span class="tag">Coming Soon</span>
+        <span class="cat-badge badge coming-soon">Coming Soon</span>
         <h3>Review Games</h3>
         <p>Fast-paced, self-marking review activities to reinforce unit content — great for a warm-up or the last ten minutes of class.</p>
       </div>
     </div>
-
   </div>
 
-  <footer>Built for classroom use &middot; not a diagnostic tool</footer>
+  <div class="howitworks" id="how-it-works">
+    <div class="howitworks-card">
+      <h2>How It Works</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
+          <div><h4>1. Explore</h4><p>Browse case studies, experiments, and simulations by category.</p></div>
+        </div>
+        <div class="step">
+          <div class="step-num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+          <div><h4>2. Participate</h4><p>Interview clients, run experiments, and interact with simulations directly.</p></div>
+        </div>
+        <div class="step">
+          <div class="step-num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg></div>
+          <div><h4>3. Analyze</h4><p>Weigh evidence, review results, and reflect on what you found.</p></div>
+        </div>
+        <div class="step">
+          <div class="step-num"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+          <div><h4>4. Learn</h4><p>Connect the activity back to the concepts driving your unit.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <span class="copy">© 2026 Psych Sims. Built for classroom use — not a diagnostic tool.</span>
+      <div class="footer-links">
+        <a href="#activities">Activity Library</a>
+        <a href="ib-psychology.html">IB Psychology</a>
+        <a href="teacher-login.html">Teacher Login</a>
+      </div>
+    </div>
+  </footer>
 
   <script>
-    // top nav dropdown panels
     (function(){
       const items = document.querySelectorAll('#siteNav .nav-item');
       items.forEach(item => {
-        const btn = item.querySelector('.nav-tab');
+        const btn = item.querySelector('button');
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
           const isOpen = item.classList.contains('open');
@@ -434,10 +558,7 @@
       e.stopPropagation();
       catNavMenu.style.display = catNavMenu.style.display === 'block' ? 'none' : 'block';
     });
-
-    document.addEventListener('click', () => {
-      catNavMenu.style.display = 'none';
-    });
+    document.addEventListener('click', () => { catNavMenu.style.display = 'none'; });
 
     catNavMenu.querySelectorAll('button[data-target]').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -446,9 +567,19 @@
         catNavBtn.textContent = btn.textContent;
         catNavMenu.style.display = 'none';
         if(targetEl){
-          const offset = targetEl.getBoundingClientRect().top + window.scrollY - 20;
+          const offset = targetEl.getBoundingClientRect().top + window.scrollY - 90;
           window.scrollTo({top: offset, behavior: 'smooth'});
         }
+      });
+    });
+
+    // simple client-side search across activity cards
+    const searchInput = document.getElementById('activitySearch');
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.trim().toLowerCase();
+      document.querySelectorAll('.library-wrap .card').forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = (!q || text.includes(q)) ? '' : 'none';
       });
     });
   </script>
