@@ -4,65 +4,64 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Choose an Activity — Psychology Case Simulations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site-theme.css">
 <style>
-  body{
-    font-family: system-ui, sans-serif;
-    background:#F1E9D2;
-    min-height:100vh; margin:0; padding:40px 20px;
-  }
-  .wrap{max-width:600px; margin:0 auto;}
+  body{min-height:100vh; padding:36px 20px 60px;}
+  .wrap{max-width:640px; margin:0 auto;}
   .banner{
-    background:#2F4858; color:#FBF7EC; font-family:'Courier New', monospace;
-    font-size:0.8rem; padding:8px 16px; border-radius:6px; margin-bottom:20px;
+    background:var(--indigo-600); color:#fff; font-family:'JetBrains Mono', monospace;
+    font-size:0.78rem; padding:10px 16px; border-radius:9px; margin-bottom:22px;
   }
-  .banner a{color:#FBF7EC; opacity:0.8;}
-  h1{font-size:1.3rem; margin:0 0 8px;}
-  p{color:#5C5648; line-height:1.5;}
+  .banner a{color:#fff; opacity:0.85; text-decoration:underline;}
+  h1{font-size:1.3rem; font-weight:800; margin:0 0 8px;}
+  .wrap > p{color:var(--ink-soft); line-height:1.55; margin:0 0 20px;}
   .case-card{
-    background:#FBF7EC; border:1px solid #2B2A25; border-radius:8px;
-    padding:22px; margin-bottom:16px; cursor:pointer;
-    box-shadow:3px 3px 0 rgba(43,42,37,0.1);
-    transition:transform 0.1s ease, box-shadow 0.1s ease;
+    background:#fff; border:1px solid var(--line); border-radius:13px;
+    padding:20px; margin-bottom:14px; cursor:pointer;
+    box-shadow:var(--shadow-card);
+    transition:transform 0.12s ease, box-shadow 0.12s ease;
   }
-  .case-card:hover{transform:translate(-1px,-1px); box-shadow:4px 4px 0 rgba(43,42,37,0.18);}
-  .case-title{font-weight:700; font-size:1.05rem; margin-bottom:6px;}
-  .case-desc{font-size:0.9rem; color:#5C5648;}
+  .case-card:hover{transform:translateY(-2px); box-shadow:0 8px 20px rgba(31,34,51,.1);}
+  .case-title{font-weight:700; font-size:1rem; margin-bottom:6px;}
+  .case-desc{font-size:0.88rem; color:var(--ink-soft); line-height:1.5;}
   .section-header{
-    font-family:'Courier New', monospace; font-size:0.78rem; text-transform:uppercase;
-    letter-spacing:0.08em; color:#5C5648; margin:28px 0 12px; padding-bottom:6px;
-    border-bottom:1px dashed #C7B78E;
+    font-family:'JetBrains Mono', monospace; font-size:0.72rem; text-transform:uppercase;
+    letter-spacing:0.06em; color:var(--ink-faint); margin:30px 0 14px; padding-bottom:8px;
+    border-bottom:1px solid var(--line); font-weight:600;
   }
-  .section-header:first-of-type{margin-top:22px;}
+  .section-header:first-of-type{margin-top:24px;}
   .cat-nav{
     position:sticky; top:12px; z-index:20;
-    background:#FBF7EC; border:1px solid #2B2A25; border-radius:8px;
-    padding:10px 14px; margin-bottom:18px;
-    box-shadow:3px 3px 0 rgba(43,42,37,0.1);
+    background:#fff; border:1px solid var(--line); border-radius:11px;
+    padding:11px 14px; margin-bottom:20px;
+    box-shadow:var(--shadow-md);
     display:flex; align-items:center; gap:10px;
   }
-  .cat-nav-label{font-family:'Courier New', monospace; font-size:0.78rem; color:#5C5648; white-space:nowrap;}
+  .cat-nav-label{font-family:'JetBrains Mono', monospace; font-size:0.74rem; color:var(--ink-faint); white-space:nowrap;}
   .cat-nav-select-wrap{position:relative; flex:1;}
   .cat-nav-btn{
-    width:100%; text-align:left; font-family:system-ui, sans-serif; font-size:0.9rem;
-    background:#F1E9D2; border:1px solid #2B2A25; border-radius:6px;
-    padding:8px 30px 8px 10px; cursor:pointer; color:#2B2A25;
+    width:100%; text-align:left; font-family:'Inter', sans-serif; font-size:0.89rem;
+    background:var(--surface); border:1px solid var(--line); border-radius:8px;
+    padding:9px 30px 9px 12px; cursor:pointer; color:var(--ink);
   }
   .cat-nav-btn::after{
     content:"▾"; position:absolute; right:12px; top:50%; transform:translateY(-50%);
-    pointer-events:none; color:#5C5648;
+    pointer-events:none; color:var(--ink-faint);
   }
   .cat-nav-menu{
     display:none; position:absolute; top:calc(100% + 4px); left:0; right:0;
-    background:#FBF7EC; border:1px solid #2B2A25; border-radius:6px;
-    box-shadow:3px 3px 0 rgba(43,42,37,0.1); overflow:hidden;
+    background:#fff; border:1px solid var(--line); border-radius:10px;
+    box-shadow:var(--shadow-md); overflow:hidden; z-index:21;
   }
   .cat-nav-menu button{
-    display:block; width:100%; text-align:left; font-family:system-ui, sans-serif;
-    font-size:0.88rem; background:none; border:none; padding:9px 12px; cursor:pointer;
-    color:#2B2A25; border-bottom:1px dashed #C7B78E;
+    display:block; width:100%; text-align:left; font-family:'Inter', sans-serif;
+    font-size:0.87rem; background:none; border:none; padding:10px 12px; cursor:pointer;
+    color:var(--ink); border-bottom:1px solid var(--line);
   }
   .cat-nav-menu button:last-child{border-bottom:none;}
-  .cat-nav-menu button:hover{background:#F1E9D2;}
+  .cat-nav-menu button:hover{background:var(--lavender-50); color:var(--indigo-600);}
 </style>
 </head>
 <body>
@@ -107,97 +106,97 @@
 
     <div class="section-header" id="cat-narrative-cases">Narrative Cases</div>
 
-    <div class="case-card" id="little-hans-card" style="border-style:dashed;">
+    <div class="case-card" id="little-hans-card">
       <div class="case-title">Little Hans — A Case Study in Interpretation</div>
       <div class="case-desc">Freud's 1909 case history, told in six parts. Read the evidence, form your own theory, then see Freud's actual interpretation — and decide if you agree.</div>
     </div>
 
-    <div class="case-card" id="no-fear-card" style="border-style:dashed;">
+    <div class="case-card" id="no-fear-card">
       <div class="case-title">The Woman With No Fear</div>
       <div class="case-desc">The real case of S.M., who lost both amygdalae to a rare disease. Form your own theory of what the amygdala does, then see how a surprising twist complicates the simple story.</div>
     </div>
 
     <div class="section-header" id="cat-experiments">Experiments</div>
 
-    <div class="case-card" id="stroop-card" style="border-style:dashed;">
+    <div class="case-card" id="stroop-card">
       <div class="case-title">Stroop Task — Live Experiment</div>
       <div class="case-desc">Click the ink color, not the word. Fast, fun, and your results show up live on the class display — nothing is saved.</div>
     </div>
 
-    <div class="case-card" id="emotional-stroop-card" style="border-style:dashed;">
+    <div class="case-card" id="emotional-stroop-card">
       <div class="case-title">Emotional Stroop Task</div>
       <div class="case-desc">Same idea, different twist — pick a category, then click through a set of words printed in colored ink.</div>
     </div>
 
-    <div class="case-card" id="social-anxiety-stroop-card" style="border-style:dashed;">
+    <div class="case-card" id="social-anxiety-stroop-card">
       <div class="case-title">Social Anxiety Stroop Task</div>
       <div class="case-desc">Same idea, applied to words about social situations. Click the ink color as fast as you can.</div>
     </div>
 
-    <div class="case-card" id="pavlov-card" style="border-style:dashed;">
+    <div class="case-card" id="pavlov-card">
       <div class="case-title">Condition the Dog — Classical Conditioning</div>
       <div class="case-desc">Ring a bell, give food, and figure out the timing yourself. Train a real response into your own virtual dog.</div>
     </div>
 
-    <div class="case-card" id="conditioning-concepts-card" style="border-style:dashed;">
+    <div class="case-card" id="conditioning-concepts-card">
       <div class="case-title">Key Concepts: Conditioning</div>
       <div class="case-desc">Learn UCS, UCR, CS, and CR, apply them to your own dog experiment, then explain how someone might develop social anxiety this way.</div>
     </div>
 
-    <div class="case-card" id="jung-word-association-card" style="border-style:dashed;">
+    <div class="case-card" id="jung-word-association-card">
       <div class="case-title">Word Association — A Case File</div>
       <div class="case-desc">Respond to a series of words with the first thing that comes to mind — a recreation of a technique from the early 1900s. Full explanation comes after you finish.</div>
     </div>
 
     <div class="section-header" id="cat-neuroscience">Neuroscience</div>
 
-    <div class="case-card" id="neurotransmitters-card" style="border-style:dashed;">
+    <div class="case-card" id="neurotransmitters-card">
       <div class="case-title">Inside the Synapse — SSRI vs. Benzodiazepine</div>
       <div class="case-desc">An interactive synapse diagram. Toggle the drug on and off to see how an SSRI blocks serotonin reuptake, or how a benzodiazepine changes GABA signaling.</div>
     </div>
 
-    <div class="case-card" id="antipsychotics-concepts-card" style="border-style:dashed;">
+    <div class="case-card" id="antipsychotics-concepts-card">
       <div class="case-title">Key Concepts: Antipsychotics</div>
       <div class="case-desc">Watch how typical and atypical antipsychotics act differently at the synapse, test yourself on telling them apart, read about each, then explain the difference.</div>
     </div>
 
     <div class="section-header" id="cat-biology">Biology</div>
 
-    <div class="case-card" id="evolution-sim-card" style="border-style:dashed;">
+    <div class="case-card" id="evolution-sim-card">
       <div class="case-title">Evolving Ecosystem — Natural Selection Simulator</div>
       <div class="case-desc">Watch a population of digital organisms evolve over generations — no fitness score, no designed creatures. Just inherited genes, mutation, mate choice, and survival deciding who reproduces.</div>
     </div>
 
     <div class="section-header" id="cat-psych-tests">Psychological Tests</div>
 
-    <div class="case-card" id="social-reflection-card" style="border-style:dashed;">
+    <div class="case-card" id="social-reflection-card">
       <div class="case-title">Social Situations Reflection</div>
       <div class="case-desc">A short self-reflection scale on how you feel in social situations. Not a diagnostic tool, and nothing is saved.</div>
     </div>
 
-    <div class="case-card" id="sias-card" style="border-style:dashed;">
+    <div class="case-card" id="sias-card">
       <div class="case-title">Social Interaction Anxiety Scale</div>
       <div class="case-desc">The actual, published SIAS used in research. Not a diagnostic tool, and nothing is saved.</div>
     </div>
 
-    <div class="case-card" id="defense-style-card" style="border-style:dashed;">
+    <div class="case-card" id="defense-style-card">
       <div class="case-title">Defense Style Reflection</div>
       <div class="case-desc">A 40-statement self-reflection on how you cope with stress, grouped into three psychodynamic defense styles. Not a diagnostic tool, and nothing is saved.</div>
     </div>
 
     <div class="section-header" id="cat-research">Research Studies</div>
 
-    <div class="case-card" id="thompson-card" style="border-style:dashed;">
+    <div class="case-card" id="thompson-card">
       <div class="case-title">Thompson et al. (2011) — Gene x Environment</div>
       <div class="case-desc">A background write-up plus a predict-then-reveal activity on the OXTR gene x maternal depression study.</div>
     </div>
 
-    <div class="case-card" id="loftus-card" style="border-style:dashed;">
+    <div class="case-card" id="loftus-card">
       <div class="case-title">Loftus &amp; Palmer (1974) — Eyewitness Memory</div>
       <div class="case-desc">Watch an animated car crash, then answer a few quick questions about what you saw.</div>
     </div>
 
-    <div class="case-card" id="sst-card" style="border-style:dashed;">
+    <div class="case-card" id="sst-card">
       <div class="case-title">Scrambled Sentences — Interpretation Bias</div>
       <div class="case-desc">Unscramble a series of sentences as quickly as you can, using 5 of the 6 words shown each time.</div>
     </div>

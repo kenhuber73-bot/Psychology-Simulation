@@ -5,105 +5,107 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard — Psychology Case Simulations</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site-theme.css">
 <style>
-  body{
-    font-family: system-ui, sans-serif;
-    background:#F1E9D2;
-    min-height:100vh; margin:0; padding:40px 20px;
+  body{min-height:100vh; padding:36px 20px 60px;}
+  .wrap{max-width:760px; margin:0 auto;}
+  .back-link{display:inline-flex; align-items:center; gap:6px; margin-bottom:18px; color:var(--ink-soft); font-size:0.88rem; font-weight:500;}
+  .back-link:hover{color:var(--indigo-600);}
+  .dash-card{
+    background:#fff; border:1px solid var(--line); border-radius:15px;
+    padding:28px 30px; box-shadow:var(--shadow-card); margin-bottom:18px;
   }
-  .wrap{max-width:720px; margin:0 auto;}
-  .card{
-    background:#FBF7EC; border:1px solid #2B2A25; border-radius:8px;
-    padding:32px; box-shadow:4px 4px 0 rgba(43,42,37,0.08); margin-bottom:20px;
+  .dash-card h1{font-size:1.25rem; font-weight:800; margin:0 0 8px;}
+  .dash-card h2{font-size:1.05rem; font-weight:800; margin:0 0 4px;}
+  .dash-card p{color:var(--ink-soft); line-height:1.55; font-size:0.9rem; margin:0 0 6px;}
+  input, select{
+    width:100%; padding:11px 13px; margin:8px 0 14px; border:1px solid var(--line);
+    border-radius:9px; font-size:0.92rem; box-sizing:border-box; background:#fff; font-family:'Inter', sans-serif; color:var(--ink);
   }
-  h1{font-size:1.3rem; margin:0 0 8px;}
-  h2{font-size:1.05rem; margin:0 0 14px;}
-  p{color:#5C5648; line-height:1.5;}
-  input{
-    width:100%; padding:10px; margin:8px 0 14px; border:1px solid #2B2A25;
-    border-radius:5px; font-size:0.95rem; box-sizing:border-box;
-  }
-  select{
-    width:100%; padding:10px; margin:8px 0 14px; border:1px solid #2B2A25;
-    border-radius:5px; font-size:0.95rem; box-sizing:border-box; background:white;
-    font-family:inherit;
-  }
+  input:focus, select:focus{outline:2px solid var(--indigo-500); outline-offset:1px; border-color:var(--indigo-500);}
   button{
-    padding:10px 18px; background:#2F4858; color:white; border:none;
-    border-radius:6px; font-size:0.9rem; cursor:pointer;
+    padding:10px 18px; background:var(--indigo-600); color:white; border:none;
+    border-radius:9px; font-size:0.88rem; cursor:pointer; font-weight:600; font-family:'Inter', sans-serif;
   }
+  button:hover{background:var(--indigo-700);}
   button:disabled{opacity:0.5; cursor:default;}
-  .logout-btn{background:none; color:#5C5648; border:1px solid #5C5648; margin-top:16px;}
+  .logout-btn{background:none; color:var(--ink-soft); border:1px solid var(--line); margin-top:14px;}
+  .logout-btn:hover{background:var(--lavender-50); color:var(--ink);}
   .class-item{
     display:flex; justify-content:space-between; align-items:center;
-    padding:12px 0; border-bottom:1px dashed #C7B78E; cursor:pointer;
+    padding:13px 4px; border-bottom:1px solid var(--line); cursor:pointer; border-radius:9px;
   }
   .class-item:last-child{border-bottom:none;}
-  .class-item:hover{background:#F1E9D2;}
-  .class-name{font-weight:600; cursor:pointer;}
+  .class-item:hover{background:var(--lavender-50);}
+  .class-name{font-weight:700; cursor:pointer; font-size:0.94rem;}
   .join-code{
-    font-family:'Courier New', monospace; background:#E3D5AE;
-    padding:4px 10px; border-radius:4px; font-size:0.9rem; cursor:pointer;
+    font-family:'JetBrains Mono', monospace; background:var(--indigo-100); color:var(--indigo-700);
+    padding:4px 10px; border-radius:6px; font-size:0.85rem; cursor:pointer; font-weight:600;
   }
   .display-btn{
-    background:#2F4858; color:white; border:none; border-radius:5px;
-    padding:6px 12px; font-size:0.8rem; cursor:pointer;
+    background:var(--indigo-600); color:white; border:none; border-radius:7px;
+    padding:6px 12px; font-size:0.78rem; cursor:pointer; font-weight:600;
   }
-  .display-btn:hover{background:#3A5A6E;}
-  .message{margin-top:10px; font-size:0.88rem; padding:10px; border-radius:5px;}
-  .message.error{background:#F4E1E1; color:#7A2E2E;}
-  .empty{color:#5C5648; font-style:italic; font-size:0.9rem;}
-  .close-results{background:none; color:#5C5648; border:1px solid #5C5648; font-size:0.8rem; padding:6px 12px; margin-bottom:16px;}
-  table{width:100%; border-collapse:collapse; font-size:0.88rem;}
-  th{text-align:left; color:#5C5648; font-weight:600; padding:8px 6px; border-bottom:2px solid #2B2A25;}
-  td{padding:8px 6px; border-bottom:1px dashed #C7B78E;}
-  .correct-tag{background:#E4EDE1; color:#3E5233; padding:2px 8px; border-radius:4px; font-size:0.78rem; font-weight:600;}
-  .incorrect-tag{background:#F4E1E1; color:#7A2E2E; padding:2px 8px; border-radius:4px; font-size:0.78rem; font-weight:600;}
-  .reflection-tag{background:#E3D5AE; color:#2F4858; padding:2px 8px; border-radius:4px; font-size:0.78rem; font-weight:600;}
-  .paragraph-preview{cursor:pointer; text-decoration:underline dotted; text-underline-offset:2px;}
+  .display-btn:hover{background:var(--indigo-700);}
+  .message{margin-top:10px; font-size:0.86rem; padding:10px 12px; border-radius:9px; font-weight:500;}
+  .message.error{background:var(--rose-bg); color:var(--rose);}
+  .empty{color:var(--ink-faint); font-style:italic; font-size:0.88rem;}
+  .close-results{background:none; color:var(--ink-soft); border:1px solid var(--line); font-size:0.8rem; padding:8px 14px; margin-bottom:16px;}
+  .close-results:hover{background:var(--lavender-50); color:var(--ink);}
+  table{width:100%; border-collapse:collapse; font-size:0.86rem;}
+  th{text-align:left; color:var(--ink-faint); font-weight:700; padding:9px 8px; border-bottom:2px solid var(--line); font-size:0.76rem; text-transform:uppercase; letter-spacing:0.03em;}
+  td{padding:10px 8px; border-bottom:1px solid var(--line); color:var(--ink);}
+  .correct-tag{background:var(--green-bg); color:var(--green); padding:3px 9px; border-radius:20px; font-size:0.76rem; font-weight:700;}
+  .incorrect-tag{background:var(--rose-bg); color:var(--rose); padding:3px 9px; border-radius:20px; font-size:0.76rem; font-weight:700;}
+  .reflection-tag{background:var(--indigo-100); color:var(--indigo-700); padding:3px 9px; border-radius:20px; font-size:0.76rem; font-weight:700;}
+  .paragraph-preview{cursor:pointer; text-decoration:underline dotted; text-underline-offset:2px; color:var(--indigo-600);}
   .paragraph-full{white-space:pre-wrap; max-width:340px;}
   .link-row{
     display:flex; justify-content:space-between; align-items:center; gap:10px;
-    padding:12px 0; border-bottom:1px dashed #C7B78E;
+    padding:13px 0; border-bottom:1px solid var(--line);
   }
   .link-row:last-child{border-bottom:none;}
   .link-info{flex:1; min-width:0;}
-  .link-label{font-weight:600; font-size:0.92rem;}
+  .link-label{font-weight:700; font-size:0.9rem;}
   .link-url{
-    font-family:'Courier New', monospace; font-size:0.78rem; color:#5C5648;
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:2px;
+    font-family:'JetBrains Mono', monospace; font-size:0.75rem; color:var(--ink-faint);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:3px;
   }
   .link-actions{display:flex; gap:6px; flex-shrink:0;}
-  .link-actions button{padding:6px 12px; font-size:0.78rem;}
-  .revoke-btn{background:#A13D3D;}
-  .copy-btn{background:#5E7A52;}
+  .link-actions button{padding:7px 13px; font-size:0.76rem;}
+  .revoke-btn{background:var(--rose);}
+  .revoke-btn:hover{background:#B62E52;}
+  .copy-btn{background:var(--green);}
+  .copy-btn:hover{background:#128A3E;}
 </style>
 </head>
 <body>
   <div class="wrap">
-    <a href="index.html" style="display:inline-block; margin-bottom:14px; color:#5C5648; font-size:0.88rem; text-decoration:none;">&larr; Back to Psych Sims</a>
-    <div class="card">
+    <a href="index.html" class="back-link">← Back to Psych Sims</a>
+    <div class="dash-card">
       <h1>Welcome</h1>
       <p id="status">Checking your session...</p>
       <button id="logout-btn" class="logout-btn" style="display:none;">Log out</button>
     </div>
 
-    <div class="card" id="classes-card" style="display:none;">
+    <div class="dash-card" id="classes-card" style="display:none;">
       <h2>Your Classes</h2>
-      <p style="font-size:0.85rem; margin-top:-8px;">Click a class to see student results.</p>
+      <p style="margin-bottom:14px;">Click a class to see student results.</p>
       <div id="classes-list"></div>
     </div>
 
-    <div class="card" id="activity-links-card" style="display:none;">
+    <div class="dash-card" id="activity-links-card" style="display:none;">
       <h2>Activity Links</h2>
-      <p style="font-size:0.85rem; margin-top:-8px;">Generate a link for a specific activity — anyone with the link can access it, no student login needed.</p>
+      <p>Generate a link for a specific activity — anyone with the link can access it, no student login needed.</p>
       <select id="activity-select"></select>
       <button id="generate-link-btn">Generate Link</button>
       <div id="link-message"></div>
       <div id="activity-links-list" style="margin-top:16px;"></div>
     </div>
 
-    <div class="card" id="results-card" style="display:none;">
+    <div class="dash-card" id="results-card" style="display:none;">
       <button id="close-results-btn" class="close-results">← Back to classes</button>
       <h2 id="results-title">Results</h2>
       <div id="results-content"></div>
@@ -220,7 +222,7 @@
           <span style="display:flex; align-items:center; gap:10px;">
             <span class="join-code">${cls.join_code}</span>
             <button class="display-btn" data-code="${cls.join_code}" data-name="${cls.name}">Display</button>
-            <button class="display-btn" data-id="${cls.id}" data-name="${cls.name}" style="background:#5E7A52;">Stroop</button>
+            <button class="display-btn" data-id="${cls.id}" data-name="${cls.name}" style="background:var(--green);">Stroop</button>
           </span>
         `;
         row.querySelector('.class-name').addEventListener('click', () => showResults(cls));
