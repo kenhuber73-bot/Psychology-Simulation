@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Introducing Anxiety Disorders — Psych Sims</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site-theme.css">
+<style>
+  /* ---- subject sidebar (shared pattern) ---- */
+  .sidebar-mobile-toggle{display:none;}
+  .subject-layout{max-width:1180px; margin:0 auto; padding:24px 24px 70px; display:flex; gap:28px; align-items:flex-start;}
+  .subject-sidebar{
+    width:230px; flex-shrink:0; position:sticky; top:84px;
+    background:#fff; border:1px solid var(--line); border-radius:14px;
+    padding:16px; box-shadow:var(--shadow-card);
+  }
+  .subject-sidebar .sidebar-label{
+    font-family:'JetBrains Mono', monospace; font-size:0.66rem; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--ink-faint); margin:0 0 12px; padding-bottom:8px; border-bottom:1px solid var(--line);
+  }
+  .sidebar-unit{margin-bottom:2px;}
+  .sidebar-unit-toggle{
+    width:100%; text-align:left; background:none; border:none; cursor:pointer;
+    font-family:'Inter', sans-serif; font-weight:600; font-size:0.86rem; color:var(--ink);
+    padding:9px 8px; border-radius:8px; display:flex; align-items:center; justify-content:space-between; gap:6px;
+  }
+  .sidebar-unit-toggle:hover{background:var(--lavender-50);}
+  .sidebar-unit-toggle .chev{font-size:0.6rem; color:var(--ink-faint); transition:transform .12s ease;}
+  .sidebar-unit.expanded > .sidebar-unit-toggle .chev{transform:rotate(180deg);}
+  .sidebar-unit-toggle.disabled{color:var(--ink-faint); cursor:default;}
+  .sidebar-topic-list{display:none; flex-direction:column; padding:2px 0 8px 12px; border-left:2px solid var(--line); margin:2px 0 6px 16px;}
+  .sidebar-unit.expanded > .sidebar-topic-list{display:flex;}
+  .sidebar-topic-list a{font-size:0.8rem; color:var(--ink-soft); padding:6px 8px; border-radius:6px; font-weight:500;}
+  .sidebar-topic-list a:hover, .sidebar-topic-list a.current{background:var(--lavender-50); color:var(--indigo-600); font-weight:600;}
+  .sidebar-status{font-family:'JetBrains Mono', monospace; font-size:0.56rem; text-transform:uppercase; letter-spacing:0.03em; color:var(--gray); background:var(--gray-bg); padding:1px 7px; border-radius:9px;}
+  .sidebar-status.progress{background:var(--indigo-100); color:var(--indigo-700);}
+  .subject-main{flex:1; min-width:0;}
+  @media(max-width:860px){
+    .subject-layout{flex-direction:column;}
+    .subject-sidebar{width:100%; position:static; display:none;}
+    .subject-sidebar.mobile-open{display:block;}
+    .sidebar-mobile-toggle{
+      display:flex; justify-content:space-between; align-items:center; width:calc(100% - 48px);
+      margin:24px 24px 0; max-width:1180px; font-family:'Inter', sans-serif; font-weight:700;
+      font-size:0.9rem; color:var(--ink); background:#fff; border:1px solid var(--line);
+      border-radius:12px; padding:12px 16px; box-shadow:var(--shadow-card); cursor:pointer;
+    }
+  }
+
+  /* ---- lesson page specific ---- */
+  .lesson-toolbar{display:flex; justify-content:flex-end; gap:8px; margin:0 0 10px;}
+  .lesson-toolbar button{
+    font-family:'JetBrains Mono', monospace; font-size:0.72rem; background:#fff;
+    border:1px solid var(--line); border-radius:8px; padding:7px 13px; color:var(--ink-soft); cursor:pointer;
+  }
+  .lesson-toolbar button:hover{border-color:var(--indigo-500); color:var(--indigo-600);}
+
+  .lesson-hero{
+    background:linear-gradient(135deg, var(--lavender-50) 0%, #EFEBFF 100%); border:1px solid var(--line);
+    border-radius:18px; padding:34px 38px; margin:0 0 36px;
+  }
+  .lesson-hero h1{font-size:clamp(1.6rem, 3.6vw, 2.15rem); font-weight:800; margin:8px 0 12px; letter-spacing:-0.01em;}
+  .lesson-hero p{color:var(--ink-soft); font-size:0.96rem; line-height:1.65; max-width:640px; margin:0;}
+
+  .lesson-section{margin:0 0 46px;}
+  .lesson-section-head{display:flex; align-items:baseline; gap:12px; margin-bottom:16px; border-bottom:1px solid var(--line); padding-bottom:12px;}
+  .lesson-section-head .sec-label{
+    font-family:'JetBrains Mono', monospace; font-size:0.74rem; font-weight:600; color:#fff;
+    background:var(--indigo-600); padding:3px 9px; border-radius:7px;
+  }
+  .lesson-section-head h2{font-size:1.22rem; font-weight:800;}
+  .lesson-section > p.intro{color:var(--ink-soft); font-size:0.94rem; line-height:1.65; max-width:680px; margin:0 0 20px;}
+
+  .hook-box{
+    background:#fff; border:1px solid var(--line); border-left:4px solid var(--indigo-600);
+    border-radius:0 13px 13px 0; padding:22px 26px; box-shadow:var(--shadow-card);
+  }
+  .hook-box p{margin:0 0 14px; font-size:0.96rem; line-height:1.7; color:var(--ink);}
+  .hook-box p:last-child{margin-bottom:0;}
+  .hook-box strong{color:var(--indigo-700);}
+  .hook-prompt{
+    font-family:'JetBrains Mono', monospace; font-size:0.84rem; color:var(--indigo-700); font-weight:600;
+    background:var(--indigo-100); border-radius:9px; padding:12px 16px; margin-top:6px;
+  }
+
+  .video-embed{
+    position:relative; width:100%; max-width:640px; aspect-ratio:16/9; border-radius:12px; overflow:hidden;
+    border:1px solid var(--line); box-shadow:var(--shadow-card);
+  }
+  .video-embed iframe{position:absolute; top:0; left:0; width:100%; height:100%; border:0;}
+
+  .instr-grid{display:grid; grid-template-columns:1fr; gap:24px;}
+  @media(min-width:760px){.instr-grid{grid-template-columns:280px 1fr;}}
+
+  .deck-card{
+    background:#fff; border:1px solid var(--line); border-radius:13px;
+    padding:0; box-shadow:var(--shadow-card); text-decoration:none; color:inherit;
+    overflow:hidden; display:flex; flex-direction:column; transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .deck-card:hover{transform:translateY(-2px); box-shadow:0 8px 20px rgba(31,34,51,.1);}
+  .deck-thumb{
+    height:110px; background:linear-gradient(135deg, var(--indigo-600), var(--violet));
+    display:flex; align-items:center; justify-content:center; position:relative;
+  }
+  .deck-thumb svg{width:34px; height:34px; stroke:white; opacity:0.9;}
+  .deck-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .deck-thumb .ext{
+    position:absolute; bottom:8px; right:10px; font-family:'JetBrains Mono', monospace;
+    font-size:0.62rem; color:white; opacity:0.95; letter-spacing:0.05em;
+    background:rgba(20,20,40,0.5); padding:2px 7px; border-radius:4px; z-index:2;
+  }
+  .deck-body{padding:16px 18px;}
+  .deck-body h3{margin:0 0 5px; font-size:0.95rem; font-weight:700;}
+  .deck-body p{margin:0; color:var(--ink-soft); font-size:0.8rem; line-height:1.5;}
+  .deck-body .dl-hint{
+    display:inline-flex; align-items:center; gap:5px; margin-top:10px;
+    font-family:'JetBrains Mono', monospace; font-size:0.68rem; text-transform:uppercase;
+    letter-spacing:0.05em; color:var(--indigo-600); font-weight:700;
+  }
+
+  .card-grid{display:grid; grid-template-columns:1fr; gap:18px;}
+  @media(min-width:700px){.card-grid{grid-template-columns:1fr 1fr;}}
+  @media(min-width:980px){.card-grid.three{grid-template-columns:repeat(3,1fr);}}
+  .card .format-note{
+    display:inline-block; font-family:'JetBrains Mono', monospace; font-size:0.64rem; text-transform:uppercase;
+    letter-spacing:0.04em; color:var(--ink-faint); margin-top:6px;
+  }
+
+  .apply-box{
+    background:#fff; border:1px solid var(--line); border-radius:15px;
+    padding:26px; box-shadow:var(--shadow-card);
+  }
+  .apply-box .task-prompt{font-size:0.95rem; line-height:1.7; color:var(--ink); margin:0 0 18px;}
+  .apply-box .task-prompt strong{color:var(--indigo-700);}
+  .apply-box textarea{
+    width:100%; min-height:120px; font-family:'Inter', sans-serif; font-size:0.92rem;
+    border:1px solid var(--line); border-radius:10px; padding:12px 14px; resize:vertical;
+    background:var(--surface); color:var(--ink); box-sizing:border-box;
+  }
+  .apply-box textarea:focus{outline:2px solid var(--indigo-500); outline-offset:1px; border-color:var(--indigo-500);}
+  .apply-box .apply-actions{display:flex; justify-content:flex-end; margin-top:12px;}
+  .apply-box .apply-actions button{
+    font-family:'Inter', sans-serif; font-weight:700; font-size:0.88rem;
+    background:var(--indigo-600); color:#fff; border:none; border-radius:9px;
+    padding:11px 22px; cursor:pointer; box-shadow:var(--shadow-sm);
+    transition:background .12s ease;
+  }
+  .apply-box .apply-actions button:hover{background:var(--indigo-700);}
+  .apply-saved-note{font-family:'JetBrains Mono', monospace; font-size:0.74rem; color:var(--green); margin-top:10px; display:none;}
+
+  .lesson-pager{
+    display:flex; justify-content:space-between; gap:16px; margin:50px 0 0; padding-top:20px;
+    border-top:1px solid var(--line);
+  }
+  .lesson-pager a{
+    font-family:'JetBrains Mono', monospace; font-size:0.78rem; color:var(--ink-soft);
+    max-width:46%;
+  }
+  .lesson-pager a:hover{color:var(--indigo-600);}
+  .lesson-pager .dir{display:block; font-size:0.66rem; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:3px; color:var(--ink-faint);}
+  .lesson-pager .next{text-align:right; margin-left:auto;}
+</style>
+</head>
+<body>
+  <div id="activity-locked" style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; font-family:'Inter',sans-serif; background:linear-gradient(135deg, #F6F4FF 0%, #EFEBFF 100%); box-sizing:border-box;">
+    <div style="max-width:480px; text-align:center; background:#fff; border:1px solid #E7E5F5; border-radius:16px; padding:40px 32px; box-shadow:0 6px 20px rgba(75,56,199,.08);">
+      <h1 style="font-size:1.2rem; font-weight:800; margin:0 0 10px; color:#1F2233;">🔒 This lesson requires a link from your teacher</h1>
+      <p style="color:#5B5F76; font-size:0.9rem; margin:0;">Ask your teacher for the lesson link, or check your class page for it.</p>
+    </div>
+  </div>
+  <div id="activity-content" style="display:none;">
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="7" fill="#5B4FE5"/><path d="M12 6.5c-1.8 0-3 1.2-3.1 2.6-.9.3-1.5 1.2-1.5 2.1 0 .5.2 1 .5 1.4-.3.4-.5.9-.5 1.4 0 1.1.9 2 2 2.1.2.9 1 1.5 1.9 1.5.4 0 .8-.1 1.1-.4.3.3.7.4 1.1.4.9 0 1.7-.6 1.9-1.5 1.1-.1 2-1 2-2.1 0-.5-.2-1-.5-1.4.3-.4.5-.9.5-1.4 0-.9-.6-1.8-1.5-2.1-.1-1.4-1.3-2.6-3-2.6z" stroke="#fff" stroke-width="1.1" stroke-linejoin="round"/><path d="M12 6.5v10.6M9.4 10.4c.7.3 1.6.3 2.6.1M14.6 10.4c-.7.3-1.6.3-2.6.1M9 13.6c.9.4 2 .4 3 .1M15 13.6c-.9.4-2 .4-3 .1" stroke="#fff" stroke-width="0.9" stroke-linecap="round"/></svg>
+        <span>Psych Sims<span class="sub">Simulation Lab</span></span>
+      </a>
+      <nav class="mainnav" id="siteNav">
+        <a href="index.html">Home</a>
+        <div class="nav-item" data-nav="psychology">
+          <button type="button">Psychology <span class="chev">▾</span></button>
+          <div class="nav-panel">
+            <p class="panel-eyebrow">General Psychology Units</p>
+            <span class="panel-link-disabled">Coming soon <span class="status">Soon</span></span>
+          </div>
+        </div>
+        <div class="nav-item current" data-nav="ib">
+          <button type="button">IB Psychology <span class="chev">▾</span></button>
+          <div class="nav-panel">
+            <p class="panel-eyebrow">IB Psychology Units</p>
+            <a href="unit-health-wellbeing.html" class="panel-link">Health and Well-Being <span class="status">In Progress</span></a>
+            <a href="unit-history-psychology.html" class="panel-link">History of Psychology <span class="status">In Progress</span></a>
+            <span class="panel-link-disabled">Human Relationships <span class="status">Soon</span></span>
+            <div class="panel-footer"><a href="ib-psychology.html">See all IB Psychology units →</a></div>
+          </div>
+        </div>
+        <div class="nav-item" data-nav="crim">
+          <button type="button">Criminology <span class="chev">▾</span></button>
+          <div class="nav-panel">
+            <p class="panel-eyebrow">Criminology Units</p>
+            <span class="panel-link-disabled">Coming soon <span class="status">Soon</span></span>
+          </div>
+        </div>
+        <div class="nav-item" data-nav="soc">
+          <button type="button">Sociology <span class="chev">▾</span></button>
+          <div class="nav-panel">
+            <p class="panel-eyebrow">Sociology Units</p>
+            <span class="panel-link-disabled">Coming soon <span class="status">Soon</span></span>
+          </div>
+        </div>
+        <a href="index.html#activities">Activity Library</a>
+      </nav>
+      <a href="teacher-login.html" class="btn-teacher">Teacher Login</a>
+    </div>
+  </header>
+
+  <button class="sidebar-mobile-toggle" id="sidebarMobileToggle" type="button">Browse Units <span>▾</span></button>
+
+  <div class="subject-layout">
+    <aside class="subject-sidebar" id="subjectSidebar">
+      <p class="sidebar-label">IB Psychology</p>
+      <div class="sidebar-unit expanded">
+        <button class="sidebar-unit-toggle" type="button">Health and Well-Being <span class="chev">▾</span></button>
+        <div class="sidebar-topic-list">
+          <a href="unit-health-wellbeing.html#topic-01">01 Biological Basis of Behavior</a>
+          <a href="unit-health-wellbeing.html#topic-02" class="current">02 Mental Health Disorders</a>
+          <a href="unit-health-wellbeing.html#topic-03">03 Treatment and Prevention</a>
+          <a href="unit-health-wellbeing.html#topic-04">04 Health Problems</a>
+          <a href="unit-health-wellbeing.html#topic-05">05 The Practical</a>
+        </div>
+      </div>
+      <div class="sidebar-unit">
+        <button class="sidebar-unit-toggle" type="button">History of Psychology <span class="chev">▾</span></button>
+        <div class="sidebar-topic-list">
+          <a href="unit-history-psychology.html#topic-01">01 Psychoanalysis</a>
+          <a href="unit-history-psychology.html#topic-02">02 Behaviorism</a>
+          <a href="unit-history-psychology.html#topic-03">03 Humanism</a>
+          <a href="unit-history-psychology.html#topic-04">04 Cognitive</a>
+        </div>
+      </div>
+      <div class="sidebar-unit">
+        <span class="sidebar-unit-toggle disabled">Human Relationships <span class="sidebar-status">Soon</span></span>
+      </div>
+    </aside>
+
+    <div class="subject-main">
+      <p class="breadcrumb">
+        <a href="ib-psychology.html">IB Psychology</a> /
+        <a href="unit-health-wellbeing.html">Health and Well-Being</a> /
+        <a href="unit-health-wellbeing.html#topic-02">Mental Health Disorders</a> /
+        Introducing Anxiety Disorders
+      </p>
+
+      <div class="lesson-toolbar">
+        <button type="button" onclick="window.print()">🖶 Print</button>
+        <button type="button" onclick="navigator.clipboard && navigator.clipboard.writeText(window.location.href)">🔗 Copy link</button>
+      </div>
+
+      <div class="lesson-hero">
+        <span class="eyebrow">Health and Well-Being · Mental Health Disorders · Overview</span>
+        <h1>Introducing Anxiety Disorders</h1>
+        <p>Before narrowing in on Social Anxiety Disorder specifically, this lesson defines anxiety, walks through DSM-5 classification, and asks students to locate themselves honestly on a real, published scale — no diagnosis, just data.</p>
+      </div>
+
+      <!-- HOOK -->
+      <div class="lesson-section">
+        <div class="lesson-section-head">
+          <span class="sec-label">01</span>
+          <h2>Hook</h2>
+        </div>
+        <div class="hook-box">
+          <p>Everyone gets nervous before a big presentation, a first day, a first date. That's normal — arguably useful. So where's the line? At what point does ordinary nervousness become something a clinician would actually diagnose?</p>
+          <p>Before you see any slides, take the <strong>Social Interaction Anxiety Scale</strong> below — a real, published research tool — and see where you land. You won't get a diagnosis. You'll get data, and a reason to care about the definitions that follow.</p>
+          <div class="hook-prompt">→ Start with the SIAS activity in the Explore section below, then come back up here for the deck.</div>
+        </div>
+      </div>
+
+      <!-- DIRECT INSTRUCTION -->
+      <div class="lesson-section">
+        <div class="lesson-section-head">
+          <span class="sec-label">02</span>
+          <h2>Direct Instruction</h2>
+        </div>
+        <p class="intro">Defining anxiety, DSM-5 classification, diagnostic criteria for the five core anxiety disorders, and the panic attack cycle.</p>
+        <div class="instr-grid">
+          <a href="downloads/Introducing_Anxiety_Disorders.pptx" class="deck-card" download>
+            <div class="deck-thumb">
+              <img src="downloads/Introducing_Anxiety_Disorders.jpg" alt="Introducing Anxiety Disorders — title slide" loading="lazy">
+                <span class="ext">.PPTX</span>
+            </div>
+            <div class="deck-body">
+              <h3>Introducing Anxiety Disorders</h3>
+              <p>Defining anxiety, DSM-5 classification, diagnostic criteria for the five core disorders, and the panic attack cycle.</p>
+              <span class="dl-hint">↓ Download deck</span>
+            </div>
+          </a>
+          <div>
+            <div class="video-embed">
+              <iframe src="https://www.youtube.com/embed/aX7jnVXXG5o" title="OCD and Anxiety Disorders — Crash Course Psychology #29" allowfullscreen loading="lazy"></iframe>
+            </div>
+            <p style="color:var(--ink-soft); font-size:0.85rem; margin:10px 0 0; max-width:520px;">OCD and Anxiety Disorders — Crash Course Psychology #29. General grounding before narrowing in on Social Anxiety Disorder specifically.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXPLORE -->
+      <div class="lesson-section">
+        <div class="lesson-section-head">
+          <span class="sec-label">03</span>
+          <h2>Explore</h2>
+        </div>
+        <p class="intro">Three ways to apply what you're learning — a published research scale, an original self-reflection, and a live attentional-bias task. Not diagnostic tools.</p>
+        <div class="card-grid three">
+          <a href="sias.html" class="card">
+            <span class="cat-badge badge amber">Teacher link</span>
+            <h3>Social Interaction Anxiety Scale</h3>
+            <p>The actual, published SIAS used in research.</p>
+            <span class="format-note">Self-scored scale</span>
+          </a>
+          <a href="social-situations-reflection.html" class="card">
+            <span class="cat-badge badge amber">Teacher link</span>
+            <h3>Social Situations Reflection</h3>
+            <p>A short original self-reflection on how you feel in social situations.</p>
+            <span class="format-note">Reflection</span>
+          </a>
+          <a href="social-anxiety-stroop.html" class="card">
+            <span class="cat-badge badge amber">Teacher link</span>
+            <h3>Social Anxiety Stroop Task</h3>
+            <p>Click the ink color of words about social situations — a live demonstration of attentional bias.</p>
+            <span class="format-note">Live task</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- APPLY -->
+      <div class="lesson-section">
+        <div class="lesson-section-head">
+          <span class="sec-label">04</span>
+          <h2>Apply</h2>
+        </div>
+        <div class="apply-box">
+          <p class="task-prompt">
+            Using at least one term from today's deck (<strong>persistent</strong>, <strong>disproportionate</strong>, <strong>functional impairment</strong>), write 3–4 sentences: what actually separates everyday nervousness from a diagnosable anxiety disorder? If your SIAS score surprised you, say why.
+          </p>
+          <textarea id="applyAnswer" placeholder="Type your answer here…"></textarea>
+          <div class="apply-actions">
+            <button type="button" id="saveApplyBtn">↓ Save my answer</button>
+          </div>
+          <p class="apply-saved-note" id="applySavedNote">Saved — check your downloads.</p>
+        </div>
+      </div>
+
+      <div class="lesson-pager">
+        <a href="lesson-bio-stress-response.html">
+          <span class="dir">← Back to</span>
+          Lesson 4: The Stress Response
+        </a>
+        <a href="lesson-mh-biological.html" class="next">
+          <span class="dir">Next lesson →</span>
+          Lesson 1: Biological Factors
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span class="copy">© 2026 Psych Sims. Built for classroom use — not a diagnostic tool.</span>
+      <div class="footer-links">
+        <a href="index.html#activities">Activity Library</a>
+        <a href="ib-psychology.html">IB Psychology</a>
+        <a href="teacher-login.html">Teacher Login</a>
+      </div>
+    </div>
+  </footer>
+  </div>
+<script>
+  // top nav dropdown panels
+  (function(){
+    const items = document.querySelectorAll('#siteNav .nav-item');
+    items.forEach(item => {
+      const btn = item.querySelector('button');
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = item.classList.contains('open');
+        items.forEach(i => i.classList.remove('open'));
+        if(!isOpen) item.classList.add('open');
+      });
+    });
+    document.addEventListener('click', () => items.forEach(i => i.classList.remove('open')));
+  })();
+
+  // left sidebar accordion + mobile toggle
+  (function(){
+    document.querySelectorAll('.sidebar-unit-toggle:not(.disabled)').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.closest('.sidebar-unit').classList.toggle('expanded');
+      });
+    });
+    const mobileToggle = document.getElementById('sidebarMobileToggle');
+    const sidebar = document.getElementById('subjectSidebar');
+    if(mobileToggle && sidebar){
+      mobileToggle.addEventListener('click', () => sidebar.classList.toggle('mobile-open'));
+    }
+  })();
+
+  // apply task: save answer as a downloadable .txt, client-side only
+  (function(){
+    const btn = document.getElementById('saveApplyBtn');
+    const note = document.getElementById('applySavedNote');
+    if(!btn) return;
+    btn.addEventListener('click', () => {
+      const text = document.getElementById('applyAnswer').value.trim();
+      if(!text) return;
+      const blob = new Blob([text], {type:'text/plain'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'anxiety-disorders-reflection.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      note.style.display = 'block';
+    });
+  })();
+</script>
+
+
+<script src="js/supabase-config.js"></script>
+<script src="js/activity-gate.js"></script>
+<script>
+  initActivityGate('lesson-mh-overview.html');
+</script>
+</body>
+</html>
