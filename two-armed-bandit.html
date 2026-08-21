@@ -448,13 +448,12 @@
 <script src="js/supabase-config.js"></script>
 <script>
 (function(){
-  // ---------- Session gate ----------
-  const rawSession = localStorage.getItem('studentSession');
-  if(!rawSession){
-    window.location.href = 'join.html';
-    return;
+  // ---------- Anonymous session ----------
+  let studentSession = JSON.parse(localStorage.getItem('studentSession') || 'null');
+  if(!studentSession){
+    studentSession = { sessionId: 'anon-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10) };
+    localStorage.setItem('studentSession', JSON.stringify(studentSession));
   }
-  const studentSession = JSON.parse(rawSession);
 
   // ---------- GAD-7 ----------
   const GAD7_ITEMS = [
