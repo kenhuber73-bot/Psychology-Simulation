@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Defense Mechanism Identifier</title>
+<style>
+  :root{
+    --paper:#F6F4EF;
+    --paper-2:#EFEBE2;
+    --ink:#2A2C2E;
+    --ink-soft:#5B5E60;
+    --line:#D8D2C2;
+    --mature:#4E6E62;
+    --secondary:#8A6A3D;
+    --primitive:#A6493D;
+    --mature-bg:#E4EBE7;
+    --secondary-bg:#EFE6D6;
+    --primitive-bg:#F1E1DD;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    line-height:1.5;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:40px 20px 100px;}
+  .eyebrow{
+    font-family:Georgia,"Iowan Old Style",serif;
+    font-style:italic;
+    color:var(--ink-soft);
+    font-size:14px;
+    letter-spacing:.02em;
+    margin-bottom:4px;
+  }
+  h1{
+    font-family:Georgia,"Iowan Old Style",serif;
+    font-weight:400;
+    font-size:34px;
+    margin:0 0 10px;
+    letter-spacing:-0.01em;
+  }
+  h2{
+    font-family:Georgia,"Iowan Old Style",serif;
+    font-weight:400;
+    font-size:20px;
+    margin:0 0 4px;
+  }
+  .intro-text{color:var(--ink-soft);font-size:15px;max-width:58ch;}
+  .card{
+    background:var(--paper-2);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:22px 24px;
+    margin-top:18px;
+  }
+  .disclaimer{
+    font-size:13px;
+    color:var(--ink-soft);
+    border-left:3px solid var(--line);
+    padding-left:14px;
+    margin-top:22px;
+  }
+  button{
+    font-family:inherit;
+    font-size:15px;
+    cursor:pointer;
+  }
+  .start-btn, .next-btn, .restart-btn{
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    padding:13px 26px;
+    border-radius:3px;
+    margin-top:22px;
+    letter-spacing:.01em;
+  }
+  .start-btn:hover, .next-btn:hover, .restart-btn:hover{opacity:.85;}
+  .back-btn{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    padding:13px 20px;
+    border-radius:3px;
+    margin-top:22px;
+    margin-right:10px;
+  }
+  #screen-intro, #screen-results{display:block;}
+  #screen-test, #screen-results{display:none;}
+
+  .progress-track{
+    height:4px;
+    background:var(--line);
+    border-radius:2px;
+    overflow:hidden;
+    margin-bottom:30px;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--ink);
+    width:0%;
+    transition:width .25s ease;
+  }
+  .item-counter{
+    font-size:13px;
+    color:var(--ink-soft);
+    font-family:Georgia,serif;
+    font-style:italic;
+    margin-bottom:14px;
+  }
+  .item-text{
+    font-size:21px;
+    line-height:1.4;
+    margin-bottom:26px;
+    min-height:88px;
+  }
+  .scale{
+    display:flex;
+    justify-content:space-between;
+    gap:6px;
+  }
+  .scale button{
+    flex:1;
+    height:52px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    border-radius:3px;
+    font-size:15px;
+    color:var(--ink);
+    transition:background .12s, color .12s, border-color .12s;
+  }
+  .scale button:hover{border-color:var(--ink-soft);}
+  .scale button.selected{
+    background:var(--ink);
+    color:var(--paper);
+    border-color:var(--ink);
+  }
+  .scale-labels{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:8px;
+  }
+  .nav-row{margin-top:30px;}
+
+  /* results: section headers */
+  .results-section{margin-top:34px;}
+  .results-section:first-of-type{margin-top:22px;}
+  .section-note{font-size:13px;color:var(--ink-soft);margin:2px 0 0;}
+
+  /* top-defenses highlight cards */
+  .top-card{
+    background:var(--paper-2);
+    border:1px solid var(--line);
+    border-left-width:4px;
+    border-radius:4px;
+    padding:14px 18px;
+    margin-top:12px;
+  }
+  .top-card.tier-primitive{border-left-color:var(--primitive);}
+  .top-card.tier-secondary{border-left-color:var(--secondary);}
+  .top-card.tier-mature{border-left-color:var(--mature);}
+  .top-card-head{display:flex;justify-content:space-between;align-items:baseline;}
+  .top-card-name{font-family:Georgia,serif;font-size:18px;}
+  .top-card-score{font-size:14px;color:var(--ink-soft);}
+  .top-card-desc{font-size:13.5px;color:var(--ink-soft);margin-top:4px;}
+
+  /* full profile bars (individual defenses) */
+  .profile-row{margin-bottom:14px;}
+  .profile-name-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:14px;
+    margin-bottom:4px;
+  }
+  .profile-name{display:flex;align-items:center;gap:7px;}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .dot-primitive{background:var(--primitive);}
+  .dot-secondary{background:var(--secondary);}
+  .dot-mature{background:var(--mature);}
+  .profile-bar-track{
+    height:9px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:5px;
+    overflow:hidden;
+  }
+  .profile-bar-fill{height:100%;border-radius:5px 0 0 5px;}
+  .fill-mature{background:var(--mature);}
+  .fill-secondary{background:var(--secondary);}
+  .fill-primitive{background:var(--primitive);}
+
+  /* tier summary (secondary section) */
+  .tier-row{margin-bottom:16px;}
+  .tier-name{
+    font-size:14px;
+    font-weight:600;
+    display:flex;
+    justify-content:space-between;
+  }
+  .tier-bar-track{
+    height:10px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:5px;
+    margin-top:5px;
+    overflow:hidden;
+  }
+  .tier-bar-fill{height:100%;border-radius:5px 0 0 5px;}
+  .tier-desc{font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
+
+  .tag{
+    display:inline-block;
+    font-size:11px;
+    padding:2px 7px;
+    border-radius:10px;
+    color:#fff;
+  }
+  .tag-mature{background:var(--mature);}
+  .tag-secondary{background:var(--secondary);}
+  .tag-primitive{background:var(--primitive);}
+
+  footer{
+    margin-top:40px;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- INTRO -->
+  <div id="screen-intro">
+    <div class="eyebrow">Psychological Tests</div>
+    <h1>Defense Mechanism Identifier</h1>
+    <p class="intro-text">
+      This activity is modeled on the methodology researchers actually use to study defense
+      mechanisms — Bond's <strong>Defense Style Questionnaire (DSQ)</strong>. Real DSQ research scores
+      each defense as the average of several separate statements, then ranks a person's defenses
+      against each other to see which ones stand out as characteristic. This version uses original
+      items written for the 14 defenses from this unit — not the real DSQ's actual questions or
+      scoring norms — but the same underlying logic.
+    </p>
+    <div class="card">
+      <strong>How it works</strong>
+      <p style="margin-bottom:0;color:var(--ink-soft);font-size:14px;">
+        You'll rate 42 statements from 1 (strongly disagree) to 9 (strongly agree) — three statements
+        per defense, for a more reliable read than a single question could give. Your results identify
+        which specific defenses you recognized most in yourself, ranked from highest to lowest, then
+        grouped into the Primitive / Secondary / Mature tiers from class. It takes about 12–14 minutes.
+      </p>
+    </div>
+    <p class="disclaimer">
+      This is an original reflection tool built for classroom use, written to illustrate the defense
+      mechanisms covered in this unit — it is not a validated psychological test, not a clinical or
+      diagnostic instrument, and your answers are not saved or sent anywhere. Your scores are
+      <strong>ipsative</strong> — they show which defenses stood out relative to your <em>own</em> other
+      answers, not compared to other students. Everyone uses defense mechanisms; recognizing a
+      Primitive one in yourself here doesn't mean anything is wrong with you.
+    </p>
+    <button class="start-btn" onclick="startTest()">Begin</button>
+  </div>
+
+  <!-- TEST -->
+  <div id="screen-test">
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="item-counter" id="itemCounter">Item 1 of 42</div>
+    <div class="item-text" id="itemText"></div>
+    <div class="scale" id="scaleRow"></div>
+    <div class="scale-labels"><span>Strongly disagree</span><span>Strongly agree</span></div>
+    <div class="nav-row">
+      <button class="back-btn" id="backBtn" onclick="goBack()">Back</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="screen-results">
+    <div class="eyebrow">Your Results</div>
+    <h1>Your Defense Profile</h1>
+    <p class="intro-text">Based on your 42 responses, here's which specific defenses stood out for you.</p>
+
+    <div class="results-section">
+      <h2>Your top defenses</h2>
+      <p class="section-note">The three patterns you recognized most, relative to your own other answers.</p>
+      <div id="topCards"></div>
+    </div>
+
+    <div class="results-section card">
+      <h2>Full profile — all 14 defenses</h2>
+      <p class="section-note">Ranked highest to lowest.</p>
+      <div id="profileRows" style="margin-top:16px;"></div>
+    </div>
+
+    <div class="results-section">
+      <h2>Grouped by tier</h2>
+      <p class="section-note">The same 14 defenses, averaged into the three broader tiers from class.</p>
+      <div id="tierRows" style="margin-top:14px;"></div>
+    </div>
+
+    <p class="disclaimer">
+      A high score means that defense showed up more often in your answers than your other patterns
+      did — not that you scored high compared to other students, and not that it's clinically
+      significant on its own. Nearly everyone has at least one Primitive defense somewhere in their
+      top few; that's normal, not a red flag. This is a reflection exercise, not a diagnostic tool.
+    </p>
+    <button class="restart-btn" onclick="restartTest()">Start over</button>
+  </div>
+
+  <footer>Original items written for classroom use, modeled on DSQ methodology — not the real DSQ's questions, scoring, or norms.</footer>
+</div>
+
+<script>
+// ---- Item bank: 42 original items, 3 per defense, grouped into 3 tiers ----
+// style: 'primitive' | 'secondary' | 'mature'
+const mechDescriptions = {
+  "Denial": "Refusing to face reality or an obvious truth.",
+  "Projection": "Ascribing your own unacceptable feelings to someone else.",
+  "Regression": "Reverting to earlier, less mature coping patterns under stress.",
+  "Splitting": "Seeing people or situations as all-good or all-bad.",
+  "Projective Identification": "Pressuring someone else into actually feeling what you can't admit to feeling.",
+  "Acting Out": "Discharging a feeling through action instead of words or awareness.",
+  "Repression": "Keeping distressing material out of conscious awareness.",
+  "Displacement": "Redirecting an impulse toward a safer target.",
+  "Reaction Formation": "Flipping a feeling into its opposite.",
+  "Rationalization": "Explaining away a feeling or behavior in logical-sounding terms.",
+  "Sublimation": "Channeling an impulse into something constructive.",
+  "Humor": "Finding genuine humor in a hard situation.",
+  "Altruism": "Managing your own pain by genuinely helping others facing something similar.",
+  "Suppression": "Consciously setting a feeling aside to deal with later.",
+};
+
+const items = [
+  // PRIMITIVE
+  {mech:"Denial", style:"primitive", text:"When something is too upsetting to accept, I find myself acting like it just isn't true."},
+  {mech:"Denial", style:"primitive", text:"People close to me have said I ignore problems as if they weren't really happening."},
+  {mech:"Denial", style:"primitive", text:"Even when the evidence is right in front of me, I can be the last person to admit something is really wrong."},
+
+  {mech:"Projection", style:"primitive", text:"I often assume other people are annoyed with me, even without much evidence."},
+  {mech:"Projection", style:"primitive", text:"It's easier for me to notice unfair or selfish behavior in others than to admit it in myself."},
+  {mech:"Projection", style:"primitive", text:"I catch myself reacting strongly to a trait in someone else that, if I'm honest, I probably have too."},
+
+  {mech:"Regression", style:"primitive", text:"When I'm really overwhelmed, I catch myself acting younger than I actually am — sulking, needing comfort, wanting someone else to just handle it."},
+  {mech:"Regression", style:"primitive", text:"Under a lot of stress, I fall back on habits from when I was a kid, more than I'd like to admit."},
+  {mech:"Regression", style:"primitive", text:"In an argument, I sometimes catch myself whining or shutting down instead of actually talking it through."},
+
+  {mech:"Splitting", style:"primitive", text:"My opinion of someone can flip completely — from thinking they're great to thinking they're terrible — over one incident."},
+  {mech:"Splitting", style:"primitive", text:"I tend to see people as either totally trustworthy or totally not, without much room in between."},
+  {mech:"Splitting", style:"primitive", text:"Looking back, I've gone from \u201Cbest friend\u201D to \u201Cdone with this person\u201D pretty suddenly, more than once."},
+
+  {mech:"Projective Identification", style:"primitive", text:"When I'm afraid someone doesn't like me, I sometimes act in ways that end up pushing them away — and then it feels like proof I was right."},
+  {mech:"Projective Identification", style:"primitive", text:"When I expect someone to treat me a certain way, I've noticed I sometimes act in ways that make them actually start treating me that way."},
+  {mech:"Projective Identification", style:"primitive", text:"Friends have told me it's like I make my worries about a relationship come true, just by how I act."},
+
+  {mech:"Acting Out", style:"primitive", text:"When a feeling gets to be too much, I'm more likely to do something impulsive about it than to talk about it."},
+  {mech:"Acting Out", style:"primitive", text:"I've done something risky or reckless in the heat of a bad feeling, without really deciding to."},
+  {mech:"Acting Out", style:"primitive", text:"I'd rather do something drastic in the moment than sit with a feeling I can't explain yet."},
+
+  // SECONDARY
+  {mech:"Repression", style:"secondary", text:"There are things that clearly bother me that I genuinely don't think about — they just don't come to mind."},
+  {mech:"Repression", style:"secondary", text:"People have pointed out a pattern in my life that I honestly hadn't noticed myself."},
+  {mech:"Repression", style:"secondary", text:"There are whole stretches of a hard time in my life that I genuinely can't recall clearly."},
+
+  {mech:"Displacement", style:"secondary", text:"When I'm upset with someone I can't confront, I've taken it out on someone who had nothing to do with it."},
+  {mech:"Displacement", style:"secondary", text:"A bad mood from one part of my day sometimes leaks into how I treat people later, who don't deserve it."},
+  {mech:"Displacement", style:"secondary", text:"I've come home and been short with my family over something that had nothing to do with them."},
+
+  {mech:"Reaction Formation", style:"secondary", text:"When I dislike someone, I sometimes end up being unusually warm or friendly toward them instead."},
+  {mech:"Reaction Formation", style:"secondary", text:"I've noticed myself insisting I'm \u201Ctotally fine\u201D with something a little too quickly, or a little too loudly."},
+  {mech:"Reaction Formation", style:"secondary", text:"The people I claim not to care about at all are sometimes the ones I actually think about the most."},
+
+  {mech:"Rationalization", style:"secondary", text:"When I don't get something I wanted, I can usually convince myself pretty fast that I didn't want it that badly anyway."},
+  {mech:"Rationalization", style:"secondary", text:"I can always come up with a logical-sounding reason for something I did, even when I know the real reason was different."},
+  {mech:"Rationalization", style:"secondary", text:"Looking back, I can usually reframe even a clear mistake as \u201Cactually the right call, given everything.\u201D"},
+
+  // MATURE
+  {mech:"Sublimation", style:"mature", text:"When I'm upset, channeling it into something physical or creative — sport, art, music, work — genuinely helps."},
+  {mech:"Sublimation", style:"mature", text:"Some of my best effort comes out of me when I'm actually dealing with a difficult feeling, not a calm one."},
+  {mech:"Sublimation", style:"mature", text:"A hobby or a sport has been where a lot of my hardest feelings actually go."},
+
+  {mech:"Humor", style:"mature", text:"I can usually find something genuinely funny in a situation that's stressing me out."},
+  {mech:"Humor", style:"mature", text:"Making a joke about my own mistake helps me actually feel better about it, not just cover it up."},
+  {mech:"Humor", style:"mature", text:"Even at my own expense, I'd rather laugh about a bad moment than dwell on it."},
+
+  {mech:"Altruism", style:"mature", text:"Helping someone else through something I've struggled with myself genuinely makes me feel better, not just distracted."},
+  {mech:"Altruism", style:"mature", text:"Supporting someone facing a version of my own old problem seems to help me process it too."},
+  {mech:"Altruism", style:"mature", text:"I look for chances to support people going through something I've already been through myself."},
+
+  {mech:"Suppression", style:"mature", text:"I can consciously set a worry aside on purpose, and actually come back to it later when it's a better time."},
+  {mech:"Suppression", style:"mature", text:"I'm able to say to myself \u201Cnot right now\u201D about a problem, without it just running underneath everything anyway."},
+  {mech:"Suppression", style:"mature", text:"When it's not the right time to deal with something, I can genuinely park it and stay present for what's actually happening."},
+];
+
+let order = [];
+let current = 0;
+let responses = {};
+
+function shuffledOrder(n){
+  const arr = Array.from({length:n}, (_,i)=>i);
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+
+function startTest(){
+  order = shuffledOrder(items.length);
+  current = 0;
+  responses = {};
+  document.getElementById("screen-intro").style.display = "none";
+  document.getElementById("screen-test").style.display = "block";
+  renderItem();
+}
+
+function renderItem(){
+  const idx = order[current];
+  const item = items[idx];
+  document.getElementById("itemCounter").textContent = `Item ${current+1} of ${items.length}`;
+  document.getElementById("itemText").textContent = item.text;
+  document.getElementById("progressFill").style.width = `${(current/items.length)*100}%`;
+  document.getElementById("backBtn").style.visibility = current === 0 ? "hidden" : "visible";
+
+  const scaleRow = document.getElementById("scaleRow");
+  scaleRow.innerHTML = "";
+  for(let v=1; v<=9; v++){
+    const btn = document.createElement("button");
+    btn.textContent = v;
+    if(responses[idx] === v) btn.classList.add("selected");
+    btn.onclick = () => selectValue(idx, v);
+    scaleRow.appendChild(btn);
+  }
+}
+
+function selectValue(idx, v){
+  responses[idx] = v;
+  setTimeout(()=>{
+    if(current < items.length - 1){
+      current++;
+      renderItem();
+    } else {
+      showResults();
+    }
+  }, 150);
+  renderItem();
+}
+
+function goBack(){
+  if(current > 0){
+    current--;
+    renderItem();
+  }
+}
+
+const styleMeta = {
+  primitive: {label:"Primitive", cls:"fill-primitive", dotCls:"dot-primitive", tag:"tag-primitive", tierCls:"tier-primitive", desc:"Earliest to develop, most reality-distorting — the mind avoids the fact itself, not just the feeling about it."},
+  secondary: {label:"Secondary", cls:"fill-secondary", dotCls:"dot-secondary", tag:"tag-secondary", tierCls:"tier-secondary", desc:"Reality stays intact, but a feeling or its meaning gets redirected somewhere else."},
+  mature: {label:"Mature", cls:"fill-mature", dotCls:"dot-mature", tag:"tag-mature", tierCls:"tier-mature", desc:"The underlying impulse gets used constructively, rather than just blocked or managed."},
+};
+
+function showResults(){
+  document.getElementById("screen-test").style.display = "none";
+  document.getElementById("screen-results").style.display = "block";
+
+  // per-defense averages
+  const mechScores = {};
+  items.forEach((item, idx) => {
+    if(!mechScores[item.mech]) mechScores[item.mech] = {sum:0, count:0, style:item.style};
+    mechScores[item.mech].sum += responses[idx];
+    mechScores[item.mech].count += 1;
+  });
+  const mechAverages = Object.entries(mechScores).map(([mech, d]) => ({
+    mech, style:d.style, avg: d.sum / d.count
+  }));
+  const sortedMechs = mechAverages.slice().sort((a,b)=> b.avg - a.avg);
+
+  // ---- Top 3 defenses ----
+  const top3 = sortedMechs.slice(0,3);
+  document.getElementById("topCards").innerHTML = top3.map(m => `
+    <div class="top-card ${styleMeta[m.style].tierCls}">
+      <div class="top-card-head">
+        <span class="top-card-name">${m.mech}</span>
+        <span class="top-card-score">${m.avg.toFixed(1)} / 9 &nbsp; <span class="tag ${styleMeta[m.style].tag}">${styleMeta[m.style].label}</span></span>
+      </div>
+      <div class="top-card-desc">${mechDescriptions[m.mech]}</div>
+    </div>
+  `).join("");
+
+  // ---- Full profile: all 14, ranked ----
+  document.getElementById("profileRows").innerHTML = sortedMechs.map(m => {
+    const pct = (m.avg/9)*100;
+    return `
+      <div class="profile-row">
+        <div class="profile-name-row">
+          <span class="profile-name"><span class="dot ${styleMeta[m.style].dotCls}"></span>${m.mech}</span>
+          <span>${m.avg.toFixed(1)}</span>
+        </div>
+        <div class="profile-bar-track"><div class="profile-bar-fill ${styleMeta[m.style].cls}" style="width:${pct}%"></div></div>
+      </div>`;
+  }).join("");
+
+  // ---- Tier summary (secondary) ----
+  const styleGroups = {primitive:[], secondary:[], mature:[]};
+  mechAverages.forEach(m => styleGroups[m.style].push(m.avg));
+  const tierAverages = {};
+  Object.keys(styleGroups).forEach(s => {
+    const arr = styleGroups[s];
+    tierAverages[s] = arr.reduce((a,b)=>a+b,0) / arr.length;
+  });
+  document.getElementById("tierRows").innerHTML = ["primitive","secondary","mature"].map(s => {
+    const avg = tierAverages[s];
+    const pct = (avg/9)*100;
+    return `
+      <div class="tier-row">
+        <div class="tier-name"><span>${styleMeta[s].label}</span><span>${avg.toFixed(1)} / 9</span></div>
+        <div class="tier-bar-track"><div class="tier-bar-fill ${styleMeta[s].cls}" style="width:${pct}%"></div></div>
+        <div class="tier-desc">${styleMeta[s].desc}</div>
+      </div>`;
+  }).join("");
+}
+
+function restartTest(){
+  document.getElementById("screen-results").style.display = "none";
+  document.getElementById("screen-intro").style.display = "block";
+}
+</script>
+</body>
+</html>
