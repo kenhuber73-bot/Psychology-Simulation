@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Escape the Buzzer</title>
+<style>
+  :root{
+    --red-900:#5c1414; --red-700:#9c1f1f; --red-500:#d94141; --amber:#f4a63d;
+    --teal-900:#0b3b3c; --teal-700:#0f766e; --teal-100:#e6fbf8; --ink:#1e2a2a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    background:linear-gradient(180deg,#20292b,#12181a); padding:16px 12px 40px; color:var(--ink);
+  }
+  .app{ width:100%; max-width:820px; }
+  h1{ text-align:center; color:#f0e6e6; margin:6px 0 2px; font-size:1.7rem; }
+  .tag{ text-align:center; color:#c9b8b8; font-size:.9rem; margin-bottom:14px; }
+
+  #arena{
+    position:relative; background:#26181a; border:3px solid var(--red-700); border-radius:16px;
+    height:380px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+  #arena.alarm{ animation: pulseBorder .5s infinite alternate; }
+  @keyframes pulseBorder{ 0%{ box-shadow:0 0 0 0 rgba(217,65,65,.0), 0 10px 30px rgba(0,0,0,.4); } 100%{ box-shadow:0 0 40px 10px rgba(217,65,65,.55), 0 10px 30px rgba(0,0,0,.4); } }
+  #visualFlash{ position:absolute; inset:0; background:rgba(217,65,65,0); pointer-events:none; transition:background .1s; }
+
+  .setupPanel{ padding:30px 20px; text-align:center; color:#e8dcdc; }
+  .setupPanel .warn{ background:#3a1f1f; border:1px solid var(--red-700); border-radius:10px; padding:12px 16px; font-size:.85rem; margin:14px auto; max-width:520px; text-align:left; }
+  .controlsRow{ display:flex; gap:16px; justify-content:center; align-items:center; flex-wrap:wrap; margin:14px 0; font-size:.85rem; }
+  input[type=range]{ width:140px; }
+
+  button{
+    font-family:inherit; font-size:1rem; padding:12px 22px; border-radius:10px; border:none;
+    background:var(--red-700); color:white; cursor:pointer; font-weight:700;
+  }
+  button:hover{ background:var(--red-500); }
+  button.small{ font-size:.85rem; padding:8px 14px; background:var(--teal-700); }
+  button.small:hover{ background:var(--teal-900); }
+
+  .hudRow{ display:flex; justify-content:space-between; align-items:center; padding:10px 14px; color:#e8dcdc; font-size:.9rem;}
+  .trialPill{ background:#3a1f1f; border-radius:20px; padding:5px 14px; font-weight:700; }
+
+  #playField{ position:relative; height:260px; }
+  .escBtn{
+    position:absolute; width:64px; height:64px; border-radius:50%; border:none;
+    background:var(--amber); color:#3a2200; font-weight:800; font-size:1.3rem; cursor:pointer;
+    box-shadow:0 4px 10px rgba(0,0,0,.4); transition:transform .08s;
+  }
+  .escBtn:active{ transform:scale(.92); }
+  .escBtn.done{ background:#2e9e6b; color:white; }
+  .escBtn.reject{ animation: rejectShake .3s; }
+  @keyframes rejectShake{ 0%,100%{transform:translateX(0);} 30%{transform:translateX(-4px);} 60%{transform:translateX(4px);} }
+
+  .centerMsg{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:#f0e6e6; font-size:1.3rem; font-weight:700; text-align:center; padding:20px; flex-direction:column; gap:6px;
+  }
+  .hidden{ display:none !important; }
+
+  /* ---------- DEBRIEF (teal) ---------- */
+  #debrief{ background:var(--teal-100); border-radius:18px; padding:20px; margin-top:16px; box-shadow:0 10px 30px rgba(0,0,0,.25); display:none; }
+  #debrief h2{ color:var(--teal-900); margin-top:0; }
+  #debrief h3{ color:var(--teal-900); margin-bottom:4px; }
+  .card{ background:white; border-radius:10px; padding:14px; margin-bottom:14px; border:1px solid #cfe3e0; }
+  canvas#chart{ width:100%; background:#fff; border-radius:8px; }
+  .compareGrid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:10px; text-align:center; }
+  @media (max-width:600px){ .compareGrid{ grid-template-columns:1fr; } }
+  .compareGrid .box{ background:var(--teal-100); border-radius:8px; padding:10px; border:1px solid #bfe3dd; }
+  .compareGrid .box b{ display:block; color:var(--teal-900); margin-bottom:4px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>🚨 Escape the Buzzer</h1>
+  <p class="tag">Figure out how to make it stop.</p>
+
+  <div id="arena">
+    <div id="visualFlash"></div>
+
+    <div id="setupPanel" class="setupPanel">
+      <p><b>Heads up:</b> this activity uses a repeating alarm sound.</p>
+      <div class="warn">
+        You can lower the volume or mute it below (muting swaps the alarm for a flashing red screen instead — pick whichever works for you). Nothing here is meant to be painful, just annoying enough that you'll want it to stop.
+      </div>
+      <p style="font-size:.85rem; max-width:460px; margin:0 auto;">Three buttons will appear. Something you do will make the alarm stop — you'll have to figure out what.</p>
+      <div class="controlsRow">
+        <label>Volume: <input type="range" id="volSlider" min="0" max="10" value="5"></label>
+        <label><input type="checkbox" id="muteBox"> Mute sound (use flashing screen instead)</label>
+      </div>
+      <button id="startBtn">Start</button>
+    </div>
+
+    <div id="gameArea" class="hidden">
+      <div class="hudRow">
+        <div class="trialPill">Round <span id="roundNum">1</span> / 8</div>
+        <div class="trialPill" id="statusPill">Make it stop!</div>
+      </div>
+      <div id="playField"></div>
+    </div>
+
+    <div id="finishMsg" class="centerMsg hidden">
+      <div>✅ All rounds complete!</div>
+      <button id="revealBtn" style="margin-top:10px;">See what just happened</button>
+    </div>
+  </div>
+
+  <div id="debrief">
+    <h2>What was actually going on</h2>
+
+    <div class="card">
+      <h3>Your escape speed, round by round</h3>
+      <p style="font-size:.85rem; color:#3a5555;">Each bar is how long it took you to silence the alarm that round.</p>
+      <canvas id="chart" width="760" height="220"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>This is negative reinforcement</h3>
+      <p style="font-size:.9rem; line-height:1.55;">
+        <b>Negative reinforcement</b> means a behavior gets <i>strengthened</i> because it makes something unpleasant <i>go away</i>. The word "negative" here doesn't mean "bad" — it means something was <b>subtracted</b> (the alarm), not added. You weren't told the rule (click the buttons right-to-left) — you had to discover it by acting and noticing what worked, the same way Thorndike's cats learned to escape puzzle boxes by trial and error. Every time you found the right sequence, the alarm stopped, and that relief is exactly what reinforcement is: a consequence that makes the behavior that produced it more likely — and, as your chart probably shows, faster and less error-prone — the next time.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Don't confuse it with these</h3>
+      <div class="compareGrid">
+        <div class="box"><b>Positive reinforcement</b>Add something pleasant to increase a behavior. (Lucky Orchard's gems)</div>
+        <div class="box"><b>Negative reinforcement</b>Remove something unpleasant to increase a behavior. (This activity)</div>
+        <div class="box"><b>Punishment</b>Add or remove something to <i>decrease</i> a behavior — the opposite goal entirely.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>You do this every day</h3>
+      <p style="font-size:.9rem; line-height:1.55;" id="realWorldText">
+        Hitting snooze to stop an alarm, buckling your seatbelt to stop the dinging, putting on a jacket to stop feeling cold, taking a painkiller to stop a headache, closing a tab to stop a notification sound — every one of these is negative reinforcement. The behavior isn't rewarded with something new; it's reinforced because it makes something bad stop.
+      </p>
+      <p style="font-size:.85rem; color:#3a5555;">Can you think of one from your own day? Try writing it in the box below.</p>
+      <textarea id="reflection" rows="3" style="width:100%; padding:8px; border-radius:8px; border:1px solid #cfe3e0; font-family:inherit;" placeholder="e.g. I close my laptop lid to stop the fan noise..."></textarea>
+    </div>
+
+    <button class="small" id="downloadBtn">Download my results</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---------- Audio ----------
+  let audioCtx = null;
+  let alarmInterval = null;
+  function ac(){ if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
+  function alarmPulse(vol){
+    try{
+      const c = ac();
+      const o = c.createOscillator(); const g = c.createGain();
+      o.type = 'square'; o.frequency.value = 740;
+      g.gain.value = vol;
+      o.connect(g); g.connect(c.destination);
+      o.start();
+      g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 0.28);
+      o.stop(c.currentTime + 0.3);
+    }catch(e){}
+  }
+  function progressTone(step){
+    beepSimple(340 + step*90, 0.1, 0.06);
+  }
+  function wrongTone(){
+    beepSimple(140, 0.18, 0.06);
+  }
+  function beepSimple(freq, dur, vol){
+    try{
+      const c = ac();
+      const o = c.createOscillator(); const g = c.createGain();
+      o.type = 'sine'; o.frequency.value = freq; g.gain.value = vol;
+      o.connect(g); g.connect(c.destination);
+      o.start();
+      g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + dur);
+      o.stop(c.currentTime + dur + 0.02);
+    }catch(e){}
+  }
+  function successChime(){
+    try{
+      const c = ac();
+      [520,780].forEach((f,i)=>{
+        const o = c.createOscillator(); const g = c.createGain();
+        o.type='sine'; o.frequency.value=f; g.gain.value=0.08;
+        o.connect(g); g.connect(c.destination);
+        o.start(c.currentTime + i*0.1);
+        g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + i*0.1 + 0.25);
+        o.stop(c.currentTime + i*0.1 + 0.27);
+      });
+    }catch(e){}
+  }
+
+  let volSlider = document.getElementById('volSlider');
+  let muteBox = document.getElementById('muteBox');
+  let alarmOn = false;
+
+  function startAlarm(){
+    alarmOn = true;
+    document.getElementById('arena').classList.add('alarm');
+    if (!muteBox.checked){
+      alarmInterval = setInterval(() => alarmPulse(volSlider.value/200), 350);
+    } else {
+      alarmInterval = setInterval(() => {
+        const f = document.getElementById('visualFlash');
+        f.style.background = 'rgba(217,65,65,.55)';
+        setTimeout(()=> f.style.background = 'rgba(217,65,65,0)', 150);
+      }, 350);
+    }
+  }
+  function stopAlarm(){
+    alarmOn = false;
+    document.getElementById('arena').classList.remove('alarm');
+    clearInterval(alarmInterval);
+    document.getElementById('visualFlash').style.background = 'rgba(217,65,65,0)';
+  }
+
+  // ---------- Trial logic ----------
+  const TOTAL_ROUNDS = 8;
+  let round = 0;
+  let progressIndex = 0;   // how many correct-in-a-row clicks so far this round
+  let correctOrder = [];   // the 3 button elements, left-to-right (the hidden rule)
+  let trialStart = 0;
+  let latencies = [];      // seconds per round
+  let mistakesPerRound = []; // wrong clicks per round
+
+  let roundMistakes = 0;
+
+  const playField = document.getElementById('playField');
+  const roundNumEl = document.getElementById('roundNum');
+  const statusPill = document.getElementById('statusPill');
+
+  function randPos(){
+    const w = playField.clientWidth || 720, h = playField.clientHeight || 260;
+    return { x: 20 + Math.random()*(w-84), y: 10 + Math.random()*(h-74) };
+  }
+
+  function genNonOverlappingPositions(count, minDist){
+    const positions = [];
+    let attempts = 0;
+    while (positions.length < count && attempts < 500){
+      attempts++;
+      const p = randPos();
+      const tooClose = positions.some(q => Math.hypot(p.x-q.x, p.y-q.y) < minDist);
+      if (!tooClose) positions.push(p);
+    }
+    // fallback: if we couldn't place them all with spacing (very small screens), just fill in remaining
+    while (positions.length < count) positions.push(randPos());
+    return positions;
+  }
+
+  function buildRound(){
+    playField.innerHTML = '';
+    progressIndex = 0;
+    roundMistakes = 0;
+    const positions = genNonOverlappingPositions(4, 80);
+    const buttons = positions.map(pos => {
+      const btn = document.createElement('button');
+      btn.className = 'escBtn';
+      btn.textContent = '?';
+      btn.style.left = pos.x + 'px';
+      btn.style.top = pos.y + 'px';
+      playField.appendChild(btn);
+      return { el: btn, x: pos.x };
+    });
+    // hidden rule: correct order is always right-to-left by position
+    correctOrder = buttons.sort((a,b) => b.x - a.x).map(b => b.el);
+    correctOrder.forEach(el => el.addEventListener('click', () => onEscClick(el)));
+
+    trialStart = Date.now();
+    statusPill.textContent = 'Make it stop!';
+    startAlarm();
+  }
+
+  function onEscClick(btn){
+    const expected = correctOrder[progressIndex];
+    if (btn === expected){
+      btn.classList.add('done');
+      progressTone(progressIndex);
+      progressIndex++;
+      if (progressIndex >= correctOrder.length){
+        const latency = (Date.now() - trialStart)/1000;
+        latencies.push(latency);
+        mistakesPerRound.push(roundMistakes);
+        stopAlarm();
+        successChime();
+        statusPill.textContent = `Escaped in ${latency.toFixed(2)}s!`;
+        round++;
+        setTimeout(nextRoundOrFinish, 1400);
+      }
+    } else {
+      roundMistakes++;
+      wrongTone();
+      btn.classList.remove('reject'); void btn.offsetWidth; btn.classList.add('reject');
+      // a mistake resets progress for this round — must restart the sequence
+      progressIndex = 0;
+      correctOrder.forEach(el => el.classList.remove('done'));
+    }
+  }
+
+  function nextRoundOrFinish(){
+    if (round >= TOTAL_ROUNDS){
+      document.getElementById('gameArea').classList.add('hidden');
+      document.getElementById('finishMsg').classList.remove('hidden');
+    } else {
+      roundNumEl.textContent = (round+1);
+      buildRound();
+    }
+  }
+
+  document.getElementById('startBtn').addEventListener('click', () => {
+    document.getElementById('setupPanel').classList.add('hidden');
+    document.getElementById('gameArea').classList.remove('hidden');
+    round = 0; latencies = [];
+    roundNumEl.textContent = 1;
+    buildRound();
+  });
+
+  document.getElementById('revealBtn').addEventListener('click', () => {
+    document.getElementById('debrief').style.display = 'block';
+    drawChart();
+    document.getElementById('debrief').scrollIntoView({behavior:'smooth'});
+  });
+
+  function drawChart(){
+    const canvas = document.getElementById('chart');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+    const pad = 40;
+    const gw = canvas.width - pad*2;
+    const gh = canvas.height - pad*1.3;
+    const maxLat = Math.max(...latencies, 1);
+    const barW = gw / latencies.length * 0.6;
+    const gap = gw / latencies.length;
+
+    ctx.strokeStyle = '#8aa'; ctx.beginPath();
+    ctx.moveTo(pad,10); ctx.lineTo(pad, gh+10); ctx.lineTo(pad+gw, gh+10); ctx.stroke();
+    ctx.fillStyle = '#3a5555'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+
+    latencies.forEach((lat, i) => {
+      const x = pad + i*gap + (gap-barW)/2;
+      const barH = (lat/maxLat) * (gh-10);
+      const y = gh+10 - barH;
+      const grad = ctx.createLinearGradient(0,y,0,gh+10);
+      grad.addColorStop(0, '#f4a63d'); grad.addColorStop(1, '#d94141');
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y, barW, barH);
+      ctx.fillStyle = '#1e2a2a';
+      ctx.fillText(lat.toFixed(2)+'s', x+barW/2, y-6);
+      ctx.fillStyle = '#3a5555';
+      ctx.fillText('R'+(i+1), x+barW/2, gh+26);
+    });
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#3a5555';
+    ctx.fillText('seconds to escape', 4, 14);
+  }
+
+  document.getElementById('downloadBtn').addEventListener('click', () => {
+    const reflection = document.getElementById('reflection').value.trim();
+    const lines = [
+      'Escape the Buzzer — Session Data',
+      '=================================',
+      `Rounds completed: ${latencies.length}`,
+      ...latencies.map((l,i) => `  Round ${i+1}: ${l.toFixed(2)}s to escape, ${mistakesPerRound[i] || 0} wrong click(s)`),
+      `Fastest round: ${Math.min(...latencies).toFixed(2)}s`,
+      `Slowest round: ${Math.max(...latencies).toFixed(2)}s`,
+      `Total wrong clicks across all rounds: ${mistakesPerRound.reduce((a,b)=>a+b,0)}`,
+      '',
+      'My real-life example of negative reinforcement:',
+      reflection || '(not answered)'
+    ];
+    const blob = new Blob([lines.join('\n')], {type:'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'escape-the-buzzer-data.txt';
+    a.click();
+  });
+})();
+</script>
+</body>
+</html>
