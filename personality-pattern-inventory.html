@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personality Pattern Inventory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #EDE7D9;
+    --paper-raised: #F5F1E6;
+    --ink: #24211B;
+    --ink-soft: #58524A;
+    --rule: #C9BFA8;
+    --stamp: #A23F2E;
+    --stamp-soft: #C97A63;
+    --brass: #7C6A3E;
+    --ok: #4B6B54;
+    --card-shadow: rgba(36,33,27,0.18);
+    --focus: #1D5FA8;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1B1914;
+      --paper-raised: #24211A;
+      --ink: #EDE7D9;
+      --ink-soft: #B5AC98;
+      --rule: #45402F;
+      --stamp: #E07A5F;
+      --stamp-soft: #C97A63;
+      --brass: #C9B26B;
+      --ok: #8FBF9B;
+      --card-shadow: rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1B1914;
+    --paper-raised: #24211A;
+    --ink: #EDE7D9;
+    --ink-soft: #B5AC98;
+    --rule: #45402F;
+    --stamp: #E07A5F;
+    --stamp-soft: #C97A63;
+    --brass: #C9B26B;
+    --ok: #8FBF9B;
+    --card-shadow: rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Source Serif 4', Georgia, serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      linear-gradient(var(--rule) 1px, transparent 1px);
+    background-size: 100% 2.1em;
+    background-attachment: local;
+  }
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 2.2rem 1.25rem 4rem;
+  }
+  .mono { font-family: 'Space Mono', 'Courier New', monospace; }
+
+  header.top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 0.6rem;
+    margin-bottom: 1.8rem;
+  }
+  header.top .id {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+  }
+  header.top .form-no {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--stamp);
+    border: 1px solid var(--stamp);
+    padding: 0.15rem 0.5rem;
+    transform: rotate(-2deg);
+  }
+
+  h1 {
+    font-size: 1.9rem;
+    line-height: 1.15;
+    margin: 0 0 0.3rem;
+    font-weight: 700;
+  }
+  .sub {
+    color: var(--ink-soft);
+    font-size: 1rem;
+    margin: 0 0 1.6rem;
+    max-width: 46ch;
+  }
+
+  .card {
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    box-shadow: 0 6px 0 var(--card-shadow);
+    padding: 1.6rem 1.5rem;
+    margin-bottom: 1.4rem;
+  }
+
+  .notice {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    border-left: 3px solid var(--brass);
+    padding-left: 0.8rem;
+    margin: 1.4rem 0;
+  }
+
+  button {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.03em;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 0.75rem 1.4rem;
+    cursor: pointer;
+    transition: transform 0.08s ease, opacity 0.15s ease;
+  }
+  button:hover { opacity: 0.88; }
+  button:active { transform: translateY(1px); }
+  button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  button.secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--ink);
+  }
+  button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .start-btn { font-size: 0.95rem; padding: 0.85rem 1.8rem; }
+
+  /* ---- quiz screen ---- */
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+  }
+  .progress-track {
+    flex: 1;
+    height: 6px;
+    background: var(--rule);
+    position: relative;
+  }
+  .progress-fill {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: var(--stamp);
+    width: 0%;
+    transition: width 0.25s ease;
+  }
+  .progress-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+
+  .scale-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    color: var(--brass);
+    margin-bottom: 0.5rem;
+  }
+
+  .question-text {
+    font-size: 1.3rem;
+    line-height: 1.4;
+    margin: 0.2rem 0 1.6rem;
+    min-height: 3.6rem;
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .opt {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    border: 1px solid var(--rule);
+    background: transparent;
+    color: var(--ink);
+    padding: 0.75rem 0.9rem;
+    text-align: left;
+    font-family: 'Source Serif 4', serif;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  .opt:hover { border-color: var(--ink); background: rgba(124,106,62,0.08); }
+  .opt .num {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+    border: 1px solid var(--rule);
+    width: 1.6rem;
+    height: 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .opt.selected { border-color: var(--stamp); background: rgba(162,63,46,0.1); }
+  .opt.selected .num { border-color: var(--stamp); color: var(--stamp); }
+
+  .nav-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1.6rem;
+  }
+
+  /* ---- results ---- */
+  .scale-row {
+    margin-bottom: 1.1rem;
+  }
+  .scale-row .label-line {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    margin-bottom: 0.3rem;
+  }
+  .scale-row .label-line .name { color: var(--ink); }
+  .scale-row .label-line .pct { color: var(--ink-soft); }
+  .bar-track {
+    height: 10px;
+    background: var(--rule);
+    position: relative;
+  }
+  .bar-fill {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: var(--brass);
+  }
+  .bar-fill.high { background: var(--stamp); }
+  .scale-blurb {
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    margin: 0.4rem 0 0;
+    line-height: 1.45;
+  }
+
+  .radar-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 0.4rem 0 1.8rem;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+    margin: 0 0 0.2rem;
+  }
+  .section-sub {
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+    margin: 0 0 1.2rem;
+  }
+
+  footer.foot {
+    margin-top: 2.4rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--ink-soft);
+    text-align: center;
+    line-height: 1.7;
+  }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 420px) {
+    h1 { font-size: 1.55rem; }
+    .question-text { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <span class="id mono">PPI &middot; SELF-REPORT FORM</span>
+    <span class="form-no mono" id="stateBadge">INTRO</span>
+  </header>
+
+  <!-- ===== INTRO SCREEN ===== -->
+  <section id="screen-intro">
+    <h1>The Personality Pattern Inventory</h1>
+    <p class="sub">A 72-item self-report questionnaire modeled on the nine classic clinical scales popularized by the Minnesota Multiphasic Personality Inventory (MMPI) &mdash; rebuilt here with original items for classroom use.</p>
+
+    <div class="card">
+      <p style="margin-top:0;">You'll read 72 short statements and say how much each one sounds like you. It takes about 8&ndash;10 minutes. There are no right or wrong answers &mdash; answer with your first instinct rather than overthinking it.</p>
+      <p style="margin-bottom:0;">At the end you'll get a profile across nine personality &amp; adjustment scales, shown as a chart you can discuss or compare with classmates.</p>
+    </div>
+
+    <div class="notice">
+      NOT A DIAGNOSTIC TOOL. This is an original, educational adaptation inspired by MMPI-style scale concepts &mdash; it is not the MMPI, not the IDR-MPT, and not clinically validated. It's built for teaching how self-report personality inventories work, not for assessing or diagnosing anyone. If something you notice in yourself is worrying you, talk to a school counselor, doctor, or another trusted adult.
+    </div>
+
+    <button class="start-btn" onclick="startQuiz()">Begin the inventory &rarr;</button>
+  </section>
+
+  <!-- ===== QUIZ SCREEN ===== -->
+  <section id="screen-quiz" class="hidden">
+    <div class="progress-row">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <span class="progress-label mono" id="progressLabel">1 / 72</span>
+    </div>
+
+    <div class="card">
+      <div class="scale-tag mono" id="scaleTag">HYPOCHONDRIASIS</div>
+      <p class="question-text" id="questionText">&nbsp;</p>
+      <div class="options" id="optionsWrap"></div>
+    </div>
+
+    <div class="nav-row">
+      <button class="secondary" id="backBtn" onclick="goBack()">&larr; Back</button>
+      <button class="secondary" id="skipBtn" onclick="skipQuestion()">Skip this one</button>
+    </div>
+  </section>
+
+  <!-- ===== RESULTS SCREEN ===== -->
+  <section id="screen-results" class="hidden">
+    <h1>Your Profile</h1>
+    <p class="sub">Scores are shown as a percentage of each scale's maximum &mdash; a raw preference pattern, not a clinical score.</p>
+
+    <div class="card">
+      <h2>Scale Profile</h2>
+      <p class="section-sub">Higher isn't "worse" &mdash; each scale reflects a tendency, and everyone scores somewhere.</p>
+      <div class="radar-wrap" id="radarWrap"></div>
+    </div>
+
+    <div class="card" id="scaleDetail"></div>
+
+    <div class="notice">
+      Remember: this is a self-report instrument you completed once, on your own, with no clinical scoring or validity checks behind it. Real personality assessment involves trained interpretation, context, and usually more than one measure. Treat this as a conversation-starter about how these instruments work, not a verdict on who you are.
+    </div>
+
+    <button class="secondary" onclick="restartQuiz()">Start over</button>
+  </section>
+
+  <footer class="foot">
+    ORIGINAL EDUCATIONAL ADAPTATION &middot; NOT AFFILIATED WITH THE UNIVERSITY OF MINNESOTA, PEARSON, OR IDRLABS<br>
+    FOR CLASSROOM DISCUSSION OF PERSONALITY ASSESSMENT METHODS
+  </footer>
+</div>
+
+<script>
+/* ---------------------------------------------------------
+   SCALES & ITEMS — all statements are original, written for
+   this educational adaptation (not reproduced from the MMPI
+   or any commercial instrument).
+--------------------------------------------------------- */
+const SCALES = [
+  {
+    key: "Hs", name: "Hypochondriasis",
+    blurb: {
+      low: "You tend not to dwell on physical sensations — minor aches rarely become a focus.",
+      mid: "You notice bodily sensations sometimes, without letting them take over your attention.",
+      high: "Physical sensations and health concerns take up a fair amount of your attention."
+    },
+    items: [
+      "I notice small changes in my body that others don't seem to notice.",
+      "I often wonder if a minor ache is a sign of something serious.",
+      "I keep track of how I'm feeling physically throughout the day.",
+      "Digestive or stomach troubles bother me more than they seem to bother most people.",
+      "I've looked up symptoms online more than once in the past month.",
+      "I feel tired or drained more often than the people around me.",
+      "Headaches or body aches interfere with my plans fairly often.",
+      "I'd rather get checked by a doctor and be told nothing's wrong than not check at all."
+    ]
+  },
+  {
+    key: "D", name: "Depression",
+    blurb: {
+      low: "Your mood generally feels steady, and motivation isn't something you struggle with much.",
+      mid: "You have some low-mood stretches, like most people, without them dominating things.",
+      high: "You're describing a fair amount of low mood, low motivation, or flat interest lately."
+    },
+    items: [
+      "Getting started on things feels harder than it used to.",
+      "I find it difficult to look forward to things.",
+      "My mood drops for no clear reason some days.",
+      "I feel like I'm not accomplishing much, even when I'm busy.",
+      "Sleep doesn't leave me feeling rested lately.",
+      "Small setbacks can feel bigger than they should.",
+      "I've lost interest in things I used to enjoy.",
+      "I feel isolated even when I'm around other people."
+    ]
+  },
+  {
+    key: "Hy", name: "Hysteria",
+    blurb: {
+      low: "Stress doesn't usually show up in your body, and you don't mind letting people see when something's wrong.",
+      mid: "You sometimes feel stress physically or downplay it socially, in fairly ordinary amounts.",
+      high: "You often feel stress in your body before you name it emotionally, and you work hard to appear fine."
+    },
+    items: [
+      "Stress tends to show up in my body before I notice it in my mood.",
+      "I want people to like me more than I usually admit.",
+      "I'd rather smooth things over than have an argument.",
+      "I get physically unwell before big events like tests or presentations.",
+      "I try to seem fine even when I'm not.",
+      "I care a lot about how others see me.",
+      "I avoid conflict even when I have something to say.",
+      "When I'm upset, I notice it in my body (tight chest, headache) before I can name the feeling."
+    ]
+  },
+  {
+    key: "Pd", name: "Psychopathic Deviate",
+    blurb: {
+      low: "Rules and authority generally sit fine with you, and conflict with figures of authority has been rare.",
+      mid: "You question rules sometimes and have had ordinary friction with authority, within a normal range.",
+      high: "You often push back on rules and authority, and conflict with authority figures has shaped a fair bit of your story."
+    },
+    items: [
+      "Rules make sense to me only when I understand the reason behind them.",
+      "I've been in trouble with authority figures (teachers, parents, bosses) more than once.",
+      "I get restless when things feel too routine.",
+      "I've broken a rule I disagreed with, even knowing the consequences.",
+      "I don't feel much guilt after doing something I wanted to do, even if others disapproved.",
+      "Family or authority conflicts have shaped a lot of my life.",
+      "I trust my own judgment over what I'm told to do.",
+      "I've felt misunderstood by the people meant to guide me."
+    ]
+  },
+  {
+    key: "Pa", name: "Paranoia",
+    blurb: {
+      low: "You extend people the benefit of the doubt fairly easily and don't spend much energy watching your back.",
+      mid: "You're moderately cautious about others' motives, without it running your day-to-day life.",
+      high: "You describe a fair amount of guardedness — watching for hidden motives, holding onto criticism, assuming the worst."
+    },
+    items: [
+      "I assume people have a reason when they act differently around me.",
+      "It's hard to fully trust other people's motives.",
+      "I notice when someone is talking about me, even from across a room.",
+      "Criticism sticks with me longer than it probably should.",
+      "I feel like I have to watch out for myself more than others do.",
+      "I've felt like people were against me, even without clear proof.",
+      "I read into what people say more than they probably intend.",
+      "I keep some guard up even with people close to me."
+    ]
+  },
+  {
+    key: "Pt", name: "Psychasthenia",
+    blurb: {
+      low: "You make decisions and move on without much lingering doubt or rumination.",
+      mid: "You have some worry and double-checking tendencies, at a fairly typical level.",
+      high: "Worry, rumination, and a need for order or certainty show up a lot in how you describe yourself."
+    },
+    items: [
+      "I replay conversations in my head after they're over.",
+      "Doubt creeps in even after I've made a decision.",
+      "I feel more comfortable when I have a plan for everything.",
+      "Small mistakes bother me longer than they should.",
+      "My mind jumps to worst-case scenarios pretty easily.",
+      "I check things more than once to be sure I did them right.",
+      "Unstructured time makes me anxious rather than relaxed.",
+      "I hold myself to standards I wouldn't expect from anyone else."
+    ]
+  },
+  {
+    key: "Sc", name: "Schizophrenia",
+    blurb: {
+      low: "You generally feel connected to the people and world around you, without much sense of alienation.",
+      mid: "You have occasional moments of feeling different or disconnected, without it being a dominant theme.",
+      high: "You describe a fair amount of feeling different from others, disconnected, or like an outside observer of your own life."
+    },
+    items: [
+      "I sometimes feel like I'm observing my life from the outside.",
+      "My thoughts and interests are pretty different from most people I know.",
+      "I feel disconnected from people, even ones I'm close to.",
+      "Ordinary things sometimes feel strange or unfamiliar to me.",
+      "I daydream or get lost in my own thoughts more than most people.",
+      "I don't feel like I fully belong anywhere.",
+      "My family understood me less than I needed them to growing up.",
+      "I've had thoughts or ideas I've never told anyone about."
+    ]
+  },
+  {
+    key: "Ma", name: "Hypomania",
+    blurb: {
+      low: "Your energy and mood stay fairly even, and you tend to finish what you start.",
+      mid: "You have bursts of energy and enthusiasm sometimes, at a fairly ordinary level.",
+      high: "You describe a lot of high energy, quick excitement, and impulsive follow-through on new ideas."
+    },
+    items: [
+      "My energy comes in bursts rather than staying steady.",
+      "I start more projects than I finish.",
+      "I get bored quickly when things slow down.",
+      "I speak or act before fully thinking things through.",
+      "I feel excited or \"wound up\" more than most people around me.",
+      "New ideas grab my attention fast, sometimes too fast.",
+      "I've made impulsive decisions I later had mixed feelings about.",
+      "My mood can shift noticeably within the same day."
+    ]
+  },
+  {
+    key: "Si", name: "Social Introversion",
+    blurb: {
+      low: "Groups and socializing tend to energize you more than drain you.",
+      mid: "You enjoy people in doses, with a fairly typical need for alone time afterward.",
+      high: "You describe a strong need for solitude and a preference for small, quiet settings over large social ones."
+    },
+    items: [
+      "I need real time alone to recharge after being social.",
+      "Large groups drain me more than they energize me.",
+      "I'd choose a quiet night in over a party most of the time.",
+      "I think carefully before speaking up in a group.",
+      "Meeting new people takes more effort for me than it does for others.",
+      "I feel most like myself when I'm not performing for an audience.",
+      "Small talk feels more draining than meaningful conversation.",
+      "I keep a small circle rather than a wide one."
+    ]
+  }
+];
+
+/* Build interleaved question queue (round-robin across scales,
+   like a real inventory mixes its items). */
+const QUEUE = [];
+for (let i = 0; i < 8; i++) {
+  SCALES.forEach((s, sIdx) => {
+    QUEUE.push({ scaleIdx: sIdx, itemIdx: i });
+  });
+}
+const TOTAL = QUEUE.length; // 72
+
+let current = 0;
+const answers = new Array(TOTAL).fill(null); // 0,1,2 or null
+
+function startQuiz() {
+  document.getElementById('screen-intro').classList.add('hidden');
+  document.getElementById('screen-quiz').classList.remove('hidden');
+  document.getElementById('stateBadge').textContent = 'IN PROGRESS';
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = QUEUE[current];
+  const scale = SCALES[q.scaleIdx];
+  const text = scale.items[q.itemIdx];
+
+  document.getElementById('scaleTag').textContent = scale.name.toUpperCase();
+  document.getElementById('questionText').textContent = text;
+  document.getElementById('progressLabel').textContent = (current + 1) + ' / ' + TOTAL;
+  document.getElementById('progressFill').style.width = (((current) / TOTAL) * 100) + '%';
+  document.getElementById('backBtn').disabled = current === 0;
+
+  const opts = [
+    { label: "Not me", val: 0 },
+    { label: "Describes me somewhat", val: 1 },
+    { label: "Definitely me", val: 2 }
+  ];
+  const wrap = document.getElementById('optionsWrap');
+  wrap.innerHTML = '';
+  opts.forEach(o => {
+    const btn = document.createElement('button');
+    btn.className = 'opt' + (answers[current] === o.val ? ' selected' : '');
+    btn.innerHTML = '<span class="num mono">' + o.val + '</span><span>' + o.label + '</span>';
+    btn.onclick = () => selectAnswer(o.val);
+    wrap.appendChild(btn);
+  });
+}
+
+function selectAnswer(val) {
+  answers[current] = val;
+  if (current < TOTAL - 1) {
+    current++;
+    renderQuestion();
+  } else {
+    finishQuiz();
+  }
+}
+
+function skipQuestion() {
+  if (current < TOTAL - 1) {
+    current++;
+    renderQuestion();
+  } else {
+    finishQuiz();
+  }
+}
+
+function goBack() {
+  if (current > 0) {
+    current--;
+    renderQuestion();
+  }
+}
+
+function finishQuiz() {
+  document.getElementById('screen-quiz').classList.add('hidden');
+  document.getElementById('screen-results').classList.remove('hidden');
+  document.getElementById('stateBadge').textContent = 'COMPLETE';
+  renderResults();
+}
+
+function computeScores() {
+  const totals = SCALES.map(() => 0);
+  const counts = SCALES.map(() => 0);
+  QUEUE.forEach((q, i) => {
+    const v = answers[i];
+    if (v !== null) {
+      totals[q.scaleIdx] += v;
+      counts[q.scaleIdx] += 1;
+    }
+  });
+  return SCALES.map((s, idx) => {
+    const max = counts[idx] * 2;
+    const pct = max > 0 ? Math.round((totals[idx] / max) * 100) : 0;
+    return { key: s.key, name: s.name, pct, blurb: s.blurb };
+  });
+}
+
+function tierFor(pct) {
+  if (pct <= 33) return 'low';
+  if (pct <= 66) return 'mid';
+  return 'high';
+}
+
+function renderResults() {
+  const scores = computeScores();
+
+  // radar chart
+  document.getElementById('radarWrap').innerHTML = buildRadarSVG(scores);
+
+  // bars + blurbs
+  const detail = document.getElementById('scaleDetail');
+  detail.innerHTML = '<h2>Scale Detail</h2><p class="section-sub">Each bar is a percentage of that scale\'s maximum possible score.</p>';
+  scores.forEach(s => {
+    const tier = tierFor(s.pct);
+    const row = document.createElement('div');
+    row.className = 'scale-row';
+    row.innerHTML =
+      '<div class="label-line"><span class="name">' + s.name + '</span><span class="pct">' + s.pct + '%</span></div>' +
+      '<div class="bar-track"><div class="bar-fill' + (tier === 'high' ? ' high' : '') + '" style="width:' + s.pct + '%"></div></div>' +
+      '<p class="scale-blurb">' + s.blurb[tier] + '</p>';
+    detail.appendChild(row);
+  });
+}
+
+function buildRadarSVG(scores) {
+  const n = scores.length;
+  const size = 300;
+  const center = size / 2;
+  const maxR = 108;
+  const angleStep = (Math.PI * 2) / n;
+
+  function pointFor(i, r) {
+    const angle = -Math.PI / 2 + i * angleStep;
+    return [center + r * Math.cos(angle), center + r * Math.sin(angle)];
+  }
+
+  // grid rings
+  let gridRings = '';
+  [0.25, 0.5, 0.75, 1].forEach(f => {
+    let pts = [];
+    for (let i = 0; i < n; i++) {
+      pts.push(pointFor(i, maxR * f).join(','));
+    }
+    gridRings += '<polygon points="' + pts.join(' ') + '" fill="none" stroke="var(--rule)" stroke-width="1"/>';
+  });
+
+  // spokes + labels
+  let spokes = '';
+  let labels = '';
+  scores.forEach((s, i) => {
+    const [x, y] = pointFor(i, maxR);
+    spokes += '<line x1="' + center + '" y1="' + center + '" x2="' + x + '" y2="' + y + '" stroke="var(--rule)" stroke-width="1"/>';
+    const [lx, ly] = pointFor(i, maxR + 26);
+    const anchor = Math.abs(lx - center) < 4 ? 'middle' : (lx > center ? 'start' : 'end');
+    labels += '<text x="' + lx + '" y="' + ly + '" text-anchor="' + anchor + '" font-family="Space Mono, monospace" font-size="9" fill="var(--ink-soft)">' + s.key + '</text>';
+  });
+
+  // data polygon
+  let dataPts = [];
+  scores.forEach((s, i) => {
+    const r = (s.pct / 100) * maxR;
+    dataPts.push(pointFor(i, r).join(','));
+  });
+
+  return '<svg width="' + size + '" height="' + (size + 20) + '" viewBox="0 0 ' + size + ' ' + (size + 20) + '" role="img" aria-label="Radar chart of nine personality scale scores">' +
+    gridRings + spokes +
+    '<polygon points="' + dataPts.join(' ') + '" fill="var(--stamp)" fill-opacity="0.28" stroke="var(--stamp)" stroke-width="2"/>' +
+    labels +
+    '</svg>';
+}
+
+function restartQuiz() {
+  current = 0;
+  for (let i = 0; i < TOTAL; i++) answers[i] = null;
+  document.getElementById('screen-results').classList.add('hidden');
+  document.getElementById('screen-intro').classList.remove('hidden');
+  document.getElementById('stateBadge').textContent = 'INTRO';
+}
+</script>
+</body>
+</html>
