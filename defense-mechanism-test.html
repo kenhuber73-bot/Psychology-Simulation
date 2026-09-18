@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Defense Mechanism Self-Assessment</title>
+<style>
+  :root{
+    --teal-900:#0b3b39;
+    --teal-800:#0f4c46;
+    --teal-700:#0f766e;
+    --teal-600:#0d9488;
+    --teal-500:#14b8a6;
+    --teal-400:#2dd4bf;
+    --teal-100:#ccfbf1;
+    --teal-50:#f0fdfa;
+    --slate-900:#1e293b;
+    --slate-700:#334155;
+    --slate-500:#64748b;
+    --slate-300:#cbd5e1;
+    --slate-200:#e2e8f0;
+    --slate-100:#f1f5f9;
+    --bg:#f8fafc;
+    --amber-500:#d97706;
+    --amber-100:#fef3c7;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--slate-900);
+    line-height:1.5;
+  }
+  .wrap{max-width:840px;margin:0 auto;padding:24px 20px 80px;}
+  header.masthead{
+    background:linear-gradient(135deg,var(--teal-800),var(--teal-600));
+    color:white;
+    padding:36px 20px;
+    text-align:center;
+  }
+  header.masthead h1{margin:0 0 8px;font-size:1.7rem;}
+  header.masthead p{margin:0;opacity:.92;font-size:.98rem;max-width:640px;margin:0 auto;}
+  .card{
+    background:white;
+    border:1px solid var(--slate-200);
+    border-radius:14px;
+    padding:24px;
+    margin-top:24px;
+    box-shadow:0 1px 3px rgba(0,0,0,.04);
+  }
+  h2{color:var(--teal-800);font-size:1.25rem;margin-top:0;}
+  h3{color:var(--teal-700);font-size:1.05rem;}
+  .step-badge{
+    display:inline-block;background:var(--teal-100);color:var(--teal-800);
+    font-weight:700;font-size:.75rem;letter-spacing:.04em;text-transform:uppercase;
+    padding:4px 10px;border-radius:999px;margin-bottom:10px;
+  }
+  button{
+    font-family:inherit;
+    cursor:pointer;
+    border:none;
+    border-radius:10px;
+    padding:12px 22px;
+    font-size:1rem;
+    font-weight:600;
+    transition:filter .15s ease, transform .05s ease;
+  }
+  button:active{transform:translateY(1px);}
+  .btn-primary{background:var(--teal-600);color:white;}
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-primary:disabled{background:var(--slate-300);cursor:not-allowed;}
+  .btn-secondary{background:var(--teal-50);color:var(--teal-700);border:1px solid var(--teal-500);}
+  .btn-secondary:hover{background:var(--teal-100);}
+  .btn-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;}
+
+  /* Intro */
+  .steps-list{display:grid;grid-template-columns:1fr;gap:12px;margin:18px 0;}
+  .step-item{display:flex;gap:14px;align-items:flex-start;background:var(--teal-50);border-radius:10px;padding:14px 16px;}
+  .step-num{
+    flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:var(--teal-600);color:white;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;
+  }
+  .step-text strong{color:var(--teal-800);}
+  .disclaimer{
+    background:var(--amber-100);border:1px solid #f2d18e;border-radius:10px;
+    padding:12px 14px;font-size:.88rem;color:#7a5205;margin-top:16px;
+  }
+
+  /* Quiz */
+  .progress-track{
+    height:10px;background:var(--slate-200);border-radius:999px;overflow:hidden;margin-bottom:6px;
+    position:sticky;top:0;
+  }
+  .progress-fill{height:100%;background:var(--teal-500);width:0%;transition:width .2s ease;}
+  .progress-label{font-size:.82rem;color:var(--slate-500);margin-bottom:18px;}
+  .q-item{padding:18px 0;border-bottom:1px solid var(--slate-100);}
+  .q-item:last-child{border-bottom:none;}
+  .q-text{font-size:1rem;margin-bottom:12px;color:var(--slate-900);}
+  .q-num{color:var(--teal-600);font-weight:700;margin-right:6px;}
+  .likert{display:flex;gap:6px;flex-wrap:wrap;}
+  .likert label{
+    flex:1;min-width:80px;
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    padding:10px 4px;border:1.5px solid var(--slate-200);border-radius:10px;
+    cursor:pointer;font-size:.72rem;color:var(--slate-500);text-align:center;
+    transition:border-color .12s ease, background .12s ease;
+  }
+  .likert label:hover{border-color:var(--teal-400);}
+  .likert input{accent-color:var(--teal-600);width:18px;height:18px;}
+  .likert input:checked + span{color:var(--teal-800);font-weight:700;}
+  .likert label:has(input:checked){border-color:var(--teal-600);background:var(--teal-50);}
+
+  /* Results */
+  .top3-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:8px;}
+  .rank-card{
+    border:1.5px solid var(--teal-500);
+    border-radius:12px;
+    padding:18px 20px;
+    background:var(--teal-50);
+  }
+  .rank-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+  .rank-pill{
+    background:var(--teal-700);color:white;font-weight:700;font-size:.78rem;
+    border-radius:999px;padding:3px 11px;flex:0 0 auto;
+  }
+  .rank-head h3{margin:0;}
+  .rank-score{margin-left:auto;font-size:.82rem;color:var(--teal-700);font-weight:600;}
+  .sub-h{font-weight:700;color:var(--teal-800);font-size:.85rem;text-transform:uppercase;letter-spacing:.03em;margin:14px 0 6px;}
+  .rank-card p{margin:4px 0;color:var(--slate-700);font-size:.94rem;}
+  .rank-card ul{margin:4px 0 0;padding-left:20px;color:var(--slate-700);font-size:.94rem;}
+  .rank-card li{margin-bottom:6px;}
+
+  .all-scores{margin-top:10px;}
+  .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:.86rem;}
+  .bar-label{flex:0 0 168px;color:var(--slate-700);}
+  .bar-track{flex:1;background:var(--slate-100);border-radius:999px;height:14px;overflow:hidden;}
+  .bar-fill{height:100%;background:var(--teal-500);border-radius:999px;}
+  .bar-fill.top{background:var(--teal-700);}
+  .bar-pct{flex:0 0 40px;text-align:right;color:var(--slate-500);font-size:.8rem;}
+
+  .hidden{display:none !important;}
+  .center{text-align:center;}
+  footer{text-align:center;color:var(--slate-500);font-size:.78rem;margin-top:30px;}
+
+  @media (max-width:520px){
+    .likert label{min-width:56px;font-size:.62rem;padding:8px 2px;}
+    .bar-label{flex-basis:110px;font-size:.78rem;}
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <h1>What's Your Defense Style?</h1>
+  <p>A self-assessment exploring the psychological defense mechanisms we all use to cope with pain we'd rather not feel.</p>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ INTRO ============ -->
+  <section id="screen-intro" class="card">
+    <span class="step-badge">Before you begin</span>
+    <h2>Psychological Defense Mechanisms</h2>
+    <p>Every one of us pushes away feelings, needs, or truths that feel too painful to face head-on — that's not a flaw, it's a normal part of being human. Psychologists call these coping strategies <strong>defense mechanisms</strong>. They operate mostly outside our awareness, which is exactly what makes them hard to spot in ourselves.</p>
+    <p>This activity walks you through four steps:</p>
+    <div class="steps-list">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-text"><strong>Take the test.</strong> Rate 52 short statements honestly, based on how you actually tend to think, feel, and act — not how you wish you were.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-text"><strong>See your top 3.</strong> The assessment identifies the three defense mechanisms you lean on most, out of 13 possible.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-text"><strong>Understand where it comes from.</strong> Each result explains what the mechanism does and the kinds of experiences that tend to produce it.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">4</div>
+        <div class="step-text"><strong>Reflect and grow.</strong> You'll get reflection activities for each of your top 3 defenses, with space to write your own responses.</div>
+      </div>
+    </div>
+    <div class="disclaimer">
+      This is not a validated psychological test and cannot diagnose anything. It's an educational self-reflection tool for a psychology class, meant to help you notice patterns in how you cope, not to label you. Be honest rather than trying to look a certain way — no one else sees your individual answers unless you choose to share them, and nothing is saved to a server.
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="startQuiz()">Start the Assessment →</button>
+    </div>
+  </section>
+
+  <!-- ============ QUIZ ============ -->
+  <section id="screen-quiz" class="card hidden">
+    <span class="step-badge">Step 1 · The Test</span>
+    <h2>Rate each statement</h2>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel">0 of 52 answered</div>
+    <p style="color:var(--slate-500);font-size:.88rem;">For each statement, choose the response that best matches how true it is of you <em>generally</em> — not just today.</p>
+    <div id="quizList"></div>
+    <div class="btn-row">
+      <button class="btn-primary" id="submitBtn" onclick="showResults()" disabled>See My Results →</button>
+    </div>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <section id="screen-results" class="card hidden">
+    <span class="step-badge">Steps 2–4 · Your Results</span>
+    <h2>Your Top 3 Defense Mechanisms</h2>
+    <p style="color:var(--slate-700);">Based on your answers, these are the defenses that show up most strongly for you. Everyone uses a mix of all 13 to some degree — your top 3 are simply the ones carrying the most weight right now.</p>
+    <div class="top3-grid" id="top3Container"></div>
+
+    <h2 style="margin-top:32px;">All 13 Mechanisms</h2>
+    <p style="color:var(--slate-700);font-size:.9rem;">Everyone relies on every defense at least a little. This shows your relative reliance on each one, from least to most.</p>
+    <div class="all-scores" id="allScoresContainer"></div>
+
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="retake()">↺ Retake the Assessment</button>
+    </div>
+  </section>
+
+  <footer>
+    This is an informal self-reflection tool, not a validated psychological assessment. It is not intended to diagnose any condition and should not be used as a substitute for professional evaluation. For educational classroom use.
+  </footer>
+</div>
+
+<script>
+/* =========================================================
+   DATA: 13 defense mechanisms, each with:
+   - id, name, tagline
+   - definition (what it is)
+   - origin (where it tends to come from)
+   - exercises (3 reflection activities)
+   - items (4 Likert statements)
+   ========================================================= */
+const MECHANISMS = [
+  {
+    id:"repression", name:"Repression",
+    definition:"Repression pushes a feeling, memory, or urge out of conscious awareness before you ever fully register it. Unlike simply not thinking about something, repression takes ongoing mental effort to keep that material below the surface — the feeling doesn't disappear, it just goes unconscious, often leaking out sideways as irritability, boredom, or a flat, unmoved reaction to things that should affect you.",
+    origin:"Repression develops as an unconscious solution to a conflict that feels too risky to face head-on: some feeling, memory, or impulse threatens to disrupt a relationship or a sense of self that feels essential to protect, so the mind pushes it out of awareness rather than risk what expressing it might cost. This isn't a one-time event — it takes continuous, ongoing unconscious effort to keep the material buried, which is part of why heavily repressed people often seem subtly tense or effortful even when nothing appears to be wrong. Families that treat a particular emotion (anger, sadness, dependency, sexuality) as weak, shameful, or destabilizing tend to raise children who learn to withdraw awareness from that entire emotional zone rather than risk showing it and losing connection with caregivers. Because the underlying feeling never actually disappears, it tends to leak out sideways instead — as sarcasm, restlessness, physical tension, or a strange flatness in situations that would upset most people.",
+    exercises:[
+      "Think of a major loss, insult, or achievement in your life and notice how little you actually felt about it at the time. Write what you think you \"should\" have felt, and sit with why that emotion might have felt unsafe to have.",
+      "For a few days, keep a simple log of the emotions you notice. If certain feelings (anger, grief, need) never show up on the list, ask yourself what happens in your body when you try to imagine feeling them.",
+      "Try one small thing outside your normal routine this week — a new place, a new activity, a conversation you'd usually avoid. Notice any resistance that comes up, and write about what it might be protecting you from."
+    ],
+    items:[
+      "I rarely feel strong emotion, even in situations where most people would react intensely.",
+      "When something upsetting happens, I often realize afterward that I felt almost nothing at the time.",
+      "I pride myself on staying calm and \"even-keeled\" no matter what happens.",
+      "I have a hard time remembering ever feeling truly angry, even about things that would justify it."
+    ]
+  },
+  {
+    id:"denial", name:"Denial",
+    definition:"Denial refuses to accept a piece of reality that feels too painful to face — a need, a flaw, a loss, or the true state of a relationship. Where repression pushes a feeling out of awareness, denial insists the reality itself isn't true, even when the evidence points the other way.",
+    origin:"Denial tends to form around whatever a family most needed to not-know — a parent's drinking, a parent's unreliability, or how bad a relationship or situation actually was. Children are remarkably attuned to which truths keep a household calm and which ones threaten it, and they learn early to look away from the second kind. This selective blindness often gets turned inward too: if depending on a parent felt unsafe or unreliable, a child may grow into an adult who denies having needs at all, becoming fiercely self-sufficient and undervaluing how much other people actually matter to them. Because the underlying need or reality hasn't actually gone away, it often resurfaces indirectly — through overwork, substance use, or relationships where a person always seems to need others less than others need them.",
+    exercises:[
+      "Look back at your closest relationships and ask: is there a pattern where other people lean on me more than I lean on them? What would it mean to actually ask for help this week, using the words \"I need your help\"?",
+      "Pick something you've told yourself \"doesn't matter that much\" to you (closeness, a goal, a hobby you gave up). Write honestly about whether that's true, or whether it's easier to say it doesn't matter than to want it and not have it.",
+      "Notice this week whenever you catch yourself saying \"it's fine\" about something that clearly isn't. Write down what would be true if you let yourself actually feel it instead."
+    ],
+    items:[
+      "People close to me tend to need me more than I need them.",
+      "I rarely feel like I need much from other people.",
+      "I tell myself certain problems in my life \"aren't a big deal,\" even when others seem concerned.",
+      "I find it hard to admit when I want something badly."
+    ]
+  },
+  {
+    id:"displacement", name:"Displacement",
+    definition:"Displacement keeps a feeling fully conscious but redirects it away from the person or situation that actually caused it, toward a safer target. You know you're angry — you just aren't angry at the person who deserves it.",
+    origin:"Displacement tends to develop wherever expressing a feeling directly to its real target carries real risk — of losing a job, damaging an important relationship, or provoking someone more powerful than you. Rather than confront the actual source, the feeling gets redirected toward a target that feels safer to be angry at: a stranger, a minor inconvenience, or someone with less power in the relationship, such as a partner or a child. This pattern often becomes a family or workplace habit, where stress and hostility get passed down a hierarchy rather than addressed with the person who actually caused it — sometimes summed up as \"it travels downstream.\" People who rely heavily on displacement often grew up in environments where confronting the real source of a feeling directly wasn't safe or effective, so redirecting it became the only outlet available.",
+    exercises:[
+      "Think of a time you took your mood out on someone who didn't deserve it. Who or what actually caused that feeling? Try imagining yourself saying directly to the real target what you actually felt.",
+      "For a week, whenever you notice an unusually intense reaction to something small, pause and ask whether that intensity really belongs to the situation in front of you, or to something (or someone) else.",
+      "Notice if you feel a pull toward food, a screen, or another distraction when you're actually upset with a specific person. Before giving in, write a few sentences naming who or what you're really upset with."
+    ],
+    items:[
+      "I sometimes take out a bad mood on someone who had nothing to do with causing it.",
+      "My reactions to small annoyances are sometimes more intense than the situation seems to call for.",
+      "After I snap at someone, I often realize the real source of my frustration was actually somewhere else.",
+      "It's easier for me to get frustrated at a stranger or minor inconvenience than at someone close to me."
+    ]
+  },
+  {
+    id:"reaction-formation", name:"Reaction Formation",
+    definition:"Reaction formation flips an unacceptable feeling into its opposite. Underlying hostility becomes exaggerated niceness; forbidden desire becomes disgust; deep shame becomes defiant \"I don't care.\" The telltale sign is an intensity that feels a little too big for the situation.",
+    origin:"Reaction formation develops when a particular feeling — anger, desire, envy, shame — felt so dangerous or unacceptable within a person's family or self-image that even privately feeling it seemed threatening. Rather than risk that feeling surfacing, the mind builds an opposite, more acceptable identity around it: the angry person becomes relentlessly \"nice,\" the person who fears their own desire becomes easily disgusted or moralistic, the deeply ashamed person becomes defiantly \"shameless.\" This pattern is often reinforced by families or communities that actively reward the opposite trait — kindness, purity, unshakeable confidence — which makes burying the original feeling feel not just safer but virtuous. Because the true feeling is only buried, not gone, it tends to show up as an intensity or excess that feels a little too big for the situation, which is often the clearest sign this defense is at work.",
+    exercises:[
+      "Think of something you feel unusually strong disgust, disapproval, or indifference toward. Try rewriting your feelings about it using the opposite word (e.g. \"disgusted by\" becomes \"drawn to\") and notice how strongly you want to reject the rewritten sentence.",
+      "Notice moments this week when someone reacts to you in a way that seems mismatched with what you thought you were expressing. Ask what feeling might have leaked out underneath the one you intended to show.",
+      "If you pride yourself on being unusually nice, unbothered, or a \"good person,\" write honestly about what feeling might actually be harder for you to admit to than it is for most people."
+    ],
+    items:[
+      "I think of myself as an unusually nice or good person, more so than most people I know.",
+      "I feel intense disgust or disapproval about certain things that don't seem to bother other people as much.",
+      "People sometimes react to me as though I'm being hostile, even when I don't feel that way at all.",
+      "I insist I don't care about something, even though I keep bringing it up."
+    ]
+  },
+  {
+    id:"splitting", name:"Splitting",
+    definition:"Splitting resolves mixed or conflicting feelings toward the same person (or situation) by mentally separating them into \"all good\" and \"all bad,\" losing sight of the fact that both belong to the same, complicated whole.",
+    origin:"Splitting is one of the earliest defenses we develop, showing up before a young child can fully grasp that the same person — usually a parent — can be a source of both comfort and frustration. Before that understanding forms, it's simply easier to experience \"the good parent\" and \"the frustrating parent\" as two different people than to tolerate loving and resenting the same person at once. Most people learn to outgrow heavy reliance on splitting as they develop the capacity to bear ambivalence, but it resurfaces under extreme stress in almost everyone, and it stays the default coping style for people whose early relationships were unpredictable enough that mixed feelings toward the same person never became safe to hold onto. Cultural structures like sports rivalries, wartime propaganda, and political tribalism offer ready-made, safer outlets for this same pattern, which is part of why it feels so natural and widespread.",
+    exercises:[
+      "Think of a relationship where your feelings about the person have swung sharply from very positive to very negative. Write about what happened right before the shift, and whether the \"bad\" version and the \"good\" version could both be true of the same person.",
+      "Next time you feel a flash of anger at someone you care about, try holding both thoughts at once in writing: \"Right now I feel ___ toward them\" and \"I also know I care about them, and this feeling will pass.\"",
+      "Notice a place in your life (a sport, hobby, cause) where you get to safely direct strong feelings like frustration or competitiveness. What would happen to those feelings if that outlet disappeared?"
+    ],
+    items:[
+      "My feelings about people I'm close to can swing quickly from very positive to very negative.",
+      "When someone upsets me, it's hard to remember the good things about them in that moment.",
+      "I tend to see situations in clear terms of \"good guys\" and \"bad guys.\"",
+      "My close relationships have a pattern of falling apart suddenly after seeming perfect."
+    ]
+  },
+  {
+    id:"idealization", name:"Idealization",
+    definition:"Idealization elevates a person, relationship, or future outcome to a state of perfection — as if it will finally solve everything or make you happy for good. It sets an impossible standard, which makes disappointment, or disillusionment, almost inevitable.",
+    origin:"Idealization often develops as an escape route from painful feelings — depression, loneliness, or a deep sense of falling short — using the emotional \"high\" of a perfect new relationship, plan, or purchase as a kind of self-medication. It works much like the manic swing of bipolar mood cycles: the idealized state offers real, if temporary, relief from unbearable feelings, which is exactly why it's so hard to give up even after it has failed to deliver before. Culture reinforces this pattern constantly, selling the idea that the right partner, job, or purchase will finally make everything complete. Because reality can never sustain that level of perfection, and because idealizing someone usually depends on splitting off their flaws, the fall from \"perfect\" to \"worthless\" can happen fast once disappointment sets in.",
+    exercises:[
+      "Think of something (a relationship, job, purchase, move) you were convinced would make everything better. What happened when reality set in? What feeling were you actually hoping it would fix?",
+      "Notice this week whenever you think \"everything will be great once ___ happens.\" Write down what you might be avoiding feeling right now by focusing on that future moment instead.",
+      "If you tend to hold friends, partners, or public figures to impossibly high standards, pick one person and write three genuinely human, imperfect things about them — without immediately deciding they're worthless because of it."
+    ],
+    items:[
+      "I often believe things will finally be great once one specific thing happens (a new relationship, job, or purchase).",
+      "I get intensely enthusiastic about new people or plans, only to become disappointed later.",
+      "I hold the people close to me to very high, sometimes impossible, standards.",
+      "I've noticed a pattern of falling hard for something and quickly losing interest once reality sets in."
+    ]
+  },
+  {
+    id:"projection", name:"Projection",
+    definition:"Projection gets rid of an uncomfortable feeling — guilt, anger, inadequacy — by unconsciously placing it onto someone else, so they end up carrying (or expressing) what you don't want to feel. In its most familiar form, this looks like accusing someone else of exactly what you're doing yourself.",
+    origin:"Projection has roots in infancy, in what's sometimes described as one of our earliest forms of communication: a baby who can't yet manage its own distress cries it out, effectively placing that unbearable feeling into a caregiver, who absorbs it and responds. In healthy development, children gradually learn to hold and process their own difficult feelings instead of needing someone else to carry them. But under enough stress — or if that capacity never fully developed — this early pattern resurfaces in adulthood: an overwhelming feeling gets unconsciously placed into whoever is nearby, making them feel what the person doesn't want to feel themselves, whether that's irritability that makes everyone around you miserable or blame that turns your own guilt into someone else's fault. People who were consistently expected, as children, to manage a parent's emotions rather than have their own emotions looked after tend to struggle the most with this pattern as adults.",
+    exercises:[
+      "Think of a recent argument where you felt certain the other person was clearly in the wrong. Is there any chance you were doing, or feeling, some version of the very thing you accused them of?",
+      "Notice this week when you feel unusually irritable or critical of the people around you. Ask honestly: is this really about them, or am I carrying something (stress, exhaustion, guilt) and passing it along?",
+      "When you catch yourself in a \"blame war\" with someone, try pausing and asking what feeling you might be trying to avoid owning in that exact moment."
+    ],
+    items:[
+      "When I'm in a bad mood, the people around me often end up feeling bad too.",
+      "In arguments, I usually feel certain the other person is the one at fault.",
+      "I sometimes accuse others of things that, if I'm honest, might describe me just as well.",
+      "I've been told I take my stress out on people who don't deserve it."
+    ]
+  },
+  {
+    id:"control", name:"Control",
+    definition:"Control manages the pain of helplessness or unpredictability by trying to master your environment, other people, or your own body — through routines, rituals, micromanaging, or superstition. A quieter \"stealth\" version shows up as exaggerated helplessness that ends up forcing other people into a caretaking role.",
+    origin:"Control as a defense tends to develop in response to a genuinely unpredictable or unreliable early environment — one where a child couldn't count on caregivers to show up consistently, and so came to associate depending on other people with danger rather than safety. Gaining control over routines, people, or even one's own body becomes a substitute for the security that reliable caregiving should have provided. This can look like obvious control — rigid routines, micromanaging, compulsive rituals — or a quieter \"stealth\" version, where someone appears helpless or disorganized but is unconsciously maneuvering other people into taking care of them, which is its own bid for control over the relationship. Either way, the underlying belief is the same: that real dependence on someone else is unsafe unless you can manage the terms of it.",
+    exercises:[
+      "Notice how you react when plans change at the last minute or your routine is disrupted. Sit with that discomfort for a moment before trying to fix or control it, and write down what feeling shows up underneath the frustration.",
+      "Think about your closest relationships: who tends to make the decisions, and how? Look for quieter, \"stealth\" forms of control (helplessness, procrastination, forgetting) alongside more obvious ones.",
+      "Try consciously handing over one small decision you'd normally make yourself this week. Notice what comes up for you in the moment of not being the one in charge."
+    ],
+    items:[
+      "I feel unsettled when my routine or plans are disrupted.",
+      "I have a strong need to manage the details of situations, even ones that aren't fully mine to manage.",
+      "I consider myself superstitious, or believe certain rituals affect how things turn out.",
+      "Other people often end up taking care of things for me, even when I could do them myself."
+    ]
+  },
+  {
+    id:"rationalization", name:"Rationalization",
+    definition:"Rationalization is the everyday habit of coming up with a plausible-sounding reason for something, when the real motive is a feeling you'd rather not admit to — including to yourself. It's usually a mild, occasional defense; the truth is often not far beneath the surface.",
+    origin:"Rationalization is one of the mildest and most universal defenses — nearly everyone uses it to soften disappointment, protect self-esteem, or get through daily setbacks without being derailed by them, and it develops simply out of the ordinary need to feel like life makes sense. It becomes more worth examining when the same kind of \"good excuse\" shows up again and again around the same sensitive spots — always finding an outside reason a relationship failed, or a grade suffered, that has nothing to do with your own part in it. Because the feeling being avoided is usually not far beneath the surface, rationalization tends to be easier to catch, in yourself and others, than deeper defenses like repression or splitting.",
+    exercises:[
+      "Think of a recent decision or behavior you explained to yourself with a \"logical\" reason. Try writing an alternative explanation involving a feeling (envy, hurt, fear, desire) instead, and notice if it feels more true.",
+      "Next time you catch yourself mentally building a case for why you're right and someone else is wrong, write both sides down and ask what you'd feel if you accepted you might be wrong.",
+      "Pick one area of your life where you often make \"good excuses\" (spending, procrastination, a relationship pattern) and, for a few days, write the honest feeling-based reason instead of the logical one."
+    ],
+    items:[
+      "I usually have a logical explanation ready for things I do, even when I suspect the real reason is different.",
+      "I often find good reasons why a disappointing outcome (like not getting something I wanted) wasn't really about my own shortcomings.",
+      "I catch myself making excuses for behavior I feel a little uneasy about.",
+      "I tell myself \"everything happens for a reason\" or \"it worked out for the best\" more than most people I know."
+    ]
+  },
+  {
+    id:"intellectualization", name:"Intellectualization",
+    definition:"Intellectualization moves attention out of the body and feelings and into abstract thought, analysis, and explanation, so an entire emotional experience gets managed through the head instead of actually felt. Unlike rationalization's occasional white lie, intellectualization can shape someone's whole personality — cool, articulate, logical, and quietly out of touch with their own bodily and emotional experience.",
+    origin:"Intellectualization tends to develop in children who felt it wasn't safe to be small, needy, or openly emotional — sometimes because a chaotic or demanding home made vulnerability feel dangerous, sometimes because parents rewarded achievement, cleverness, and self-sufficiency far more than they responded to distress. These children often become precociously mature, skipping ahead into a kind of pseudo-adult identity built on thinking and analysis, while the younger, more exposed part of themselves goes underground. As adults, they may feel like impostors underneath a genuinely competent surface, even with real intellectual accomplishments, because that maturity was built as an escape route rather than growing naturally out of a secure childhood.",
+    exercises:[
+      "Set aside 10 quiet minutes to simply notice your thoughts without acting on them. Then shift your attention into your body — face, throat, chest, stomach — and see what physical sensations you notice once the mental narration quiets down.",
+      "Notice this week when you respond to an emotional situation with analysis or explanation rather than by naming what you feel. Try naming the feeling itself, in one word, before explaining anything about it.",
+      "Think about whether you take special pride in being smart, articulate, or logical. Write about how you feel around people who seem less controlled or more emotionally expressive than you."
+    ],
+    items:[
+      "I deal with upsetting situations mostly by thinking them through rather than feeling them.",
+      "People sometimes describe me as living \"too much in my head.\"",
+      "I take pride in being logical, articulate, or unemotional in situations where others get worked up.",
+      "I have trouble noticing physical sensations (a tight chest, a lump in my throat) that go along with my emotions."
+    ]
+  },
+  {
+    id:"narcissism", name:"Narcissism (Defense Against Shame)",
+    definition:"Everyday healthy self-regard becomes defensive narcissism when it turns into an ongoing need to appear ideal, superior, or admirable — flaunting looks, success, or intelligence to cover an underlying, often unconscious, sense of being damaged or \"not enough.\"",
+    origin:"This defense is rooted in what's sometimes called \"basic shame\" — a deep, often unconscious sense that something about you is fundamentally wrong, built up when early caregiving consistently failed to meet a child's emotional needs. Some neurobiological research suggests that a consistently unresponsive or harmful early environment can leave lasting effects on the brain systems involved in self-worth and emotional connection, which is part of why basic shame can feel so foundational rather than tied to any one event. Rather than experience that underlying sense of damage directly, a person builds and performs an idealized self-image — successful, attractive, admired — that keeps the shame out of view, both from other people and from themselves. The more precarious that underlying shame feels, the more constant the need becomes for outside admiration to keep the idealized image propped up.",
+    exercises:[
+      "At your next social gathering or introduction, notice how much of your \"best foot forward\" story leaves out ordinary or difficult parts of your life. What would it feel like to include one of them?",
+      "Notice whether you tend to compare yourself to others in terms of \"winning\" and \"losing.\" Write about how you define winning, and what it would mean about you to lose.",
+      "Think of a moment you felt genuinely humiliated or exposed. Instead of pushing that memory away, write down exactly what you felt was revealed about you in that moment."
+    ],
+    items:[
+      "I put a lot of effort into making sure people see me as successful, attractive, or impressive.",
+      "I feel a strong need to be admired or to be the center of attention.",
+      "I feel uncomfortable when the spotlight is on someone else instead of me.",
+      "I tend to compare myself to others in terms of who's winning and who's losing in life."
+    ]
+  },
+  {
+    id:"blaming", name:"Blaming",
+    definition:"Blaming deflects criticism or fault away from yourself and onto someone else, especially when accepting responsibility would feel like confirming a deeper, unbearable sense of being flawed or \"bad.\"",
+    origin:"Blaming develops as a companion to shame: when someone's sense of self-worth is precarious, even a small mistake can feel like proof of being fundamentally bad or inadequate rather than just an ordinary human error. Admitting fault under those conditions doesn't feel like a small correction — it feels like confirming the worst thing you secretly believe about yourself. So responsibility gets pushed outward instead, often onto whoever is closest, such as a partner, friend, or colleague, which protects the person from an internal experience they find intolerable, usually at the cost of real friction in the relationship.",
+    exercises:[
+      "Think of a recent disagreement where you were quick to point out the other person's role. Is there a chance you also had a hand in what went wrong?",
+      "Notice how hard it is for you to say \"I was wrong\" without adding a \"but.\" Try saying it once this week without qualifying it, and notice what comes up in you.",
+      "Reflect on what it would mean about you, deep down, if you accepted responsibility for a mistake without a fight. What feeling are you actually trying to avoid?"
+    ],
+    items:[
+      "When something goes wrong, my first instinct is to look at what someone else did.",
+      "I find it very hard to admit when I'm at fault.",
+      "I often feel my mistakes are really caused by circumstances or other people.",
+      "Being told I'm wrong makes me want to defend myself immediately, before I've even thought it through."
+    ]
+  },
+  {
+    id:"contempt", name:"Contempt",
+    definition:"Contempt looks down on other people — dismissing, mocking, or feeling superior to them — often as a way of pushing an unbearable feeling (usually shame) outside of yourself and onto someone else, who becomes the \"loser\" so you don't have to feel like one.",
+    origin:"Like narcissism and blaming, contempt is usually a downstream defense against shame. By locating inadequacy or weakness in someone else and looking down on them for it, a person unconsciously proves to themselves that the flaw belongs out there, not in here. This shows up most clearly in people who feel driven to appear superior or in control: triumphing over someone else, or treating them as beneath you, temporarily confirms an idealized self-image and pushes the person's own sense of damage further out of reach. Because this defense depends on having someone to look down on, it tends to strain close relationships, especially around any sign of neediness or vulnerability in a partner or friend — which can unconsciously remind the contemptuous person of exactly what they're trying not to feel in themselves.",
+    exercises:[
+      "Write down a few recent moments when you felt contempt or scorn toward someone. Look for a common trait among them — what is it about that trait that bothers you so much?",
+      "Ask yourself honestly whether you've ever shown that same trait, even briefly. What would it feel like to admit that?",
+      "Notice your own inner critical voice this week. Write down what it demands of you, and imagine what kind of person would actually meet those standards. Is that person realistic?"
+    ],
+    items:[
+      "I sometimes feel a sense of superiority over people who seem to have less going for them.",
+      "I have a hard time hiding my irritation with people I consider unintelligent or weak.",
+      "I find myself mentally criticizing or mocking people, even when I don't say it out loud.",
+      "I feel impatient with people who seem overly needy or emotional."
+    ]
+  }
+];
+
+const LIKERT_LABELS = ["Not like me","Rarely like me","Sometimes like me","Often like me","Very much like me"];
+
+/* Build the flat, shuffled item list (deterministic-ish shuffle so page reloads don't feel random-broken) */
+let ALL_ITEMS = [];
+MECHANISMS.forEach(m=>{
+  m.items.forEach((text, idx)=>{
+    ALL_ITEMS.push({mechId:m.id, text:text, key:m.id+"_"+idx});
+  });
+});
+// simple shuffle
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+shuffle(ALL_ITEMS);
+
+const answers = {}; // key -> value 1-5
+
+function startQuiz(){
+  document.getElementById('screen-intro').classList.add('hidden');
+  document.getElementById('screen-quiz').classList.remove('hidden');
+  renderQuiz();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function renderQuiz(){
+  const list = document.getElementById('quizList');
+  list.innerHTML = "";
+  ALL_ITEMS.forEach((item, i)=>{
+    const div = document.createElement('div');
+    div.className = 'q-item';
+    let optionsHtml = "";
+    LIKERT_LABELS.forEach((label, li)=>{
+      const val = li+1;
+      optionsHtml += `
+        <label>
+          <input type="radio" name="${item.key}" value="${val}" onchange="onAnswer('${item.key}', ${val})">
+          <span>${val}<br>${label}</span>
+        </label>`;
+    });
+    div.innerHTML = `
+      <div class="q-text"><span class="q-num">${i+1}.</span>${item.text}</div>
+      <div class="likert">${optionsHtml}</div>
+    `;
+    list.appendChild(div);
+  });
+  updateProgress();
+}
+
+function onAnswer(key, val){
+  answers[key] = val;
+  updateProgress();
+}
+
+function updateProgress(){
+  const total = ALL_ITEMS.length;
+  const answered = Object.keys(answers).length;
+  document.getElementById('progressFill').style.width = (answered/total*100)+"%";
+  document.getElementById('progressLabel').textContent = `${answered} of ${total} answered`;
+  document.getElementById('submitBtn').disabled = (answered < total);
+}
+
+function computeScores(){
+  const scores = {}; // mechId -> {sum, max, pct}
+  MECHANISMS.forEach(m=> scores[m.id] = {sum:0, max:m.items.length*5, name:m.name});
+  ALL_ITEMS.forEach(item=>{
+    const v = answers[item.key] || 0;
+    scores[item.mechId].sum += v;
+  });
+  Object.keys(scores).forEach(id=>{
+    scores[id].pct = Math.round((scores[id].sum/scores[id].max)*100);
+  });
+  return scores;
+}
+
+let lastScores = null;
+let lastTop3 = null;
+
+function showResults(){
+  lastScores = computeScores();
+  const sortedIds = Object.keys(lastScores).sort((a,b)=> lastScores[b].pct - lastScores[a].pct);
+  lastTop3 = sortedIds.slice(0,3);
+
+  // Render top 3
+  const top3Container = document.getElementById('top3Container');
+  top3Container.innerHTML = "";
+  lastTop3.forEach((id, rank)=>{
+    const mech = MECHANISMS.find(m=>m.id===id);
+    const score = lastScores[id];
+    const exList = mech.exercises.map(e=>`<li>${e}</li>`).join("");
+    const card = document.createElement('div');
+    card.className = 'rank-card';
+    card.innerHTML = `
+      <div class="rank-head">
+        <span class="rank-pill">#${rank+1}</span>
+        <h3>${mech.name}</h3>
+        <span class="rank-score">${score.pct}%</span>
+      </div>
+      <div class="sub-h">What It Is</div>
+      <p>${mech.definition}</p>
+      <div class="sub-h">Where This Tends to Come From</div>
+      <p>${mech.origin}</p>
+      <div class="sub-h">Reflection &amp; Growth Activities</div>
+      <ul>${exList}</ul>
+    `;
+    top3Container.appendChild(card);
+  });
+
+  // Render all 13 scores, sorted low to high
+  const allContainer = document.getElementById('allScoresContainer');
+  allContainer.innerHTML = "";
+  const ascIds = [...sortedIds].reverse();
+  ascIds.forEach(id=>{
+    const score = lastScores[id];
+    const isTop = lastTop3.includes(id);
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `
+      <div class="bar-label">${score.name}</div>
+      <div class="bar-track"><div class="bar-fill${isTop?' top':''}" style="width:${score.pct}%"></div></div>
+      <div class="bar-pct">${score.pct}%</div>
+    `;
+    allContainer.appendChild(row);
+  });
+
+  document.getElementById('screen-quiz').classList.add('hidden');
+  document.getElementById('screen-results').classList.remove('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function retake(){
+  Object.keys(answers).forEach(k=> delete answers[k]);
+  shuffle(ALL_ITEMS);
+  document.getElementById('screen-results').classList.add('hidden');
+  document.getElementById('screen-intro').classList.remove('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+</script>
+</body>
+</html>
